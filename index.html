@@ -18,23 +18,20 @@
 
 <div id="loadingOverlay" class="loading-overlay">
     <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
-    <p>正在連線至台灣雲端資料庫...</p>
-    <p id="authErrorMsg" class="text-xs text-amber-300 hidden font-normal mt-2 text-center">驗證失敗！請確認 Firebase 控制台已啟用「匿名登入」。</p>
+    <p>正在連線至雲端資料庫...</p>
 </div>
 
 <div id="app" class="min-h-screen flex flex-col">
     <nav class="bg-slate-900 text-white shadow-xl p-4 sticky top-0 z-40">
         <div class="container mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3 cursor-pointer" onclick="location.reload()">
-                <div class="bg-indigo-600 p-2 rounded-lg">
-                    <i data-lucide="wrench" class="w-6 h-6 text-white"></i>
-                </div>
+                <div class="bg-indigo-600 p-2 rounded-lg"><i data-lucide="wrench" class="w-6 h-6 text-white"></i></div>
                 <div>
                     <h1 class="text-xl font-bold leading-tight">雲端資產管理系統</h1>
                     <p class="text-[10px] text-slate-400 tracking-widest uppercase">Office Asset Sync</p>
                 </div>
             </div>
-            <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-50 text-white px-5 py-2.5 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg shadow-indigo-500/20">
+            <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg shadow-indigo-500/20">
                 <i data-lucide="plus" class="w-5 h-5"></i>
                 <span>新增工具</span>
             </button>
@@ -42,29 +39,29 @@
     </nav>
 
     <div class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-center">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border">
-                <p class="text-slate-500 text-sm font-medium">總工具數</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
+                <p class="text-slate-500 text-sm">總工具數</p>
                 <h3 id="statTotal" class="text-3xl font-bold mt-1">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-l-indigo-500">
-                <p class="text-slate-500 text-sm font-medium">目前外借</p>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-l-indigo-500 text-center">
+                <p class="text-slate-500 text-sm">外借中</p>
                 <h3 id="statBorrowed" class="text-3xl font-bold mt-1 text-indigo-600">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500">
-                <p class="text-slate-500 text-sm font-medium">校正預警</p>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500 text-center">
+                <p class="text-slate-500 text-sm">校正預警</p>
                 <h3 id="statWarning" class="text-3xl font-bold mt-1 text-amber-500">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-l-red-500">
-                <p class="text-slate-500 text-sm font-medium">校正過期</p>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-l-red-500 text-center">
+                <p class="text-slate-500 text-sm">校正過期</p>
                 <h3 id="statExpired" class="text-3xl font-bold mt-1 text-red-500">0</h3>
             </div>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl shadow-sm border mb-6 flex flex-wrap gap-4 items-center">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-center">
             <div class="relative flex-grow min-w-[280px]">
                 <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                <input type="text" id="searchInput" oninput="renderTools()" placeholder="搜尋名稱、型號、序號..." class="w-full pl-12 pr-4 py-3 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500">
+                <input type="text" id="searchInput" oninput="renderTools()" placeholder="搜尋名稱、型號、序號、借用人..." class="w-full pl-12 pr-4 py-3 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
             </div>
             <select id="officeFilter" onchange="renderTools()" class="px-4 py-3 rounded-xl bg-slate-50 outline-none">
                 <option value="all">全區辦公室</option>
@@ -74,11 +71,11 @@
             </select>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="w-full text-left">
                     <thead>
-                        <tr class="bg-slate-50/80 border-b text-slate-400 text-[11px] font-black uppercase tracking-widest">
+                        <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-400 text-[11px] font-black uppercase tracking-widest">
                             <th class="p-5">工具資訊</th>
                             <th class="p-5">所在地</th>
                             <th class="p-5">校正期</th>
@@ -89,14 +86,14 @@
                     <tbody id="toolTableBody" class="divide-y divide-slate-100"></tbody>
                 </table>
             </div>
-            <div id="noData" class="hidden p-20 text-center text-slate-400 font-medium">尚無工具資產</div>
+            <div id="noData" class="hidden p-20 text-center text-slate-400 font-medium">目前尚無資料</div>
         </div>
     </div>
 
     <div id="toolModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
             <div class="p-6 bg-slate-50 border-b flex justify-between items-center">
-                <h2 id="modalTitle" class="text-xl font-bold">新增資產</h2>
+                <h2 id="modalTitle" class="text-xl font-bold">新增設備資產</h2>
                 <button onclick="closeModal('toolModal')" class="p-2 hover:bg-slate-200 rounded-full"><i data-lucide="x"></i></button>
             </div>
             <form id="toolForm" onsubmit="handleSaveTool(event)" class="p-8 space-y-5">
@@ -104,31 +101,31 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2">
                         <label class="block text-xs font-bold text-slate-500 mb-2">工具名稱</label>
-                        <input type="text" name="name" required class="w-full px-4 py-3 rounded-xl border outline-none">
+                        <input type="text" name="name" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none">
                     </div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-2">型號</label><input type="text" name="model" required class="w-full px-4 py-3 rounded-xl border outline-none"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-2">序號 (S/N)</label><input type="text" name="sn" required class="w-full px-4 py-3 rounded-xl border outline-none"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-2">型號</label><input type="text" name="model" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none"></div>
+                    <div><label class="block text-xs font-bold text-slate-500 mb-2">序號 (S/N)</label><input type="text" name="sn" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none"></div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-2">所屬辦公室</label>
-                    <select name="office" class="w-full px-4 py-3 rounded-xl border bg-slate-50">
+                    <select name="office" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50">
                         <option value="台北">台北辦公室</option>
                         <option value="台中">台中辦公室</option>
                         <option value="高雄">高雄辦公室</option>
                     </select>
                 </div>
-                <div class="p-5 bg-slate-50 rounded-2xl border space-y-4">
-                    <div class="flex items-center justify-between">
+                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex items-center justify-between mb-2">
                         <label class="text-sm font-bold text-slate-700">啟用校正追蹤</label>
-                        <input type="checkbox" id="needsCalibration" name="needsCalibration" onchange="toggleDateInput(this)" checked class="w-5 h-5">
+                        <input type="checkbox" id="needsCalibration" name="needsCalibration" onchange="toggleDateInput(this)" checked class="w-5 h-5 rounded border-slate-300">
                     </div>
                     <div id="calibrationDateContainer">
-                        <input type="date" name="calibrationDate" id="calibrationDateInput" class="w-full px-4 py-2.5 rounded-lg border">
+                        <input type="date" name="calibrationDate" id="calibrationDateInput" class="w-full px-4 py-2.5 rounded-lg border border-slate-200">
                     </div>
                 </div>
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeModal('toolModal')" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold">取消</button>
-                    <button type="submit" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold">儲存</button>
+                <div class="pt-4 flex space-x-3">
+                    <button type="button" onclick="closeModal('toolModal')" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold">取消</button>
+                    <button type="submit" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold">儲存變更</button>
                 </div>
             </form>
         </div>
@@ -139,37 +136,27 @@
             <h2 id="borrowTitle" class="text-2xl font-bold mb-2">工具外借</h2>
             <p id="borrowSub" class="text-slate-500 mb-6"></p>
             <input type="hidden" id="borrowToolId">
-            <div id="borrowerInputWrapper" class="mb-6"><input type="text" id="borrowerName" placeholder="工程師姓名" class="w-full px-4 py-4 rounded-xl border-2 text-center text-lg font-bold outline-none focus:border-indigo-500"></div>
-            <div id="returnConfirm" class="hidden mb-8 p-4 bg-emerald-50 rounded-2xl text-emerald-800 font-bold border-emerald-100">確認歸還？</div>
+            <div id="borrowerInputWrapper" class="mb-6"><input type="text" id="borrowerName" placeholder="工程師姓名" class="w-full px-4 py-4 rounded-xl border-2 border-slate-100 text-center text-lg font-bold outline-none focus:border-indigo-500"></div>
+            <div id="returnConfirm" class="hidden mb-8 p-4 bg-emerald-50 rounded-2xl text-emerald-800 font-bold">確認工具已歸還？</div>
             <button onclick="handleBorrowReturn()" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold mb-3">確認提交</button>
-            <button onclick="closeModal('borrowModal')" class="w-full text-slate-400">取消</button>
+            <button onclick="closeModal('borrowModal')" class="w-full text-slate-400 font-medium">取消</button>
         </div>
     </div>
-
-    <div id="historyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl w-full max-w-2xl shadow-2xl h-[80vh] flex flex-col overflow-hidden">
-            <div class="p-6 border-b flex justify-between items-center bg-slate-50"><h2 class="text-xl font-bold">設備流向履歷</h2><button onclick="closeModal('historyModal')"><i data-lucide="x"></i></button></div>
-            <div id="historyTimeline" class="flex-grow overflow-y-auto p-8 border-l-2 border-slate-100 ml-12"></div>
-        </div>
-    </div>
-
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 translate-y-24 opacity-0 transition-all duration-500 z-[100] bg-slate-800 text-white px-8 py-4 rounded-2xl shadow-2xl"><span id="toastMsg" class="font-bold"></span></div>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // 使用您截圖中的正確金鑰
     const firebaseConfig = {
-      apiKey: "AIzaSyBB8-yJhHg7J8dYu8_hhdw06EkS94Ey990",
-      authDomain: "tool20250204.firebaseapp.com",
-      projectId: "tool20250204",
-      storageBucket: "tool20250204.firebasestorage.app",
-      messagingSenderId: "515853558092",
-      appId: "1:515853558092:web:b95dbcc0f33ebf0568efe9",
-      measurementId: "G-YJ4FE646YM"
+        apiKey: "AIzaSyBB8-yJhHg7J8dYu8_hhdw06EkS94Ey990",
+        authDomain: "tool20250204.firebaseapp.com",
+        projectId: "tool20250204",
+        storageBucket: "tool20250204.firebasestorage.app",
+        messagingSenderId: "515853558092",
+        appId: "1:515853558092:web:b95dbcc0f33ebf0568efe9",
+        measurementId: "G-YJ4FE646YM"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -179,12 +166,7 @@
 
     let tools = [];
 
-    // 初始化登入與連線
-    signInAnonymously(auth).catch(err => {
-        console.error("Auth Error", err);
-        document.getElementById('authErrorMsg').classList.remove('hidden');
-        alert("雲端驗證失敗！請確認 Firebase 控制台已啟用『匿名登入』。");
-    });
+    signInAnonymously(auth).catch(err => console.error("Auth Error", err));
 
     onAuthStateChanged(auth, (u) => {
         if (u) {
@@ -199,12 +181,9 @@
             tools = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             tools.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
             window.renderTools();
-        }, (err) => {
-            if (err.code === 'permission-denied') alert("權限不足！請檢查 Firebase 規則設定。");
         });
     }
 
-    // --- 全域渲染功能 ---
     window.renderTools = () => {
         const tbody = document.getElementById('toolTableBody');
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
@@ -212,7 +191,7 @@
         tbody.innerHTML = '';
 
         const filtered = tools.filter(tool => {
-            const matchesSearch = tool.name.toLowerCase().includes(searchTerm) || tool.sn.toLowerCase().includes(searchTerm);
+            const matchesSearch = tool.name.toLowerCase().includes(searchTerm) || tool.sn.toLowerCase().includes(searchTerm) || (tool.currentBorrower && tool.currentBorrower.toLowerCase().includes(searchTerm));
             const matchesOffice = officeFilter === 'all' || tool.office === officeFilter;
             return matchesSearch && matchesOffice;
         });
@@ -227,15 +206,14 @@
             row.className += " hover:bg-slate-50 transition-all border-b";
 
             row.innerHTML = `
-                <td class="p-5 font-bold text-slate-900">${tool.name}<div class="text-[10px] text-slate-400">SN: ${tool.sn}</div></td>
+                <td class="p-5 font-bold">${tool.name}<div class="text-[10px] text-slate-400 uppercase">SN: ${tool.sn}</div></td>
                 <td class="p-5"><span class="text-xs font-bold bg-slate-100 px-2 py-1 rounded">${tool.office}</span></td>
                 <td class="p-5"><div class="text-sm ${cal.textClass}">${tool.needsCalibration ? tool.calibrationDate : '---'}</div><div class="mt-1">${cal.badge}</div></td>
                 <td class="p-5">${tool.isBorrowed ? `<span class="status-badge bg-amber-500 text-white">外借: ${tool.currentBorrower}</span>` : `<span class="status-badge bg-emerald-500 text-white">在庫</span>`}</td>
-                <td class="p-5 text-center flex justify-center gap-1">
-                    <button onclick="openBorrowModal('${tool.id}')" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg"><i data-lucide="${tool.isBorrowed ? 'rotate-ccw' : 'share'}"></i></button>
-                    <button onclick="openEditModal('${tool.id}')" class="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><i data-lucide="edit-3"></i></button>
-                    <button onclick="viewHistory('${tool.id}')" class="p-2 text-slate-400"><i data-lucide="scroll-text"></i></button>
-                    <button onclick="deleteTool('${tool.id}')" class="p-2 text-red-300 hover:text-red-600"><i data-lucide="trash-2"></i></button>
+                <td class="p-5 text-center">
+                    <button onclick="openBorrowModal('${tool.id}')" class="p-2 text-indigo-600"><i data-lucide="${tool.isBorrowed ? 'rotate-ccw' : 'share'}"></i></button>
+                    <button onclick="openEditModal('${tool.id}')" class="p-2 text-slate-600"><i data-lucide="edit-3"></i></button>
+                    <button onclick="deleteTool('${tool.id}')" class="p-2 text-red-300"><i data-lucide="trash-2"></i></button>
                 </td>`;
             tbody.appendChild(row);
         });
@@ -277,12 +255,11 @@
         try {
             if (id) {
                 const tool = tools.find(t => t.id === id);
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tools', id), { ...toolData, history: [{ type: 'edit', date: nowStr, msg: `資料更新` }, ...tool.history] });
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tools', id), { ...toolData, history: [{ type: 'edit', date: nowStr, msg: `修改設備` }, ...tool.history] });
             } else {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tools'), { ...toolData, createdAt: Date.now(), isBorrowed: false, currentBorrower: '', history: [{ type: 'create', date: nowStr, msg: `新入庫 (${toolData.office})` }] });
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tools'), { ...toolData, createdAt: Date.now(), isBorrowed: false, currentBorrower: '', history: [{ type: 'create', date: nowStr, msg: `入庫` }] });
             }
             closeModal('toolModal');
-            showToast('雲端資料已同步');
         } catch (err) { console.error(err); }
     };
 
@@ -290,30 +267,24 @@
         const id = document.getElementById('borrowToolId').value;
         const name = document.getElementById('borrowerName').value.trim();
         const tool = tools.find(t => t.id === id);
-        const nowStr = new Date().toLocaleString('zh-TW');
         const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tools', id);
+        const now = new Date().toLocaleString('zh-TW');
 
         if (!tool.isBorrowed) {
-            if (!name) return alert('請輸入借用工程師姓名');
-            await updateDoc(docRef, { isBorrowed: true, currentBorrower: name, history: [{ type: 'borrow', date: nowStr, msg: `工程師 ${name} 借出` }, ...tool.history] });
+            if (!name) return alert('請輸入借用人姓名');
+            await updateDoc(docRef, { isBorrowed: true, currentBorrower: name, history: [{ type: 'borrow', date: now, msg: `工程師 ${name} 借出` }, ...tool.history] });
         } else {
             const old = tool.currentBorrower;
-            await updateDoc(docRef, { isBorrowed: false, currentBorrower: "", history: [{ type: 'return', date: nowStr, msg: `工程師 ${old} 歸還` }, ...tool.history] });
+            await updateDoc(docRef, { isBorrowed: false, currentBorrower: "", history: [{ type: 'return', date: now, msg: `工程師 ${old} 歸還` }, ...tool.history] });
         }
         closeModal('borrowModal');
-        showToast('雲端已同步');
     };
 
-    window.deleteTool = async (id) => {
-        if (!confirm('永久刪除？')) return;
-        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tools', id));
-        showToast('已移除設備');
-    };
-
-    window.openAddModal = () => { document.getElementById('modalTitle').innerText = "新增資產"; document.getElementById('editToolId').value = ""; document.getElementById('toolForm').reset(); window.openModal('toolModal'); };
+    window.deleteTool = async (id) => { if (confirm('永久刪除？')) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tools', id)); };
+    window.openAddModal = () => { document.getElementById('modalTitle').innerText = "新增設備"; document.getElementById('editToolId').value = ""; document.getElementById('toolForm').reset(); window.openModal('toolModal'); };
     window.openEditModal = (id) => {
         const tool = tools.find(t => t.id === id);
-        document.getElementById('modalTitle').innerText = "編輯資產";
+        document.getElementById('modalTitle').innerText = "編輯設備";
         document.getElementById('editToolId').value = tool.id;
         const form = document.getElementById('toolForm');
         form.name.value = tool.name; form.model.value = tool.model; form.sn.value = tool.sn; form.office.value = tool.office; form.needsCalibration.checked = tool.needsCalibration; form.calibrationDate.value = tool.calibrationDate || "";
@@ -324,21 +295,14 @@
         const tool = tools.find(t => t.id === id);
         document.getElementById('borrowToolId').value = id;
         document.getElementById('borrowTitle').innerText = tool.isBorrowed ? "歸還工具" : "工具外借";
-        document.getElementById('borrowSub').innerText = tool.isBorrowed ? `目前持有：${tool.currentBorrower}` : "請輸入借用人姓名";
+        document.getElementById('borrowSub').innerText = tool.isBorrowed ? `目前持有：${tool.currentBorrower}` : "輸入借用人姓名";
         document.getElementById('borrowerInputWrapper').style.display = tool.isBorrowed ? 'none' : 'block';
         document.getElementById('returnConfirm').style.display = tool.isBorrowed ? 'block' : 'none';
         window.openModal('borrowModal');
     };
-    window.viewHistory = (id) => {
-        const tool = tools.find(t => t.id === id);
-        const list = document.getElementById('historyTimeline');
-        list.innerHTML = tool.history.map(log => `<div class="relative pl-8 mb-6"><div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-slate-400 border-2 border-white"></div><div class="text-[10px] font-bold text-slate-400">${log.date}</div><div class="text-sm font-bold">${log.msg}</div></div>`).join('');
-        window.openModal('historyModal');
-    };
     window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
     window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
     window.toggleDateInput = (cb) => document.getElementById('calibrationDateContainer').style.display = cb.checked ? 'block' : 'none';
-    function showToast(msg) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = msg; t.classList.remove('translate-y-24', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-24', 'opacity-0'), 3000); }
 </script>
 </body>
 </html>
