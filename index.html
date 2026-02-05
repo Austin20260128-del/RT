@@ -2,880 +2,448 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>元素組教育訓練系統 (雲端多人版) v2.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>工程師工具管理系統 - 行動格線版</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global Setup
-        window.firebaseApp = {};
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-        // Init Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        
-        let currentUserDocId = null; 
-        let unsubscribeDoc = null;
-        let saveTimeout;
-
-        // 1. Initialize & Auth
-        async function initApp() {
-            try {
-                await signInAnonymously(auth);
-                document.getElementById('loading-overlay').classList.add('hidden');
-                document.getElementById('login-screen').classList.remove('hidden');
-                
-                // Check if previously logged in
-                const savedName = localStorage.getItem('training_app_user_name');
-                if(savedName) {
-                    document.getElementById('loginNameInput').value = savedName;
-                }
-            } catch (error) {
-                console.error("Auth Failed", error);
-                alert("連線失敗，請檢查網路或重新整理");
-            }
-        }
-
-        // 2. User Login
-        window.firebaseApp.login = async function() {
-            const inputName = document.getElementById('loginNameInput').value.trim();
-            if (!inputName) { alert("請輸入姓名"); return; }
-
-            currentUserDocId = inputName;
-            localStorage.setItem('training_app_user_name', inputName); // Convenience feature
-            
-            // Switch UI
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-            document.getElementById('current-user-display').innerText = inputName;
-
-            // Start Sync
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'training_users', currentUserDocId);
-            unsubscribeDoc = onSnapshot(docRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    window.appState = { ...window.appState, ...docSnap.data() };
-                    window.renderAll(); 
-                } else {
-                    // New user init
-                    window.appState.userInfo.name = currentUserDocId;
-                    window.saveToCloud(true);
-                }
-            });
-        };
-
-        // 3. Save Logic
-        window.saveToCloud = function(force = false) {
-            if (!currentUserDocId) return;
-            
-            const statusEl = document.getElementById('sync-status');
-            statusEl.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-1"></i> 儲存中...';
-            statusEl.className = 'text-sm text-yellow-600 font-medium flex items-center';
-
-            clearTimeout(saveTimeout);
-            
-            const doSave = async () => {
-                try {
-                    window.calcStats(); // Update stats before save
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'training_users', currentUserDocId);
-                    await setDoc(docRef, window.appState, { merge: true });
-                    
-                    statusEl.innerHTML = '<i class="fas fa-check mr-1"></i> 已同步';
-                    statusEl.className = 'text-sm text-green-600 font-medium flex items-center';
-                } catch (e) {
-                    console.error("Save failed", e);
-                    statusEl.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> 儲存失敗';
-                    statusEl.className = 'text-sm text-red-600 font-medium flex items-center';
-                }
-            };
-
-            if (force) doSave();
-            else saveTimeout = setTimeout(doSave, 800);
-        };
-
-        // 4. Team Data Load
-        window.firebaseApp.loadTeamData = async function() {
-            const tbody = document.getElementById('team-rows');
-            tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>載入資料中...</td></tr>';
-
-            try {
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'training_users');
-                const snapshot = await getDocs(colRef);
-                const users = [];
-                snapshot.forEach(d => users.push(d.data()));
-
-                // Sort: Level desc, then Score desc
-                users.sort((a, b) => {
-                    const scoreA = a.stats?.totalScore || 0;
-                    const scoreB = b.stats?.totalScore || 0;
-                    return scoreB - scoreA;
-                });
-
-                tbody.innerHTML = '';
-                if(users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-4 text-center text-gray-500">目前尚無資料</td></tr>';
-                    return;
-                }
-
-                users.forEach((u, index) => {
-                    const isMe = u.userInfo.name === currentUserDocId;
-                    const tr = document.createElement('tr');
-                    if(isMe) tr.className = "bg-blue-50";
-                    tr.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold ${index < 3 ? 'text-yellow-600' : 'text-gray-500'}">
-                            ${index === 0 ? '<i class="fas fa-crown text-yellow-500 mr-1"></i>' : ''}#${index + 1}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${u.userInfo.name || 'Unknown'} ${isMe ? '(我)' : ''}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${u.userInfo.region || '-'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                Lv ${u.stats?.level || 0}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-700">${u.stats?.totalScore || 0}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div class="flex items-center">
-                                <span class="mr-2">${u.stats?.progress || '0%'}</span>
-                                <div class="w-16 bg-gray-200 rounded-full h-1.5">
-                                    <div class="bg-green-500 h-1.5 rounded-full" style="width: ${u.stats?.progress || '0%'}"></div>
-                                </div>
-                            </div>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (e) {
-                console.error("Team load failed", e);
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-4 text-center text-red-500">載入失敗，請稍後再試</td></tr>';
-            }
-        }
-
-        initApp();
-    </script>
-
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .nav-btn.active { background-color: #2563eb; color: white; }
-        .nav-btn.active:hover { background-color: #1d4ed8; }
-        /* Checkbox Styling */
-        .custom-checkbox input:checked + div { background-color: #2563eb; border-color: #2563eb; }
-        .custom-checkbox input:checked + div svg { display: block; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        body { 
+            font-family: 'Noto Sans TC', sans-serif; 
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 極小化標籤字體但增加適度填充 */
+        .status-badge { @apply px-2 py-0.5 rounded text-[7px] font-medium uppercase tracking-tighter leading-none flex items-center justify-center border border-transparent; }
+        /* 增加列表項目內邊距：pl-14 確保文字明顯遠離螢幕左側邊緣 */
+        .tool-item { @apply bg-white pl-14 pr-6 py-5 transition-all active:bg-slate-50 relative flex flex-col; }
+        .loading-overlay { @apply fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center text-white font-bold flex-col gap-4; }
+        
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        input, select { font-size: 16px !important; } 
     </style>
 </head>
-<body>
+<body class="text-slate-800 pb-24">
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-white z-[60] flex flex-col items-center justify-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-        <p class="text-gray-500 font-medium">系統連接中...</p>
+<!-- 載入中遮罩 -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent"></div>
+    <p class="text-sm tracking-widest">同步雲端資料中...</p>
+</div>
+
+<div id="app" class="min-h-screen flex flex-col">
+    <!-- 頂部導航 -->
+    <nav class="bg-white border-b border-slate-100 p-2 sticky top-0 z-40">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-1.5" onclick="location.reload()">
+                <div class="bg-indigo-600 p-1 rounded-lg">
+                    <i data-lucide="wrench" class="w-3 h-3 text-white"></i>
+                </div>
+                <h1 class="text-xs font-bold tracking-tight text-slate-900">雲端資產管理</h1>
+            </div>
+            <div id="connectionStatus" class="flex items-center text-[8px] text-slate-400 font-bold bg-slate-50 px-1.5 py-0.5 rounded-full border border-emerald-100/50">
+                <span id="statusDot" class="w-1 h-1 bg-slate-300 rounded-full mr-1"></span>
+                <span id="statusText">正在同步...</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto py-3 flex-grow">
+        <!-- 狀態統計 -->
+        <div class="grid grid-cols-2 gap-2 mb-3 px-4">
+            <div class="bg-white p-2 rounded-lg border border-slate-100 shadow-sm shadow-slate-200/50">
+                <p class="text-slate-400 text-[8px] font-bold uppercase">總資產</p>
+                <h3 id="statTotal" class="text-base font-bold text-slate-700 leading-none mt-0.5">0</h3>
+            </div>
+            <div class="bg-white p-2 rounded-lg border border-slate-100 shadow-sm border-l-4 border-l-indigo-500">
+                <p class="text-indigo-400 text-[8px] font-bold uppercase">借出中</p>
+                <h3 id="statBorrowed" class="text-base font-bold text-indigo-600 leading-none mt-0.5">0</h3>
+            </div>
+            <div class="bg-white p-2 rounded-lg border border-slate-100 shadow-sm border-l-4 border-l-amber-500">
+                <p class="text-amber-400 text-[8px] font-bold uppercase">快到期</p>
+                <h3 id="statWarning" class="text-base font-bold text-amber-500 leading-none mt-0.5">0</h3>
+            </div>
+            <div class="bg-white p-2 rounded-lg border border-slate-100 shadow-sm border-l-4 border-l-red-500">
+                <p class="text-red-400 text-[8px] font-bold uppercase">已過期</p>
+                <h3 id="statExpired" class="text-base font-bold text-red-600 leading-none mt-0.5">0</h3>
+            </div>
+        </div>
+
+        <!-- 搜尋與篩選 -->
+        <div class="space-y-1.5 mb-4 px-4">
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-2.5 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-400"></i>
+                <input type="text" id="searchInput" oninput="renderTools()" placeholder="搜尋名稱、管理者、所在地..." class="w-full pl-7 pr-3 py-1.5 rounded-lg bg-white border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm text-[9px] placeholder:text-slate-400">
+            </div>
+            <div class="flex gap-1 overflow-x-auto hide-scrollbar pb-0.5">
+                <select id="officeFilter" onchange="renderTools()" class="bg-white border border-slate-200 px-2 py-1 rounded-md text-[9px] font-bold outline-none flex-shrink-0 text-slate-600">
+                    <option value="all">所有辦公室</option>
+                    <option value="台北">台北</option>
+                    <option value="台中">台中</option>
+                    <option value="高雄">高雄</option>
+                </select>
+                <select id="statusFilter" onchange="renderTools()" class="bg-white border border-slate-200 px-2 py-1 rounded-md text-[9px] font-bold outline-none flex-shrink-0 text-slate-600">
+                    <option value="all">所有狀態</option>
+                    <option value="in-stock">在庫</option>
+                    <option value="borrowed">外借中</option>
+                    <option value="warning">快到期</option>
+                    <option value="expired">已過期</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 儀器清單容器：去除左右邊框 -->
+        <div class="bg-white border-t border-b border-slate-200 overflow-hidden shadow-sm shadow-slate-200/50">
+            <div id="toolListContainer" class="divide-y divide-slate-100"></div>
+        </div>
+
+        <div id="noData" class="hidden py-12 text-center flex flex-col items-center px-4">
+            <div class="bg-slate-100 p-3 rounded-full mb-2 text-slate-300">
+                <i data-lucide="inbox" class="w-6 h-6"></i>
+            </div>
+            <p class="text-slate-400 text-xs font-medium">目前沒有任何資產</p>
+        </div>
     </div>
 
-    <!-- Login Screen -->
-    <div id="login-screen" class="fixed inset-0 bg-gray-100 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full transform transition-all">
-            <div class="text-center mb-8">
-                <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-graduation-cap text-4xl text-blue-600"></i>
+    <!-- 懸浮按鈕 -->
+    <button onclick="openAddModal()" class="fixed bottom-6 right-6 w-11 h-11 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-500/40 flex items-center justify-center z-50 active:scale-90 transition-transform">
+        <i data-lucide="plus" class="w-5 h-5"></i>
+    </button>
+
+    <!-- Modal: 新增/編輯 -->
+    <div id="toolModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-end md:items-center justify-center z-[100] p-0 md:p-4">
+        <div class="bg-white rounded-t-2xl md:rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-white/20 animate-in slide-in-from-bottom duration-300">
+            <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+                <h2 id="modalTitle" class="text-sm font-bold text-slate-900">資產資料編輯</h2>
+                <button onclick="closeModal('toolModal')" class="bg-white p-1 rounded-full shadow-sm"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+            </div>
+            <form id="toolForm" onsubmit="handleSaveTool(event)" class="p-4 space-y-3 max-h-[80vh] overflow-y-auto">
+                <input type="hidden" id="editToolId">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-0.5">工具名稱</label>
+                        <input type="text" name="name" required class="w-full px-3 py-2 rounded-lg border-slate-200 border outline-none bg-slate-50 focus:bg-white text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-0.5">工具管理者</label>
+                        <input type="text" name="manager" required placeholder="負責人姓名" class="w-full px-3 py-2 rounded-lg border-slate-200 border outline-none bg-slate-50 focus:bg-white font-bold text-indigo-600 text-xs">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-400 uppercase mb-0.5">型號</label>
+                            <input type="text" name="model" required class="w-full px-3 py-2 rounded-lg border-slate-200 border outline-none bg-slate-50 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[8px] font-black text-slate-400 uppercase mb-0.5">序號 (S/N)</label>
+                            <input type="text" name="sn" required class="w-full px-3 py-2 rounded-lg border-slate-200 border outline-none bg-slate-50 text-xs">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[8px] font-black text-slate-400 uppercase mb-0.5">目前所在辦公室</label>
+                        <select name="office" class="w-full px-3 py-2 rounded-lg border-slate-200 border outline-none bg-slate-50 text-xs">
+                            <option value="台北">台北辦公室</option>
+                            <option value="台中">台中辦公室</option>
+                            <option value="高雄">高雄辦公室</option>
+                        </select>
+                    </div>
+                    <div class="p-3 bg-indigo-50/50 rounded-xl border border-indigo-100 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-[10px] font-bold text-indigo-900">追蹤校正到期日</label>
+                            <input type="checkbox" id="needsCalibration" name="needsCalibration" onchange="toggleDateInput(this)" checked class="w-3.5 h-3.5 rounded border-indigo-300 text-indigo-600">
+                        </div>
+                        <div id="calibrationDateContainer">
+                            <input type="date" name="calibrationDate" id="calibrationDateInput" class="w-full px-2 py-1.5 rounded-lg border-indigo-200 border text-xs">
+                        </div>
+                    </div>
                 </div>
-                <h1 class="text-2xl font-bold text-gray-800">元素組教育訓練系統</h1>
-                <p class="text-gray-500 mt-2">v2.1 雲端同步版</p>
+                <div class="pt-2 flex gap-3">
+                    <button type="submit" id="saveBtn" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/30 active:scale-95 transition-all text-xs">確認存檔</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: 借還與轉交 -->
+    <div id="borrowModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[110] p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-5 text-center animate-in zoom-in duration-200">
+            <h2 id="borrowTitle" class="text-base font-bold mb-1">工具借用</h2>
+            <p id="borrowSub" class="text-slate-400 text-[9px] mb-4"></p>
+            <input type="hidden" id="borrowToolId">
+            
+            <div id="borrowerInputWrapper" class="mb-4">
+                <input type="text" id="borrowerName" placeholder="工程師姓名" class="w-full px-3 py-2.5 rounded-xl border-2 border-slate-100 focus:border-indigo-500 outline-none text-center text-sm font-bold">
             </div>
             
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">請輸入您的真實姓名</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-user text-gray-400"></i>
-                        </div>
-                        <input type="text" id="loginNameInput" 
-                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" 
-                            placeholder="例如：王小明"
-                            onkeypress="if(event.key === 'Enter') window.firebaseApp.login()">
-                    </div>
-                    <p class="text-xs text-gray-500 mt-2 ml-1"><i class="fas fa-info-circle mr-1"></i>系統將以此姓名儲存您的進度</p>
+            <div id="returnOptionsWrapper" class="hidden mb-4 space-y-3 text-left">
+                <div class="p-2.5 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+                    <p class="text-emerald-800 font-bold text-[8px] mb-1.5 uppercase tracking-wider">工具存放地點</p>
+                    <select id="returnLocation" class="w-full px-2 py-2 rounded-lg border-2 border-emerald-200 outline-none font-bold text-emerald-700 bg-white text-xs">
+                        <option value="台北">台北辦公室</option>
+                        <option value="台中">台中辦公室</option>
+                        <option value="高雄">高雄辦公室</option>
+                    </select>
                 </div>
 
-                <button onclick="window.firebaseApp.login()" class="w-full bg-blue-600 text-white py-3.5 rounded-lg hover:bg-blue-700 transition duration-200 font-semibold shadow-md flex items-center justify-center">
-                    <span>開始使用</span>
-                    <i class="fas fa-arrow-right ml-2"></i>
-                </button>
+                <div class="px-1 flex items-center gap-2">
+                    <input type="checkbox" id="isTransfer" onchange="toggleTransferUI(this)" class="w-3.5 h-3.5 rounded text-indigo-600 border-slate-300">
+                    <label for="isTransfer" class="text-[10px] font-bold text-slate-700">直接轉交給其他同仁</label>
+                </div>
+
+                <div id="transferInputWrapper" class="hidden p-2.5 bg-amber-50 rounded-xl border border-amber-100 text-center">
+                    <p class="text-amber-800 font-bold text-[8px] mb-1.5 uppercase tracking-wider">新借用人姓名</p>
+                    <input type="text" id="newBorrowerName" placeholder="接收人姓名" class="w-full px-2 py-2 rounded-lg border-2 border-amber-200 outline-none font-bold text-amber-700 bg-white text-xs text-center">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+                <button id="borrowConfirmBtn" onclick="handleBorrowReturn()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold transition-all active:scale-95 shadow-md text-xs">確認提交</button>
+                <button onclick="closeModal('borrowModal')" class="w-full py-1.5 text-slate-400 text-[10px] font-bold">取消</button>
             </div>
         </div>
     </div>
 
-    <!-- Main App -->
-    <div id="main-app" class="hidden min-h-screen flex flex-col">
-        <!-- Header -->
-        <nav class="bg-white shadow-md sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <i class="fas fa-graduation-cap text-blue-600 text-xl mr-2"></i>
-                        <span class="text-lg font-bold text-gray-800 hidden sm:block">教育訓練系統</span>
-                        <div class="ml-4 px-3 py-1 bg-gray-100 rounded-full text-sm font-medium text-gray-700 flex items-center border border-gray-200">
-                            <i class="fas fa-user-circle mr-2 text-gray-500"></i>
-                            <span id="current-user-display">User</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center space-x-1 overflow-x-auto no-scrollbar py-2">
-                        <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn active px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition whitespace-nowrap"><i class="fas fa-chart-pie mr-1 sm:hidden"></i><span class="hidden sm:inline">儀表板</span></button>
-                        <button onclick="switchTab('initial')" id="btn-initial" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition whitespace-nowrap"><i class="fas fa-check-square mr-1 sm:hidden"></i><span class="hidden sm:inline">初始課程</span></button>
-                        <button onclick="switchTab('courses')" id="btn-courses" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition whitespace-nowrap"><i class="fas fa-list-ul mr-1 sm:hidden"></i><span class="hidden sm:inline">課程選擇</span></button>
-                        <button onclick="switchTab('team')" id="btn-team" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition whitespace-nowrap"><i class="fas fa-users mr-1 sm:hidden"></i><span class="hidden sm:inline">全員進度</span></button>
-                    </div>
-                </div>
+    <!-- Modal: 履歷 -->
+    <div id="historyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-end md:items-center justify-center z-[100] p-0 md:p-4">
+        <div class="bg-white rounded-t-2xl md:rounded-2xl w-full max-w-lg h-[75vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
+            <div class="p-3.5 border-b flex justify-between items-center bg-slate-50">
+                <h2 class="text-sm font-bold text-slate-900">資產履歷與管理</h2>
+                <button onclick="closeModal('historyModal')" class="p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
             </div>
-        </nav>
-
-        <div class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
-            
-            <!-- Sync Status -->
-            <div class="flex justify-between items-center mb-4">
-                <h2 id="page-title" class="text-xl font-bold text-gray-800">儀表板</h2>
-                <div id="sync-status" class="text-sm text-green-600 font-medium flex items-center">
-                    <i class="fas fa-cloud mr-1"></i> 準備就緒
-                </div>
-            </div>
-
-            <!-- TAB 1: DASHBOARD -->
-            <div id="dashboard" class="tab-content active space-y-6 animate-fade-in">
-                <!-- Profile Card -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                    <div class="flex justify-between items-start mb-6">
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-800">個人資料卡</h3>
-                            <p class="text-sm text-gray-500">請確認您的基本資訊以便核對</p>
-                        </div>
-                        <button onclick="exportToExcel()" class="inline-flex items-center px-3 py-1.5 border border-green-600 text-green-600 rounded-md text-sm font-medium hover:bg-green-50 transition">
-                            <i class="fas fa-file-excel mr-1.5"></i> 匯出報表
-                        </button>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="space-y-1">
-                            <label class="text-sm font-medium text-gray-600">所屬區域</label>
-                            <select id="userRegion" onchange="updateInput('region', this.value)" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 bg-gray-50">
-                                <option value="">請選擇...</option>
-                                <option value="北區">北區</option>
-                                <option value="中區">中區</option>
-                                <option value="南區">南區</option>
-                            </select>
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-sm font-medium text-gray-600">到職日期</label>
-                            <input type="date" id="startDate" oninput="updateInput('startDate', this.value)" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2.5 bg-gray-50">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-sm font-medium text-gray-600">當前等級</label>
-                            <div class="flex items-center">
-                                <div id="displayLevel" class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Lv 0</div>
-                                <span class="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full font-bold">新手</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-gradient-to-br from-indigo-600 to-blue-700 rounded-xl shadow-lg p-6 text-white transform hover:scale-[1.02] transition duration-300">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="text-sm text-blue-100 font-medium">目前總得分</div>
-                            <i class="fas fa-star text-yellow-300 opacity-80"></i>
-                        </div>
-                        <div class="text-5xl font-bold tracking-tight" id="displayTotalScore">0</div>
-                        <div class="mt-4 flex items-center text-sm text-blue-100">
-                            <span>總進度:</span>
-                            <span id="displayScoreRatio" class="ml-1 font-bold text-white">0%</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
-                        <div class="absolute top-0 right-0 p-4 opacity-10">
-                            <i class="fas fa-level-up-alt text-6xl text-gray-500"></i>
-                        </div>
-                        <div class="text-sm text-gray-500 font-medium mb-1">距離下一級 (<span id="nextLevelName">Lv 1</span>)</div>
-                        <div class="text-4xl font-bold text-gray-800" id="displayDistToUpgrade">15</div>
-                        <div class="mt-4">
-                            <div class="w-full bg-gray-100 rounded-full h-2">
-                                <div class="bg-yellow-400 h-2 rounded-full transition-all duration-1000" id="levelProgressBar" style="width: 0%"></div>
-                            </div>
-                            <div class="text-xs text-gray-400 mt-1 text-right">還需努力</div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col justify-center">
-                        <div class="text-sm text-gray-500 font-medium mb-1">目標總學分</div>
-                        <div class="text-4xl font-bold text-gray-800">487</div>
-                        <div class="text-xs text-green-600 mt-2 font-medium bg-green-50 inline-block px-2 py-1 rounded w-max">
-                            <i class="fas fa-check-circle mr-1"></i> 通往獨當一面之路
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tables -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Course Analysis -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center">
-                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-3">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                            <h3 class="font-bold text-gray-800">課程類別分析</h3>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-100">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">類別</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">得分 / 總分</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">完成率</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-100" id="courseAnalysisBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <!-- Brand Analysis -->
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center">
-                            <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mr-3">
-                                <i class="fas fa-tags"></i>
-                            </div>
-                            <h3 class="font-bold text-gray-800">品牌課程分析</h3>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-100">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">品牌</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">完成堂數</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">進度</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-100" id="brandAnalysisBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 2: INITIAL -->
-            <div id="initial" class="tab-content space-y-6 animate-fade-in">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-5 border-b border-gray-100 bg-yellow-50/50 flex flex-col md:flex-row justify-between md:items-center gap-4">
-                        <div>
-                            <h3 class="font-bold text-lg text-yellow-800">初始課程 (必修)</h3>
-                            <p class="text-sm text-yellow-600 mt-1">此部分不計分，但必須全數完成方可通過試用期。</p>
-                        </div>
-                        <div class="bg-white px-4 py-2 rounded-lg shadow-sm border border-yellow-100">
-                            <span class="text-xs text-gray-500 uppercase font-semibold">當前進度</span>
-                            <div class="text-xl font-bold text-yellow-600" id="initialProgress">0/10</div>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 text-sm">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left w-16">確認</th>
-                                    <th class="px-4 py-3 text-left">類別</th>
-                                    <th class="px-4 py-3 text-left">課程名稱</th>
-                                    <th class="px-4 py-3 text-left text-gray-500">詳情</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-100" id="initialCourseList"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB 3: COURSES -->
-            <div id="courses" class="tab-content space-y-6 animate-fade-in">
-                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 flex items-start">
-                    <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
-                    <div class="text-sm text-blue-800">
-                        <p class="font-bold">計分規則說明</p>
-                        <p>請依據實際完成的項目進行勾選，系統會自動加總分數並計算等級。雲端會即時儲存您的變更。</p>
-                    </div>
-                </div>
-                <div id="scored-courses-container" class="space-y-6">
-                    <!-- Dynamic Content -->
-                </div>
-            </div>
-
-             <!-- TAB 4: TEAM -->
-             <div id="team" class="tab-content space-y-6 animate-fade-in">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-5 border-b border-gray-100 bg-indigo-50/50 flex justify-between items-center">
-                        <div>
-                            <h3 class="font-bold text-lg text-indigo-900">團隊排行榜</h3>
-                            <p class="text-sm text-indigo-600 mt-1">互相激勵，共同成長</p>
-                        </div>
-                        <button onclick="window.firebaseApp.loadTeamData()" class="p-2 text-indigo-600 hover:bg-indigo-100 rounded-full transition" title="重新整理">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">排名</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">姓名</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">區域</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">等級</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">總分</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">總進度</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-100" id="team-rows"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
+            <div id="historyTimeline" class="flex-grow overflow-y-auto p-4 space-y-4 hide-scrollbar"></div>
         </div>
     </div>
 
-    <!-- Logic Script -->
-    <script>
-        // --- DATA DEFINITIONS ---
+    <!-- Toast 通知 -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 translate-y-24 opacity-0 transition-all duration-500 z-[120] bg-slate-800 text-white px-5 py-2.5 rounded-full shadow-2xl text-[10px] font-bold flex items-center gap-1.5">
+        <i data-lucide="check-circle" class="w-3 h-3 text-emerald-400"></i>
+        <span id="toastMsg"></span>
+    </div>
+</div>
 
-        // 1. Initial Courses (Non-scored) - 10 items
-        const initialCoursesData = [
-            { id: 'i1', category: '管理部', name: '繳交個人資料、填寫文件', detail: '30分 / 王淑英' },
-            { id: 'i2', category: '管理部', name: '辦公室環境介紹', detail: '20分 / 許鏸文' },
-            { id: 'i3', category: '資訊組', name: '資安課程 (含設定)', detail: '1小時 / 彭一平' },
-            { id: 'i4', category: '管理部', name: '員工手冊說明', detail: '50分 / 許鏸文' },
-            { id: 'i5', category: '管理部', name: '國貿常識', detail: '30分 / 許鏸文' },
-            { id: 'i6', category: '管理部', name: '震旦行操作教學', detail: '15分 / 許鏸文' },
-            { id: 'i7', category: '管理部', name: '4 週彈性工時', detail: '30分 / 林芳' },
-            { id: 'i8', category: '管理部', name: 'NDA', detail: '30分 / 林芳' },
-            { id: 'i9', category: '業務部', name: 'CRM 操作教學', detail: '30分 / 吳奕汶' },
-            { id: 'i10', category: '管理部', name: '估價單與成本分析', detail: '40分 / 許鏸文' }
-        ];
+<!-- Firebase SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 2. Scored Courses Logic
-        // Total Target: 487 Points.
-        // Composition: Lv1(4) + Lv2(153) + Lv3(80) + Lv4(225) + Growth(25) = 487.
-        
-        let courseData = [];
+    // 系統提供之環境變數 (Rule 1)
+    const firebaseConfig = JSON.parse(__firebase_config);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-tool-app';
 
-        // Helper to add courses
-        function addCourse(id, level, pts, name, desc, brand = null) {
-            courseData.push({ id, level, pts, name, desc, brand });
-        }
+    let tools = [];
+    let user = null;
 
-        // --- Lv 1 (Total 4) ---
-        addCourse('c1_1', '新手篇', 1, '勇於介紹自己(一)', 'Line自介');
-        addCourse('c1_2', '新手篇', 1, '勇於介紹自己(二)', '認識同事');
-        addCourse('c1_3', '新手篇', 1, '能夠使用CRM工具', 'Daily Report');
-        addCourse('c1_4', '新手篇', 1, '參與新手訓練課程', '完成初始介紹');
+    window.initIcons = () => { if (typeof lucide !== 'undefined') lucide.createIcons(); };
 
-        // --- Lv 2 (Total 153) ---
-        // Core: 6 pts
-        addCourse('c2_1', '理解篇', 3, '理解自己的公司', '利泓介紹');
-        addCourse('c2_2', '理解篇', 3, '觀摩其他人的模式', '陪同拜訪x4');
-        
-        // Brand Courses (To match CSV Brand Analysis counts)
-        // Milestone (Need 20 total across levels. Let's put 5 here worth 5 pts each = 25)
-        for(let i=1; i<=5; i++) addCourse(`c2_m_${i}`, '理解篇', 5, `Milestone 基礎課程 ${i}`, '產品線與技術', 'Milestone');
-        
-        // Labtech (Need 8 total. Put 3 here worth 5 pts = 15)
-        for(let i=1; i<=3; i++) addCourse(`c2_l_${i}`, '理解篇', 5, `Labtech 基礎課程 ${i}`, '冷卻系統/概論', 'Labtech');
-
-        // Analytik Jena (Need 17 total. Put 5 here worth 5 pts = 25)
-        for(let i=1; i<=5; i++) addCourse(`c2_a_${i}`, '理解篇', 5, `AJ 光譜儀基礎 ${i}`, 'AAS/ICP/EA', 'Analytik Jena');
-
-        // Applied Spectra (Need 6 total. Put 2 here worth 5 pts = 10)
-        for(let i=1; i<=2; i++) addCourse(`c2_as_${i}`, '理解篇', 5, `Applied Spectra 基礎 ${i}`, 'LIBS 技術', 'Applied Spectra');
-
-        // Metal Power (Need 5 total. Put 2 here worth 5 pts = 10)
-        for(let i=1; i<=2; i++) addCourse(`c2_mp_${i}`, '理解篇', 5, `Metal Power 基礎 ${i}`, 'OES 金屬分析', 'Metal Power');
-
-        // Current Lv2 Total: 6 + 25 + 15 + 25 + 10 + 10 = 91.
-        // Need 153. Gap = 62.
-        // Fill with "General Skills"
-        addCourse('c2_fill_1', '理解篇', 10, '實驗室安全規範', '化學防護');
-        addCourse('c2_fill_2', '理解篇', 10, '基本報價邏輯', '利潤計算');
-        addCourse('c2_fill_3', '理解篇', 10, '競爭對手分析', '競品調查');
-        addCourse('c2_fill_4', '理解篇', 10, '客戶產業分布', '產業別');
-        addCourse('c2_fill_5', '理解篇', 10, '標案流程理解', '採購網');
-        addCourse('c2_fill_6', '理解篇', 12, '軟體操作基礎', '儀器軟體'); // 12 pts to balance
-        // 91 + 62 = 153. OK.
-
-        // --- Lv 3 (Total 80) ---
-        addCourse('c3_1', '規劃篇', 10, '學習開發客戶(一)', '陌生電話');
-        addCourse('c3_2', '規劃篇', 10, '學習開發客戶(二)', '陌生拜訪');
-        addCourse('c3_3', '規劃篇', 10, '學習開發客戶(三)', '陌生信件');
-        addCourse('c3_4', '規劃篇', 10, '規劃銷售策略', '產品線規劃');
-        addCourse('c3_5', '規劃篇', 10, '規劃行銷策略', '行銷規劃');
-        addCourse('c3_6', '規劃篇', 10, '自我管理', '請假程序');
-        addCourse('c3_7', '規劃篇', 10, '區域管理', '客戶地圖');
-        addCourse('c3_8', '規劃篇', 10, '專案管理', '時程控管');
-
-        // --- Lv 4 (Total 225) ---
-        // Teamwork Core
-        addCourse('c4_1', '團隊合作篇', 15, '與售後團隊合作', '售後流程');
-
-        // Brand Advanced (Filling remaining counts)
-        // Milestone (Need 15 more. 3 courses x 15 = 45)
-        for(let i=1; i<=3; i++) addCourse(`c4_m_${i}`, '團隊合作篇', 15, `Milestone 進階裝機 ${i}`, '裝機實務', 'Milestone');
-        // Milestone Remaining Count check: 5(Lv2) + 3(Lv4) = 8. (CSV said 20 total. I'll add more fillers to hit count but check points)
-        // Actually, let's strictly follow points first.
-        
-        // Labtech (Need 5 more. 1 course x 15 = 15)
-        addCourse(`c4_l_1`, '團隊合作篇', 15, `Labtech 進階裝機`, '裝機實務', 'Labtech');
-
-        // Analytik Jena (Need 12 more. 3 courses x 15 = 45)
-        for(let i=1; i<=3; i++) addCourse(`c4_a_${i}`, '團隊合作篇', 15, `AJ 進階裝機/售後 ${i}`, '裝機與維修', 'Analytik Jena');
-
-        // Applied Spectra (Need 4 more. 1 course x 15 = 15)
-        addCourse(`c4_as_1`, '團隊合作篇', 15, `LIBS 進階應用`, '應用支援', 'Applied Spectra');
-
-        // Metal Power (Need 3 more. 1 course x 15 = 15)
-        addCourse(`c4_mp_1`, '團隊合作篇', 15, `OES 進階應用`, '應用支援', 'Metal Power');
-        
-        // Current Lv4 Points: 15 + 45 + 15 + 45 + 15 + 15 = 150.
-        // Need 225. Gap = 75.
-        // High Value Tasks
-        addCourse('c4_h_1', '團隊合作篇', 30, '內部講師認證', '擔任主講人');
-        addCourse('c4_h_2', '團隊合作篇', 30, '技術文件製作', '手冊中文化');
-        addCourse('c4_h_3', '團隊合作篇', 15, '跨部門客訴處理', '危機處理');
-        // 150 + 75 = 225. OK.
-
-        // Note: The "Brand Count" in analysis might be lower than CSV label if I don't add 0-point placeholders or split points further, 
-        // but for scoring logic, the Points are paramount. I will prioritize Points accuracy. 
-        // To fix Brand Counts for the table, I will add some "hidden" dummy counts logic or just map these existing ones.
-        // Let's assume the CSV "20 courses" meant chapters. I have mapped them to scored items.
-
-        // --- Self Growth (Total 25) ---
-        addCourse('cg_1', '自我成長', 5, '閱讀分享', '書籍心得');
-        addCourse('cg_2', '自我成長', 10, '外部課程', '研討會');
-        addCourse('cg_3', '自我成長', 10, '語言能力', '外語證明');
-
-        // 3. Levels
-        const levelThresholds = [
-            { level: 0, min: 0, max: 14, next: 15 },
-            { level: 1, min: 15, max: 64, next: 65 },
-            { level: 2, min: 65, max: 179, next: 180 },
-            { level: 3, min: 180, max: 349, next: 350 },
-            { level: 4, min: 350, max: 429, next: 430 },
-            { level: 5, min: 430, max: 9999, next: null }
-        ];
-
-        // 4. App State
-        window.appState = {
-            userInfo: { name: '', region: '', startDate: '' },
-            completedInitial: [],
-            completedCourses: [],
-            stats: { level: 0, totalScore: 0, progress: '0%' }
-        };
-
-        // --- UI LOGIC ---
-
-        function switchTab(tabId) {
-            // Update Title
-            const titles = {
-                'dashboard': '個人儀表板',
-                'initial': '初始課程 (必修)',
-                'courses': '課程選擇 (計分)',
-                'team': '全員進度表'
-            };
-            document.getElementById('page-title').innerText = titles[tabId];
-
-            // Tabs
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            
-            // Buttons
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active', 'bg-blue-50', 'text-blue-700'));
-            const btn = document.getElementById('btn-' + tabId);
-            btn.classList.add('active', 'bg-blue-50', 'text-blue-700');
-
-            if(tabId === 'team') window.firebaseApp.loadTeamData();
-        }
-
-        function updateInput(field, value) {
-            window.appState.userInfo[field] = value;
-            window.saveToCloud();
-        }
-
-        function toggleInitial(id) {
-            const list = window.appState.completedInitial;
-            if (list.includes(id)) window.appState.completedInitial = list.filter(x => x !== id);
-            else list.push(id);
-            
-            // Optimistic Update
-            renderInitialList();
-            window.saveToCloud();
-        }
-
-        function toggleCourse(id) {
-            const list = window.appState.completedCourses;
-            if (list.includes(id)) window.appState.completedCourses = list.filter(x => x !== id);
-            else list.push(id);
-            
-            // Optimistic Update
-            renderStatsAndAnalysis();
-            window.saveToCloud();
-        }
-
-        // --- CORE CALCULATION ---
-        window.calcStats = function() {
-            let score = 0;
-            courseData.forEach(c => {
-                if (window.appState.completedCourses.includes(c.id)) score += c.pts;
-            });
-
-            let lvl = 0;
-            for (let t of levelThresholds) {
-                if (score >= t.min) lvl = t.level;
-                else break;
-            }
-
-            const maxScore = 487;
-            const progress = Math.min(100, Math.round((score / maxScore) * 100)) + '%';
-            
-            window.appState.stats = { level: lvl, totalScore: score, progress: progress };
-            return { score, lvl, progress };
-        }
-
-        // --- RENDER FUNCTIONS ---
-        window.renderAll = function() {
-            // Restore Inputs
-            document.getElementById('userRegion').value = window.appState.userInfo.region || '';
-            document.getElementById('startDate').value = window.appState.userInfo.startDate || '';
-
-            renderInitialList();
-            renderStatsAndAnalysis();
-            renderCourseList();
-        }
-
-        function renderInitialList() {
-            const tbody = document.getElementById('initialCourseList');
-            tbody.innerHTML = '';
-            initialCoursesData.forEach(c => {
-                const checked = window.appState.completedInitial.includes(c.id);
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="px-4 py-3">
-                            <label class="custom-checkbox flex items-center cursor-pointer">
-                                <input type="checkbox" class="hidden" ${checked ? 'checked' : ''} onchange="toggleInitial('${c.id}')">
-                                <div class="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center transition ${checked ? 'bg-blue-600 border-blue-600' : 'bg-white'}">
-                                    <i class="fas fa-check text-white text-xs ${checked ? '' : 'hidden'}"></i>
-                                </div>
-                            </label>
-                        </td>
-                        <td class="px-4 py-3 text-sm text-gray-900 font-medium">${c.category}</td>
-                        <td class="px-4 py-3 text-sm text-gray-700">${c.name}</td>
-                        <td class="px-4 py-3 text-xs text-gray-500">${c.detail}</td>
-                    </tr>`;
-            });
-            document.getElementById('initialProgress').innerText = `${window.appState.completedInitial.length} / ${initialCoursesData.length}`;
-        }
-
-        function renderStatsAndAnalysis() {
-            const { score, lvl, progress } = window.calcStats();
-
-            // Stats Cards
-            document.getElementById('displayTotalScore').innerText = score;
-            document.getElementById('displayLevel').innerText = 'Lv ' + lvl;
-            document.getElementById('displayScoreRatio').innerText = progress;
-
-            // Level Bar
-            const currentLevelObj = levelThresholds.find(t => t.level === lvl);
-            if (currentLevelObj && currentLevelObj.next) {
-                const dist = currentLevelObj.next - score;
-                document.getElementById('displayDistToUpgrade').innerText = dist;
-                document.getElementById('nextLevelName').innerText = 'Lv ' + (lvl + 1);
-                
-                const range = currentLevelObj.next - currentLevelObj.min;
-                const p = Math.max(0, Math.min(100, ((score - currentLevelObj.min) / range) * 100));
-                document.getElementById('levelProgressBar').style.width = p + '%';
+    // 認證程序 (Rule 3)
+    const initAuth = async () => {
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
             } else {
-                document.getElementById('displayDistToUpgrade').innerText = 'MAX';
-                document.getElementById('levelProgressBar').style.width = '100%';
-                document.getElementById('nextLevelName').innerText = 'Max';
+                await signInAnonymously(auth);
             }
-
-            // Analysis Tables
-            const levels = ['新手篇', '理解篇', '規劃篇', '團隊合作篇', '自我成長'];
-            const levelPoints = { '新手篇':4, '理解篇':153, '規劃篇':80, '團隊合作篇':225, '自我成長':25 };
-            
-            // 1. Course Analysis
-            const cBody = document.getElementById('courseAnalysisBody');
-            cBody.innerHTML = '';
-            levels.forEach(lvlName => {
-                const earned = courseData.filter(c => c.level === lvlName && window.appState.completedCourses.includes(c.id))
-                                         .reduce((sum, c) => sum + c.pts, 0);
-                const total = levelPoints[lvlName];
-                const pct = Math.round((earned/total)*100);
-                
-                cBody.innerHTML += `
-                    <tr>
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900">${lvlName}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">${earned} / ${total}</td>
-                        <td class="px-6 py-4 text-sm">
-                            <div class="flex items-center">
-                                <span class="mr-2 text-xs w-8 text-right">${pct}%</span>
-                                <div class="w-24 bg-gray-100 rounded-full h-1.5">
-                                    <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>`;
-            });
-
-            // 2. Brand Analysis
-            const bBody = document.getElementById('brandAnalysisBody');
-            bBody.innerHTML = '';
-            // Using CSV targets for "Course Count" not points
-            const brands = [
-                { name: 'Milestone', total: 20 },
-                { name: 'Labtech', total: 8 },
-                { name: 'Analytik Jena', total: 17 },
-                { name: 'Applied Spectra', total: 6 },
-                { name: 'Metal Power', total: 5 }
-            ];
-            
-            brands.forEach(b => {
-                const done = courseData.filter(c => c.brand === b.name && window.appState.completedCourses.includes(c.id)).length;
-                // Cap percentage at 100 even if data is slightly off
-                const pct = Math.min(100, Math.round((done / b.total) * 100));
-                
-                bBody.innerHTML += `
-                    <tr>
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900">${b.name}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">${done} / ${b.total}</td>
-                        <td class="px-6 py-4 text-sm">
-                            <div class="flex items-center">
-                                <div class="w-full bg-gray-100 rounded-full h-1.5">
-                                    <div class="bg-purple-500 h-1.5 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>`;
-            });
+        } catch (e) {
+            console.error("Firebase Auth Error", e);
+            updateConnectionStatus(false);
         }
+    };
 
-        function renderCourseList() {
-            const container = document.getElementById('scored-courses-container');
-            container.innerHTML = '';
-            
-            const levels = ['新手篇', '理解篇', '規劃篇', '團隊合作篇', '自我成長'];
-            const levelPoints = { '新手篇':4, '理解篇':153, '規劃篇':80, '團隊合作篇':225, '自我成長':25 };
+    onAuthStateChanged(auth, (u) => {
+        user = u;
+        if (u) {
+            updateConnectionStatus(true);
+            startSync();
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+    });
 
-            levels.forEach(lvlName => {
-                const items = courseData.filter(c => c.level === lvlName);
-                const earned = items.filter(c => window.appState.completedCourses.includes(c.id)).reduce((s,c)=>s+c.pts,0);
-                const total = levelPoints[lvlName];
-                
-                const section = document.createElement('div');
-                section.className = "bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden";
-                section.innerHTML = `
-                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.fa-chevron-down').classList.toggle('rotate-180')">
-                        <div class="flex items-center">
-                             <div class="bg-blue-100 text-blue-700 w-8 h-8 rounded-lg flex items-center justify-center mr-3 font-bold text-sm">
-                                ${lvlName.substring(0,1)}
-                             </div>
-                             <div>
-                                <h3 class="font-bold text-gray-800">${lvlName}</h3>
-                                <p class="text-xs text-gray-500">已獲得 ${earned} / ${total} 分</p>
-                             </div>
+    function updateConnectionStatus(connected) {
+        const dot = document.getElementById('statusDot');
+        const text = document.getElementById('statusText');
+        if (connected) {
+            dot.className = "w-1 h-1 bg-emerald-500 rounded-full mr-1 animate-pulse";
+            text.innerText = "跨區同步中";
+            text.className = "text-emerald-600";
+        } else {
+            dot.className = "w-1 h-1 bg-red-500 rounded-full mr-1";
+            text.innerText = "連線失敗";
+            text.className = "text-red-600";
+        }
+    }
+
+    // 啟動即時監聽 (Rule 1 & 2)
+    function startSync() {
+        if (!user) return;
+        // 使用正確的路徑架構以符合權限規則
+        const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'tools');
+        onSnapshot(colRef, (snapshot) => {
+            tools = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            tools.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            window.renderTools();
+        }, (err) => {
+            console.error("Firestore Permission Error:", err);
+            showToast("同步失敗：權限不足");
+        });
+    }
+
+    window.renderTools = () => {
+        const container = document.getElementById('toolListContainer');
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const officeF = document.getElementById('officeFilter').value;
+        const statusF = document.getElementById('statusFilter').value;
+        container.innerHTML = '';
+
+        const filtered = tools.filter(t => {
+            const cal = getCalibrationStatus(t);
+            const matchS = t.name.toLowerCase().includes(searchTerm) || t.sn.toLowerCase().includes(searchTerm) || (t.manager && t.manager.toLowerCase().includes(searchTerm)) || (t.currentBorrower && t.currentBorrower.toLowerCase().includes(searchTerm));
+            const matchO = officeF === 'all' || t.office === officeF;
+            let matchSt = true;
+            if (statusF === 'borrowed') matchSt = t.isBorrowed;
+            else if (statusF === 'in-stock') matchSt = !t.isBorrowed;
+            else if (statusF === 'warning') matchSt = cal.level === 'warning';
+            else if (statusF === 'expired') matchSt = cal.level === 'expired';
+            return matchS && matchO && matchSt;
+        });
+
+        document.getElementById('noData').style.display = filtered.length === 0 ? 'flex' : 'none';
+
+        filtered.forEach(t => {
+            const cal = getCalibrationStatus(t);
+            const item = document.createElement('div');
+            item.className = `tool-item ${t.isBorrowed ? 'bg-amber-50/20' : ''}`;
+            item.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex-grow pr-4">
+                        <h4 class="font-bold text-slate-800 leading-tight text-xs tracking-tight">${t.name}</h4>
+                        <div class="flex items-center gap-1 mt-1">
+                            <i data-lucide="shield-check" class="w-2.5 h-2.5 text-indigo-500"></i>
+                            <span class="text-[8px] font-bold text-indigo-600 leading-none">管理人：${t.manager || '未設定'}</span>
                         </div>
-                        <i class="fas fa-chevron-down text-gray-400 transition-transform duration-300"></i>
+                        <p class="text-[8px] font-mono text-slate-400 mt-1 leading-none uppercase tracking-tighter">${t.model} · SN: ${t.sn}</p>
                     </div>
-                    <div class="${earned === total ? 'hidden' : ''}"> <!-- Auto collapse completed sections optional, keeping open for now but logic is easy -->
-                        <table class="min-w-full divide-y divide-gray-100">
-                            <tbody class="divide-y divide-gray-50">
-                                ${items.map(c => `
-                                    <tr class="hover:bg-blue-50/30 transition group">
-                                        <td class="px-4 py-3 w-12 text-center">
-                                            <label class="custom-checkbox inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="hidden" ${window.appState.completedCourses.includes(c.id) ? 'checked' : ''} onchange="toggleCourse('${c.id}')">
-                                                <div class="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center transition ${window.appState.completedCourses.includes(c.id) ? 'bg-blue-600 border-blue-600' : 'bg-white group-hover:border-blue-400'}">
-                                                    <i class="fas fa-check text-white text-xs ${window.appState.completedCourses.includes(c.id)?'':'hidden'}"></i>
-                                                </div>
-                                            </label>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            <div class="flex flex-col sm:flex-row sm:items-center">
-                                                ${c.brand ? `<span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 mr-2 mb-1 sm:mb-0 w-max">${c.brand}</span>` : ''}
-                                                <span class="text-sm font-medium text-gray-900">${c.name}</span>
-                                            </div>
-                                            <p class="text-xs text-gray-500 mt-0.5 sm:hidden">${c.desc}</p>
-                                        </td>
-                                        <td class="px-4 py-3 text-sm text-gray-500 hidden sm:table-cell">${c.desc}</td>
-                                        <td class="px-4 py-3 text-right">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                ${c.pts} 分
-                                            </span>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
+                    <div class="flex flex-row gap-1 items-start flex-shrink-0 pr-1">
+                        <span class="status-badge bg-slate-100 text-slate-500"><i data-lucide="map-pin" class="w-1.5 h-1.5 mr-0.5 text-slate-400"></i> ${t.office}</span>
+                        ${t.isBorrowed ? `<span class="status-badge bg-amber-500 text-white shadow-sm">持有: ${t.currentBorrower}</span>` : `<span class="status-badge bg-emerald-500 text-white shadow-sm">在庫</span>`}
                     </div>
-                `;
-                container.appendChild(section);
-            });
-        }
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-slate-50 mt-1">
+                    <div class="flex flex-col">
+                        <span class="text-[7px] text-slate-400 font-bold uppercase tracking-tighter">下次校正</span>
+                        <span class="text-[9px] font-bold ${cal.textClass} leading-tight">${t.needsCalibration ? t.calibrationDate : '---'}</span>
+                    </div>
+                    <div class="flex gap-1.5 pr-1">
+                        <button onclick="openBorrowModal('${t.id}')" class="p-2.5 ${t.isBorrowed ? 'bg-amber-100 text-amber-600' : 'bg-indigo-50 text-indigo-600'} rounded-lg active:scale-90 transition-transform"><i data-lucide="${t.isBorrowed ? 'repeat' : 'share-2'}" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="openEditModal('${t.id}')" class="p-2.5 bg-slate-50 text-slate-500 rounded-lg active:scale-90 transition-transform"><i data-lucide="edit-2" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="viewHistory('${t.id}')" class="p-2.5 text-slate-300 hover:text-slate-600"><i data-lucide="more-horizontal" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                </div>`;
+            container.appendChild(item);
+        });
+        updateStats();
+        window.initIcons();
+    };
 
-        // --- EXPORT ---
-        window.exportToExcel = function() {
-            const { score, lvl, progress } = window.calcStats();
-            const u = window.appState.userInfo;
-            const dateStr = new Date().toISOString().split('T')[0];
+    function getCalibrationStatus(t) {
+        if (!t.needsCalibration || !t.calibrationDate) return { textClass: 'text-slate-300', level: 'none' };
+        const diff = Math.ceil((new Date(t.calibrationDate) - new Date().setHours(0,0,0,0)) / 86400000);
+        if (diff < 0) return { textClass: 'text-red-600', level: 'expired' };
+        if (diff <= 60) return { textClass: 'text-amber-600 font-bold', level: 'warning' };
+        return { textClass: 'text-slate-500', level: 'ok' };
+    }
 
-            // Sheet 1: Summary
-            const summaryData = [
-                ["教育訓練進度表", ""],
-                ["匯出日期", dateStr],
-                ["", ""],
-                ["學員姓名", u.name || "未填寫"],
-                ["區域", u.region || "未填寫"],
-                ["到職日", u.startDate || "未填寫"],
-                ["", ""],
-                ["當前等級", `Lv ${lvl}`],
-                ["總得分", score],
-                ["總進度", progress]
-            ];
-            const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+    function updateStats() {
+        const total = tools.length;
+        const borrowed = tools.filter(t => t.isBorrowed).length;
+        let w = 0, e = 0;
+        tools.forEach(t => {
+            const s = getCalibrationStatus(t);
+            if(s.level === 'warning') w++;
+            if(s.level === 'expired') e++;
+        });
+        document.getElementById('statTotal').innerText = total;
+        document.getElementById('statBorrowed').innerText = borrowed;
+        document.getElementById('statWarning').innerText = w;
+        document.getElementById('statExpired').innerText = e;
+    }
 
-            // Sheet 2: Details
-            const header = ["類別", "等級", "品牌", "課程名稱", "分數", "狀態", "說明"];
-            const rows = [];
-            
-            // Initial
-            initialCoursesData.forEach(c => {
-                rows.push(["初始必修", "-", "-", c.name, "0", window.appState.completedInitial.includes(c.id) ? "已完成" : "未完成", c.detail]);
-            });
-            // Scored
-            courseData.forEach(c => {
-                rows.push(["計分課程", c.level, c.brand||"-", c.name, c.pts, window.appState.completedCourses.includes(c.id) ? "已完成" : "未完成", c.desc]);
-            });
+    window.handleSaveTool = async (e) => {
+        e.preventDefault();
+        const f = new FormData(e.target);
+        const id = document.getElementById('editToolId').value;
+        const now = new Date().toLocaleString('zh-TW');
+        const data = { name: f.get('name'), manager: f.get('manager'), model: f.get('model'), sn: f.get('sn'), office: f.get('office'), needsCalibration: f.get('needsCalibration') === 'on', calibrationDate: f.get('calibrationDate') || null };
+        try {
+            if (id) {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tools', id);
+                const tool = tools.find(t => t.id === id);
+                await updateDoc(docRef, { ...data, history: [{ type: 'edit', date: now, msg: `變更資料 (${data.office} 管理: ${data.manager})` }, ...tool.history] });
+                showToast("已更新");
+            } else {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tools'), { ...data, createdAt: Date.now(), isBorrowed: false, currentBorrower: '', history: [{ type: 'create', date: now, msg: `入庫建檔 (${data.office} 管理: ${data.manager})` }] });
+                showToast("已建檔");
+            }
+            closeModal('toolModal');
+        } catch (err) { showToast("存檔失敗"); }
+    };
 
-            const ws2 = XLSX.utils.aoa_to_sheet([header, ...rows]);
+    window.handleBorrowReturn = async () => {
+        const id = document.getElementById('borrowToolId').value;
+        const tool = tools.find(t => t.id === id);
+        const now = new Date().toLocaleString('zh-TW');
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tools', id);
+        try {
+            if (!tool.isBorrowed) {
+                const name = document.getElementById('borrowerName').value.trim();
+                if (!name) return showToast('請填寫姓名');
+                await updateDoc(docRef, { isBorrowed: true, currentBorrower: name, history: [{ type: 'borrow', date: now, msg: `${name} 借出` }, ...tool.history] });
+                showToast(`已借出`);
+            } else {
+                const isTransfer = document.getElementById('isTransfer').checked;
+                const returnOffice = document.getElementById('returnLocation').value;
+                const oldName = tool.currentBorrower;
+                if (isTransfer) {
+                    const newName = document.getElementById('newBorrowerName').value.trim();
+                    if (!newName) return showToast('請填寫接收人');
+                    await updateDoc(docRef, { currentBorrower: newName, office: returnOffice, history: [{ type: 'transfer', date: now, msg: `由 ${oldName} 轉交給 ${newName} (${returnOffice})` }, ...tool.history] });
+                    showToast(`已轉交`);
+                } else {
+                    await updateDoc(docRef, { isBorrowed: false, currentBorrower: "", office: returnOffice, history: [{ type: 'return', date: now, msg: `${oldName} 歸還至 ${returnOffice}` }, ...tool.history] });
+                    showToast(`已歸還`);
+                }
+            }
+            document.getElementById('borrowerName').value = ""; document.getElementById('newBorrowerName').value = ""; closeModal('borrowModal');
+        } catch (err) { showToast("提交失敗"); }
+    };
 
-            // Book
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws1, "總覽");
-            XLSX.utils.book_append_sheet(wb, ws2, "課程明細");
+    window.toggleTransferUI = (cb) => {
+        document.getElementById('transferInputWrapper').classList.toggle('hidden', !cb.checked);
+        document.getElementById('borrowConfirmBtn').innerText = cb.checked ? "確認轉交" : "確認歸還";
+    };
 
-            XLSX.writeFile(wb, `教育訓練_${u.name || 'User'}_${dateStr}.xlsx`);
-        }
+    window.deleteTool = async (id) => {
+        if (!confirm('永久刪除？')) return;
+        try {
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tools', id));
+            closeModal('historyModal'); showToast('已移除');
+        } catch (err) { showToast("刪除失敗"); }
+    };
 
-    </script>
+    window.openAddModal = () => { document.getElementById('modalTitle').innerText = "資產建檔"; document.getElementById('editToolId').value = ""; document.getElementById('toolForm').reset(); window.openModal('toolModal'); };
+    window.openEditModal = (id) => { const t = tools.find(x => x.id === id); document.getElementById('modalTitle').innerText = "資產編輯"; document.getElementById('editToolId').value = t.id; const f = document.getElementById('toolForm'); f.name.value = t.name; f.manager.value = t.manager || ""; f.model.value = t.model; f.sn.value = t.sn; f.office.value = t.office; f.needsCalibration.checked = t.needsCalibration; f.calibrationDate.value = t.calibrationDate || ""; window.toggleDateInput(f.needsCalibration); window.openModal('toolModal'); };
+    window.openBorrowModal = (id) => { const t = tools.find(x => x.id === id); document.getElementById('borrowToolId').value = id; const isB = t.isBorrowed; document.getElementById('borrowTitle').innerText = isB ? "狀態變更 / 歸還" : "借出登記"; document.getElementById('borrowSub').innerText = isB ? `持有：${t.currentBorrower}` : `登記：${t.name}`; document.getElementById('borrowerInputWrapper').classList.toggle('hidden', isB); document.getElementById('returnOptionsWrapper').classList.toggle('hidden', !isB); const tfCheckbox = document.getElementById('isTransfer'); tfCheckbox.checked = false; window.toggleTransferUI(tfCheckbox); if (isB) document.getElementById('returnLocation').value = t.office; const btn = document.getElementById('borrowConfirmBtn'); if(!isB) { btn.innerText = "確認借出"; btn.className = "w-full py-3.5 bg-indigo-600 text-white rounded-xl font-bold shadow-md text-sm"; } window.openModal('borrowModal'); };
+    window.viewHistory = (id) => { const t = tools.find(x => x.id === id); const list = document.getElementById('historyTimeline'); list.innerHTML = `<button onclick="deleteTool('${t.id}')" class="w-full py-2 mb-4 bg-red-50 text-red-600 rounded-xl font-bold text-[10px] border border-red-100 uppercase tracking-widest">永久移除資料</button><div class="space-y-4"></div>`; const container = list.querySelector('.space-y-4'); if(t.history) { t.history.forEach(log => { const item = document.createElement('div'); item.className = "flex gap-3 relative"; let color = "bg-slate-300"; if(log.type === 'borrow') color = "bg-amber-500"; if(log.type === 'return') color = "bg-emerald-500"; if(log.type === 'transfer') color = "bg-indigo-500"; item.innerHTML = `<div class="w-1.5 h-1.5 rounded-full ${color} mt-1 flex-shrink-0 z-10 shadow-sm"></div><div class="pb-1 border-l border-slate-100 pl-4 ml-[-14px]"><p class="text-[7px] font-bold text-slate-400 tracking-tighter">${log.date}</p><p class="text-[10px] font-bold text-slate-700 leading-snug">${log.msg}</p></div>`; container.appendChild(item); }); } window.openModal('historyModal'); window.initIcons(); };
+    window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
+    window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
+    window.toggleDateInput = (cb) => document.getElementById('calibrationDateContainer').style.display = cb.checked ? 'block' : 'none';
+    function showToast(msg) { const t = document.getElementById('toast'); const m = document.getElementById('toastMsg'); if (m) m.innerText = msg; if (t) { t.classList.remove('translate-y-24', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-24', 'opacity-0'), 2500); } }
+
+    initAuth();
+    window.initIcons();
+</script>
+
 </body>
 </html>
