@@ -2,144 +2,186 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>工程師工具管理系統 - 雲端同步版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; }
-        .status-badge { @apply px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f1f5f9; font-size: 14px; }
+        .status-badge { @apply px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider; }
         .row-borrowed { @apply bg-amber-50/40; }
         .loading-overlay { @apply fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center text-white font-bold flex-col gap-4; }
+        /* 履歷時間軸樣式 */
+        .timeline-container { position: relative; padding-left: 1.5rem; }
+        .timeline-line { position: absolute; left: 5px; top: 5px; bottom: 5px; width: 2px; background-color: #e2e8f0; }
+        .timeline-item { position: relative; margin-bottom: 1rem; }
+        .timeline-dot { position: absolute; left: -24px; top: 4px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid white; z-index: 10; }
     </style>
 </head>
 <body class="text-slate-800">
 
 <div id="loadingOverlay" class="loading-overlay">
-    <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
-    <p>正在連線至雲端資料庫...</p>
+    <div class="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent"></div>
+    <p class="text-sm">正在連線至雲端資料庫...</p>
 </div>
 
 <div id="app" class="min-h-screen flex flex-col">
-    <nav class="bg-slate-900 text-white shadow-xl p-4 sticky top-0 z-40">
+    <nav class="bg-slate-900 text-white shadow-xl p-3 sticky top-0 z-40">
         <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-3 cursor-pointer" onclick="location.reload()">
-                <div class="bg-indigo-600 p-2 rounded-lg"><i data-lucide="wrench" class="w-6 h-6 text-white"></i></div>
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="location.reload()">
+                <div class="bg-indigo-600 p-1.5 rounded-lg"><i data-lucide="wrench" class="w-5 h-5 text-white"></i></div>
                 <div>
-                    <h1 class="text-xl font-bold leading-tight">雲端資產管理系統</h1>
-                    <p class="text-[10px] text-slate-400 tracking-widest uppercase">Office Asset Sync</p>
+                    <h1 class="text-base font-bold leading-tight">雲端資產管理</h1>
+                    <p class="text-[9px] text-slate-400 tracking-widest uppercase">Office Asset Sync</p>
                 </div>
             </div>
-            <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center space-x-2 transition-all shadow-lg shadow-indigo-500/20">
-                <i data-lucide="plus" class="w-5 h-5"></i>
+            <button onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1 shadow-lg shadow-indigo-500/20 transition-all">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                 <span>新增工具</span>
             </button>
         </div>
     </nav>
 
-    <div class="container mx-auto p-4 md:p-8 flex-grow">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 text-center">
-                <p class="text-slate-500 text-sm">總工具數</p>
-                <h3 id="statTotal" class="text-3xl font-bold mt-1">0</h3>
+    <div class="container mx-auto p-3 md:p-6 flex-grow">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4 text-center">
+            <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200">
+                <p class="text-slate-500 text-[10px] uppercase font-bold">總工具</p>
+                <h3 id="statTotal" class="text-xl font-bold mt-0.5">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-l-indigo-500 text-center">
-                <p class="text-slate-500 text-sm">外借中</p>
-                <h3 id="statBorrowed" class="text-3xl font-bold mt-1 text-indigo-600">0</h3>
+            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-l-indigo-500">
+                <p class="text-slate-500 text-[10px] uppercase font-bold">外借中</p>
+                <h3 id="statBorrowed" class="text-xl font-bold mt-0.5 text-indigo-600">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-l-amber-500 text-center">
-                <p class="text-slate-500 text-sm">校正預警</p>
-                <h3 id="statWarning" class="text-3xl font-bold mt-1 text-amber-500">0</h3>
+            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-l-amber-500">
+                <p class="text-slate-500 text-[10px] uppercase font-bold">預警</p>
+                <h3 id="statWarning" class="text-xl font-bold mt-0.5 text-amber-500">0</h3>
             </div>
-            <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-l-red-500 text-center">
-                <p class="text-slate-500 text-sm">校正過期</p>
-                <h3 id="statExpired" class="text-3xl font-bold mt-1 text-red-500">0</h3>
+            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-l-red-500">
+                <p class="text-slate-500 text-[10px] uppercase font-bold">過期</p>
+                <h3 id="statExpired" class="text-xl font-bold mt-0.5 text-red-500">0</h3>
             </div>
         </div>
 
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-6 flex flex-wrap gap-4 items-center">
-            <div class="relative flex-grow min-w-[280px]">
-                <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
-                <input type="text" id="searchInput" oninput="renderTools()" placeholder="搜尋名稱、型號、序號、借用人..." class="w-full pl-12 pr-4 py-3 rounded-xl bg-slate-50 outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 mb-4 flex flex-wrap gap-2 items-center">
+            <div class="relative flex-grow min-w-[200px]">
+                <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"></i>
+                <input type="text" id="searchInput" oninput="renderTools()" placeholder="搜尋..." class="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-50 text-xs outline-none focus:ring-2 focus:ring-indigo-500 transition-all border border-transparent focus:border-indigo-500">
             </div>
-            <select id="officeFilter" onchange="renderTools()" class="px-4 py-3 rounded-xl bg-slate-50 outline-none">
-                <option value="all">全區辦公室</option>
-                <option value="台北">台北辦公室</option>
-                <option value="台中">台中辦公室</option>
-                <option value="高雄">高雄辦公室</option>
+            <select id="officeFilter" onchange="renderTools()" class="px-2 py-2 rounded-lg bg-slate-50 text-xs font-bold outline-none border border-slate-200">
+                <option value="all">全區</option>
+                <option value="台北">台北</option>
+                <option value="台中">台中</option>
+                <option value="高雄">高雄</option>
             </select>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left">
+                <table class="w-full text-left table-auto">
                     <thead>
-                        <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-400 text-[11px] font-black uppercase tracking-widest">
-                            <th class="p-5">工具資訊</th>
-                            <th class="p-5">所在地</th>
-                            <th class="p-5">校正期</th>
-                            <th class="p-5">當前狀態</th>
-                            <th class="p-5 text-center">操作</th>
+                        <tr class="bg-slate-50 border-b text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                            <th class="p-3">工具資訊</th>
+                            <th class="p-3">所在地</th>
+                            <th class="p-3">校正</th>
+                            <th class="p-3">狀態</th>
+                            <th class="p-3 text-center">操作</th>
                         </tr>
                     </thead>
-                    <tbody id="toolTableBody" class="divide-y divide-slate-100"></tbody>
+                    <tbody id="toolTableBody" class="divide-y divide-slate-100 text-[13px]"></tbody>
                 </table>
             </div>
-            <div id="noData" class="hidden p-20 text-center text-slate-400 font-medium">目前尚無資料</div>
+            <div id="noData" class="hidden p-10 text-center text-slate-400 text-xs">查無相關資料</div>
         </div>
     </div>
 
-    <div id="toolModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
-            <div class="p-6 bg-slate-50 border-b flex justify-between items-center">
-                <h2 id="modalTitle" class="text-xl font-bold">新增設備資產</h2>
-                <button onclick="closeModal('toolModal')" class="p-2 hover:bg-slate-200 rounded-full"><i data-lucide="x"></i></button>
-            </div>
-            <form id="toolForm" onsubmit="handleSaveTool(event)" class="p-8 space-y-5">
-                <input type="hidden" id="editToolId">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2">
-                        <label class="block text-xs font-bold text-slate-500 mb-2">工具名稱</label>
-                        <input type="text" name="name" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none">
-                    </div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-2">型號</label><input type="text" name="model" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none"></div>
-                    <div><label class="block text-xs font-bold text-slate-500 mb-2">序號 (S/N)</label><input type="text" name="sn" required class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none"></div>
-                </div>
+    <div id="historyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[70] p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden h-[70vh] flex flex-col">
+            <div class="p-4 bg-indigo-50 border-b flex justify-between items-center">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-2">所屬辦公室</label>
-                    <select name="office" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50">
-                        <option value="台北">台北辦公室</option>
-                        <option value="台中">台中辦公室</option>
-                        <option value="高雄">高雄辦公室</option>
-                    </select>
+                    <h2 class="text-sm font-bold text-indigo-900">資產完整履歷</h2>
+                    <p id="historyToolName" class="text-[10px] text-indigo-600 font-medium"></p>
                 </div>
-                <div class="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="text-sm font-bold text-slate-700">啟用校正追蹤</label>
-                        <input type="checkbox" id="needsCalibration" name="needsCalibration" onchange="toggleDateInput(this)" checked class="w-5 h-5 rounded border-slate-300">
-                    </div>
-                    <div id="calibrationDateContainer">
-                        <input type="date" name="calibrationDate" id="calibrationDateInput" class="w-full px-4 py-2.5 rounded-lg border border-slate-200">
-                    </div>
+                <button onclick="closeModal('historyModal')" class="p-1.5 hover:bg-indigo-100 rounded-full text-indigo-900"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-grow bg-white">
+                <div class="timeline-container text-xs">
+                    <div class="timeline-line"></div>
+                    <div id="historyList"></div>
                 </div>
-                <div class="pt-4 flex space-x-3">
-                    <button type="button" onclick="closeModal('toolModal')" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold">取消</button>
-                    <button type="submit" class="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold">儲存變更</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <div id="borrowModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-[60] p-4">
-        <div class="bg-white rounded-3xl w-full max-w-sm shadow-2xl p-8 text-center">
-            <h2 id="borrowTitle" class="text-2xl font-bold mb-2">工具外借</h2>
-            <p id="borrowSub" class="text-slate-500 mb-6"></p>
+        <div class="bg-white rounded-2xl w-full max-w-xs shadow-2xl p-6 overflow-hidden">
+            <h2 id="borrowTitle" class="text-base font-bold mb-1 text-center"></h2>
+            <p id="borrowSub" class="text-slate-500 mb-4 text-center text-[11px]"></p>
             <input type="hidden" id="borrowToolId">
-            <div id="borrowerInputWrapper" class="mb-6"><input type="text" id="borrowerName" placeholder="工程師姓名" class="w-full px-4 py-4 rounded-xl border-2 border-slate-100 text-center text-lg font-bold outline-none focus:border-indigo-500"></div>
-            <div id="returnConfirm" class="hidden mb-8 p-4 bg-emerald-50 rounded-2xl text-emerald-800 font-bold">確認工具已歸還？</div>
-            <button onclick="handleBorrowReturn()" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold mb-3">確認提交</button>
-            <button onclick="closeModal('borrowModal')" class="w-full text-slate-400 font-medium">取消</button>
+            <div id="borrowView">
+                <input type="text" id="borrowerName" placeholder="填寫借用人姓名" class="w-full px-3 py-3 rounded-xl border-2 text-center text-base font-bold outline-none focus:border-indigo-500">
+            </div>
+            <div id="returnView" class="hidden space-y-4 text-xs">
+                <div class="flex gap-1 p-1 bg-slate-100 rounded-lg">
+                    <button onclick="setReturnMode('return')" id="modeBtnReturn" class="flex-1 py-1.5 rounded-md font-bold transition-all">歸還</button>
+                    <button onclick="setReturnMode('transfer')" id="modeBtnTransfer" class="flex-1 py-1.5 rounded-md font-bold transition-all">轉交</button>
+                </div>
+                <div id="returnLocationArea">
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">歸還至辦公室</label>
+                    <select id="returnOffice" class="w-full px-3 py-2 rounded-lg border font-bold outline-none"><option value="台北">台北</option><option value="台中">台中</option><option value="高雄">高雄</option></select>
+                </div>
+                <div id="transferUserArea" class="hidden">
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">轉交給工程師</label>
+                    <input type="text" id="transferName" placeholder="接收人姓名" class="w-full px-3 py-2 rounded-lg border text-center font-bold outline-none">
+                </div>
+            </div>
+            <div class="mt-6 space-y-2">
+                <button onclick="handleBorrowReturn()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm shadow-md">確認提交</button>
+                <button onclick="closeModal('borrowModal')" class="w-full text-slate-400 font-medium text-xs py-1">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toolModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b flex justify-between items-center">
+                <h2 id="modalTitle" class="text-sm font-bold">資產資料編輯</h2>
+                <button onclick="closeModal('toolModal')" class="p-1.5 hover:bg-slate-200 rounded-full"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <form id="toolForm" onsubmit="handleSaveTool(event)" class="p-5 space-y-3 text-xs">
+                <input type="hidden" id="editToolId">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2">
+                        <label class="block font-bold text-slate-500 mb-1">工具名稱</label>
+                        <input type="text" name="name" required class="w-full px-3 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-indigo-500/20">
+                    </div>
+                    <div><label class="block font-bold text-slate-500 mb-1">型號</label><input type="text" name="model" required class="w-full px-3 py-2 rounded-lg border outline-none"></div>
+                    <div><label class="block font-bold text-slate-500 mb-1">序號</label><input type="text" name="sn" required class="w-full px-3 py-2 rounded-lg border outline-none"></div>
+                    <div class="col-span-2">
+                        <label class="block font-bold text-indigo-600 mb-1">負責人</label>
+                        <input type="text" name="owner" required class="w-full px-3 py-2 rounded-lg border-2 border-indigo-50 outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-500 mb-1">所在地</label>
+                    <select name="office" class="w-full px-3 py-2 rounded-lg border bg-slate-50 font-bold">
+                        <option value="台北">台北</option><option value="台中">台中</option><option value="高雄">高雄</option>
+                    </select>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="font-bold text-slate-700">啟用校正追蹤</label>
+                        <input type="checkbox" id="needsCalibration" name="needsCalibration" onchange="toggleDateInput(this)" checked class="w-4 h-4">
+                    </div>
+                    <div id="calibrationDateContainer">
+                        <input type="date" name="calibrationDate" id="calibrationDateInput" class="w-full px-3 py-1.5 rounded border">
+                    </div>
+                </div>
+                <div class="pt-2 flex gap-2">
+                    <button type="button" onclick="closeModal('toolModal')" class="flex-1 py-2.5 bg-slate-100 rounded-xl font-bold">取消</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl font-bold">儲存</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -165,15 +207,10 @@
     const appId = 'office-tool-sync';
 
     let tools = [];
+    let returnMode = 'return';
 
     signInAnonymously(auth).catch(err => console.error("Auth Error", err));
-
-    onAuthStateChanged(auth, (u) => {
-        if (u) {
-            startSync();
-            document.getElementById('loadingOverlay').classList.add('hidden');
-        }
-    });
+    onAuthStateChanged(auth, u => { if (u) { startSync(); document.getElementById('loadingOverlay').classList.add('hidden'); } });
 
     function startSync() {
         const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'tools');
@@ -191,7 +228,10 @@
         tbody.innerHTML = '';
 
         const filtered = tools.filter(tool => {
-            const matchesSearch = tool.name.toLowerCase().includes(searchTerm) || tool.sn.toLowerCase().includes(searchTerm) || (tool.currentBorrower && tool.currentBorrower.toLowerCase().includes(searchTerm));
+            const matchesSearch = tool.name.toLowerCase().includes(searchTerm) || 
+                                tool.sn.toLowerCase().includes(searchTerm) || 
+                                (tool.owner && tool.owner.toLowerCase().includes(searchTerm)) ||
+                                (tool.currentBorrower && tool.currentBorrower.toLowerCase().includes(searchTerm));
             const matchesOffice = officeFilter === 'all' || tool.office === officeFilter;
             return matchesSearch && matchesOffice;
         });
@@ -206,14 +246,25 @@
             row.className += " hover:bg-slate-50 transition-all border-b";
 
             row.innerHTML = `
-                <td class="p-5 font-bold">${tool.name}<div class="text-[10px] text-slate-400 uppercase">SN: ${tool.sn}</div></td>
-                <td class="p-5"><span class="text-xs font-bold bg-slate-100 px-2 py-1 rounded">${tool.office}</span></td>
-                <td class="p-5"><div class="text-sm ${cal.textClass}">${tool.needsCalibration ? tool.calibrationDate : '---'}</div><div class="mt-1">${cal.badge}</div></td>
-                <td class="p-5">${tool.isBorrowed ? `<span class="status-badge bg-amber-500 text-white">外借: ${tool.currentBorrower}</span>` : `<span class="status-badge bg-emerald-500 text-white">在庫</span>`}</td>
-                <td class="p-5 text-center">
-                    <button onclick="openBorrowModal('${tool.id}')" class="p-2 text-indigo-600"><i data-lucide="${tool.isBorrowed ? 'rotate-ccw' : 'share'}"></i></button>
-                    <button onclick="openEditModal('${tool.id}')" class="p-2 text-slate-600"><i data-lucide="edit-3"></i></button>
-                    <button onclick="deleteTool('${tool.id}')" class="p-2 text-red-300"><i data-lucide="trash-2"></i></button>
+                <td class="p-3">
+                    <div class="font-bold text-slate-900 leading-tight">${tool.name}</div>
+                    <div class="text-[9px] text-slate-400 font-mono">SN: ${tool.sn}</div>
+                    <div class="text-[10px] text-indigo-500 font-bold mt-0.5 whitespace-nowrap overflow-hidden">👤 ${tool.owner || '-'}</div>
+                </td>
+                <td class="p-3"><span class="text-[10px] font-bold bg-slate-100 px-1.5 py-0.5 rounded text-slate-600 whitespace-nowrap">${tool.office}</span></td>
+                <td class="p-3">
+                    <div class="text-[11px] ${cal.textClass} leading-none">${tool.needsCalibration ? tool.calibrationDate : '--'}</div>
+                    <div class="mt-1">${cal.badge}</div>
+                </td>
+                <td class="p-3">
+                    ${tool.isBorrowed ? `<span class="status-badge bg-amber-500 text-white">借: ${tool.currentBorrower}</span>` : `<span class="status-badge bg-emerald-500 text-white">在庫</span>`}
+                </td>
+                <td class="p-3 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        <button onclick="openBorrowModal('${tool.id}')" class="text-indigo-600"><i data-lucide="${tool.isBorrowed ? 'rotate-ccw' : 'share'}" class="w-4 h-4"></i></button>
+                        <button onclick="showHistory('${tool.id}')" class="text-slate-400 hover:text-indigo-600"><i data-lucide="scroll-text" class="w-4 h-4"></i></button>
+                        <button onclick="openEditModal('${tool.id}')" class="text-slate-600 hover:bg-slate-100"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                    </div>
                 </td>`;
             tbody.appendChild(row);
         });
@@ -221,43 +272,43 @@
         if (typeof lucide !== 'undefined') lucide.createIcons();
     };
 
-    function getCalibrationStatus(tool) {
-        if (!tool.needsCalibration || !tool.calibrationDate) return { badge: '', textClass: 'text-slate-300', level: 'none' };
-        const diffDays = Math.ceil((new Date(tool.calibrationDate) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
-        if (diffDays < 0) return { badge: '<span class="status-badge bg-red-100 text-red-600 border">過期</span>', textClass: 'text-red-600 font-bold', level: 'expired' };
-        if (diffDays <= 60) return { badge: '<span class="status-badge bg-amber-50 text-amber-600 border">預警</span>', textClass: 'text-amber-600 font-bold', level: 'warning' };
-        return { badge: '<span class="status-badge bg-blue-50 text-blue-500 border">有效</span>', textClass: 'text-slate-500', level: 'ok' };
-    }
-
-    function updateStats() {
-        document.getElementById('statTotal').innerText = tools.length;
-        document.getElementById('statBorrowed').innerText = tools.filter(t => t.isBorrowed).length;
-        let w = 0, e = 0;
-        tools.forEach(t => {
-            const s = getCalibrationStatus(t);
-            if(s.level === 'warning') w++;
-            if(s.level === 'expired') e++;
-        });
-        document.getElementById('statWarning').innerText = w;
-        document.getElementById('statExpired').innerText = e;
-    }
+    window.showHistory = (id) => {
+        const tool = tools.find(t => t.id === id);
+        document.getElementById('historyToolName').innerText = `${tool.name} (SN: ${tool.sn})`;
+        const list = document.getElementById('historyList');
+        list.innerHTML = '';
+        if (!tool.history || tool.history.length === 0) list.innerHTML = '<p class="text-center text-slate-400 py-4">無紀錄</p>';
+        else {
+            tool.history.forEach(log => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                let dotColor = 'bg-slate-300';
+                if (log.type === 'borrow') dotColor = 'bg-amber-500';
+                if (log.type === 'return') dotColor = 'bg-emerald-500';
+                if (log.type === 'transfer') dotColor = 'bg-indigo-500';
+                if (log.type === 'create') dotColor = 'bg-blue-600';
+                item.innerHTML = `<div class="timeline-dot ${dotColor}"></div><div class="text-[9px] text-slate-400 font-bold mb-0.5">${log.date}</div><div class="bg-slate-50 border rounded-lg p-2 text-[11px] font-medium leading-relaxed">${log.msg}</div>`;
+                list.appendChild(item);
+            });
+        }
+        window.openModal('historyModal');
+    };
 
     window.handleSaveTool = async (e) => {
         e.preventDefault();
         const f = new FormData(e.target);
         const id = document.getElementById('editToolId').value;
+        const now = new Date().toLocaleString('zh-TW');
         const toolData = {
             name: f.get('name'), model: f.get('model'), sn: f.get('sn'), office: f.get('office'),
-            needsCalibration: f.get('needsCalibration') === 'on', calibrationDate: f.get('calibrationDate') || null
+            owner: f.get('owner'), needsCalibration: f.get('needsCalibration') === 'on', calibrationDate: f.get('calibrationDate') || null
         };
-        const nowStr = new Date().toLocaleString('zh-TW');
-
         try {
             if (id) {
                 const tool = tools.find(t => t.id === id);
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tools', id), { ...toolData, history: [{ type: 'edit', date: nowStr, msg: `修改設備` }, ...tool.history] });
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tools', id), { ...toolData, history: [{ type: 'edit', date: now, msg: `變更資料/負責人` }, ...tool.history] });
             } else {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tools'), { ...toolData, createdAt: Date.now(), isBorrowed: false, currentBorrower: '', history: [{ type: 'create', date: nowStr, msg: `入庫` }] });
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'tools'), { ...toolData, createdAt: Date.now(), isBorrowed: false, currentBorrower: '', history: [{ type: 'create', date: now, msg: `設備新入庫 (${toolData.office})` }] });
             }
             closeModal('toolModal');
         } catch (err) { console.error(err); }
@@ -265,44 +316,81 @@
 
     window.handleBorrowReturn = async () => {
         const id = document.getElementById('borrowToolId').value;
-        const name = document.getElementById('borrowerName').value.trim();
         const tool = tools.find(t => t.id === id);
         const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'tools', id);
         const now = new Date().toLocaleString('zh-TW');
-
         if (!tool.isBorrowed) {
-            if (!name) return alert('請輸入借用人姓名');
-            await updateDoc(docRef, { isBorrowed: true, currentBorrower: name, history: [{ type: 'borrow', date: now, msg: `工程師 ${name} 借出` }, ...tool.history] });
+            const name = document.getElementById('borrowerName').value.trim();
+            if (!name) return alert('姓名？');
+            await updateDoc(docRef, { isBorrowed: true, currentBorrower: name, history: [{ type: 'borrow', date: now, msg: `借給 ${name}` }, ...tool.history] });
         } else {
-            const old = tool.currentBorrower;
-            await updateDoc(docRef, { isBorrowed: false, currentBorrower: "", history: [{ type: 'return', date: now, msg: `工程師 ${old} 歸還` }, ...tool.history] });
+            if (returnMode === 'return') {
+                const office = document.getElementById('returnOffice').value;
+                await updateDoc(docRef, { isBorrowed: false, currentBorrower: "", office: office, history: [{ type: 'return', date: now, msg: `歸還於 ${office}` }, ...tool.history] });
+            } else {
+                const tName = document.getElementById('transferName').value.trim();
+                if (!tName) return alert('接收人？');
+                await updateDoc(docRef, { currentBorrower: tName, history: [{ type: 'transfer', date: now, msg: `由 ${tool.currentBorrower} 轉交予 ${tName}` }, ...tool.history] });
+            }
         }
         closeModal('borrowModal');
     };
 
-    window.deleteTool = async (id) => { if (confirm('永久刪除？')) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'tools', id)); };
-    window.openAddModal = () => { document.getElementById('modalTitle').innerText = "新增設備"; document.getElementById('editToolId').value = ""; document.getElementById('toolForm').reset(); window.openModal('toolModal'); };
-    window.openEditModal = (id) => {
-        const tool = tools.find(t => t.id === id);
-        document.getElementById('modalTitle').innerText = "編輯設備";
-        document.getElementById('editToolId').value = tool.id;
-        const form = document.getElementById('toolForm');
-        form.name.value = tool.name; form.model.value = tool.model; form.sn.value = tool.sn; form.office.value = tool.office; form.needsCalibration.checked = tool.needsCalibration; form.calibrationDate.value = tool.calibrationDate || "";
-        window.toggleDateInput(form.needsCalibration);
-        window.openModal('toolModal');
+    window.getCalibrationStatus = (tool) => {
+        if (!tool.needsCalibration || !tool.calibrationDate) return { badge: '', textClass: 'text-slate-300', level: 'none' };
+        const diffDays = Math.ceil((new Date(tool.calibrationDate) - new Date().setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) return { badge: '<span class="status-badge bg-red-100 text-red-600 border px-1">過期</span>', textClass: 'text-red-600 font-bold', level: 'expired' };
+        if (diffDays <= 60) return { badge: '<span class="status-badge bg-amber-50 text-amber-600 border px-1">預警</span>', textClass: 'text-amber-600 font-bold', level: 'warning' };
+        return { badge: '<span class="status-badge bg-blue-50 text-blue-500 border px-1">有效</span>', textClass: 'text-slate-500', level: 'ok' };
     };
+
+    window.updateStats = () => {
+        document.getElementById('statTotal').innerText = tools.length;
+        document.getElementById('statBorrowed').innerText = tools.filter(t => t.isBorrowed).length;
+        let w = 0, e = 0; tools.forEach(t => { const s = getCalibrationStatus(t); if(s.level === 'warning') w++; if(s.level === 'expired') e++; });
+        document.getElementById('statWarning').innerText = w; document.getElementById('statExpired').innerText = e;
+    };
+
+    window.setReturnMode = (mode) => {
+        returnMode = mode;
+        const btnR = document.getElementById('modeBtnReturn');
+        const btnT = document.getElementById('modeBtnTransfer');
+        if (mode === 'return') {
+            btnR.className = "flex-1 py-1.5 rounded-md text-[10px] font-bold bg-amber-500 text-white shadow-sm";
+            btnT.className = "flex-1 py-1.5 rounded-md text-[10px] font-bold text-slate-500";
+            document.getElementById('returnLocationArea').classList.remove('hidden');
+            document.getElementById('transferUserArea').classList.add('hidden');
+        } else {
+            btnT.className = "flex-1 py-1.5 rounded-md text-[10px] font-bold bg-amber-500 text-white shadow-sm";
+            btnR.className = "flex-1 py-1.5 rounded-md text-[10px] font-bold text-slate-500";
+            document.getElementById('transferUserArea').classList.remove('hidden');
+            document.getElementById('returnLocationArea').classList.add('hidden');
+        }
+    };
+
     window.openBorrowModal = (id) => {
         const tool = tools.find(t => t.id === id);
         document.getElementById('borrowToolId').value = id;
-        document.getElementById('borrowTitle').innerText = tool.isBorrowed ? "歸還工具" : "工具外借";
-        document.getElementById('borrowSub').innerText = tool.isBorrowed ? `目前持有：${tool.currentBorrower}` : "輸入借用人姓名";
-        document.getElementById('borrowerInputWrapper').style.display = tool.isBorrowed ? 'none' : 'block';
-        document.getElementById('returnConfirm').style.display = tool.isBorrowed ? 'block' : 'none';
+        const isB = tool.isBorrowed;
+        document.getElementById('borrowTitle').innerText = isB ? "處置作業" : "外借作業";
+        document.getElementById('borrowSub').innerText = isB ? `持有人：${tool.currentBorrower}` : "填寫借用人";
+        if (isB) { document.getElementById('borrowView').classList.add('hidden'); document.getElementById('returnView').classList.remove('hidden'); document.getElementById('returnOffice').value = tool.office; setReturnMode('return'); } 
+        else { document.getElementById('borrowView').classList.remove('hidden'); document.getElementById('returnView').classList.add('hidden'); document.getElementById('borrowerName').value = ""; }
         window.openModal('borrowModal');
     };
+
+    window.openEditModal = (id) => {
+        const tool = tools.find(t => t.id === id);
+        document.getElementById('editToolId').value = tool.id;
+        const f = document.getElementById('toolForm');
+        f.name.value = tool.name; f.model.value = tool.model; f.sn.value = tool.sn; f.office.value = tool.office; f.owner.value = tool.owner || ""; f.needsCalibration.checked = tool.needsCalibration; f.calibrationDate.value = tool.calibrationDate || "";
+        window.toggleDateInput(f.needsCalibration); window.openModal('toolModal');
+    };
+
     window.openModal = (id) => document.getElementById(id).classList.remove('hidden');
     window.closeModal = (id) => document.getElementById(id).classList.add('hidden');
     window.toggleDateInput = (cb) => document.getElementById('calibrationDateContainer').style.display = cb.checked ? 'block' : 'none';
+    window.openAddModal = () => { document.getElementById('modalTitle').innerText = "新增設備"; document.getElementById('editToolId').value = ""; document.getElementById('toolForm').reset(); window.openModal('toolModal'); };
 </script>
 </body>
 </html>
