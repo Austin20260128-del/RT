@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>元素組教育訓練系統 v1.5.1 (Multi-Device Sync)</title>
+    <title>元素組新進人員教育訓練系統 v1.4</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .nav-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; }
+        .nav-btn.active { background-color: #2563eb; color: white; }
         
+        /* Custom Checkbox */
         .custom-checkbox input:checked + div {
             background-color: #2563eb;
             border-color: #2563eb;
@@ -21,76 +21,43 @@
         .custom-checkbox input:checked + div svg {
             display: block;
         }
-
-        .spinner {
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border-left-color: #2563eb;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="text-gray-900">
-
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center">
-        <div class="spinner mb-4"></div>
-        <p class="text-gray-500 animate-pulse">正在連接雲端同步引擎...</p>
-    </div>
+<body>
 
     <!-- Top Navigation -->
-    <nav class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-200">
+    <nav class="bg-white shadow-md sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        <i class="fas fa-graduation-cap mr-2"></i>教育訓練系統 v1.5.1
-                    </span>
-                    <span id="syncStatus" class="ml-4 px-2 py-1 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-500">
-                        <i class="fas fa-cloud-download-alt mr-1"></i>等待識別碼
-                    </span>
+                    <span class="text-xl font-bold text-gray-800"><i class="fas fa-graduation-cap text-blue-600 mr-2"></i>教育訓練系統 v1.4</span>
                 </div>
-                <div class="flex items-center space-x-1 md:space-x-2">
-                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn active px-3 py-2 rounded-md text-sm font-medium border border-transparent">儀表板</button>
-                    <button onclick="switchTab('initial')" id="btn-initial" class="nav-btn px-3 py-2 rounded-md text-sm font-medium border border-transparent">必修</button>
-                    <button onclick="switchTab('courses')" id="btn-courses" class="nav-btn px-3 py-2 rounded-md text-sm font-medium border border-transparent">評分</button>
-                    <button onclick="exportToExcel()" class="hidden md:block text-emerald-600 px-2 hover:bg-emerald-50 rounded"><i class="fas fa-file-excel"></i></button>
-                    <button onclick="resetData()" class="text-rose-600 px-2 hover:bg-rose-50 rounded"><i class="fas fa-redo-alt"></i></button>
+                <div class="flex items-center space-x-4">
+                    <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn active px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900">個人資料儀表板</button>
+                    <button onclick="switchTab('initial')" id="btn-initial" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900">初始課程 (必修)</button>
+                    <button onclick="switchTab('courses')" id="btn-courses" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900">課程選擇 (計分)</button>
+                    <button onclick="exportToExcel()" class="px-3 py-2 rounded-md text-sm font-medium text-green-600 hover:bg-green-50 border border-green-200"><i class="fas fa-file-excel mr-1"></i>匯出 Excel</button>
+                    <button onclick="resetData()" class="px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 border border-red-200">重置資料</button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-        <!-- TAB 1: DASHBOARD -->
+        <!-- TAB 1: DASHBOARD (個人資料) -->
         <div id="dashboard" class="tab-content active space-y-6">
-            <!-- Sync Card -->
-            <div class="bg-indigo-600 rounded-xl shadow-lg p-6 text-white">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-lg font-bold"><i class="fas fa-sync-alt mr-2"></i>雲端跨裝置同步</h2>
-                        <p class="text-xs opacity-70 mt-1">請輸入相同的「同步識別碼」來在手機與電腦間同步進度。</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="text" id="syncKey" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-64" placeholder="例如：您的姓名或編號">
-                        <button onclick="applySync()" class="bg-white text-indigo-600 px-4 py-2 rounded-lg font-bold hover:bg-indigo-50 transition-colors">連線</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <!-- User Info Card -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">基本資料</h2>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">使用者姓名</label>
-                        <input type="text" id="userName" oninput="debouncedSave()" class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50" placeholder="姓名">
+                        <label class="block text-sm font-medium text-gray-700">姓名</label>
+                        <input type="text" id="userName" oninput="saveInputs()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2" placeholder="請輸入姓名">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">所屬區域</label>
-                        <select id="userRegion" onchange="debouncedSave()" class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50">
+                        <label class="block text-sm font-medium text-gray-700">區域</label>
+                        <select id="userRegion" onchange="saveInputs()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
                             <option value="">選擇區域</option>
                             <option value="北區">北區</option>
                             <option value="中區">中區</option>
@@ -98,144 +65,238 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">到職日期</label>
-                        <input type="date" id="startDate" oninput="debouncedSave()" class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50">
+                        <label class="block text-sm font-medium text-gray-700">到職日</label>
+                        <input type="date" id="startDate" oninput="saveInputs()" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm border p-2">
                     </div>
-                    <div class="flex flex-col justify-center items-center md:items-end">
-                        <div id="displayLevel" class="text-5xl font-black text-blue-600 italic">Lv 0</div>
-                        <div class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Current Rank</div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">目前等級</label>
+                        <div id="displayLevel" class="mt-1 text-2xl font-bold text-blue-600">Lv 0</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Stats -->
+            <!-- Score Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white border-l-8 border-blue-600 rounded-xl shadow-sm p-6">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">目前總積分</div>
-                    <div class="text-4xl font-black mt-1 text-gray-800" id="displayTotalScore">0</div>
-                    <div class="mt-4 text-xs font-bold text-blue-600 bg-blue-50 inline-block px-2 py-1 rounded">完成率: <span id="displayScoreRatio">0%</span></div>
+                <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-6 text-white">
+                    <div class="text-sm opacity-80">目前總得分</div>
+                    <div class="text-4xl font-bold" id="displayTotalScore">0</div>
+                    <div class="mt-2 text-sm opacity-80">總得分比率: <span id="displayScoreRatio">0%</span></div>
                 </div>
-                <div class="bg-white border-l-8 border-amber-500 rounded-xl shadow-sm p-6 flex flex-col justify-between">
-                    <div>
-                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">晉升 <span id="nextLevelName" class="text-amber-600">Lv 1</span> 尚需</div>
-                        <div class="flex items-baseline">
-                            <span class="text-4xl font-black text-gray-800" id="displayDistToUpgrade">15</span>
-                            <span class="ml-2 text-gray-400 text-xs italic">pts left</span>
-                        </div>
-                    </div>
-                    <div class="w-full bg-gray-100 rounded-full h-2 mt-4">
-                        <div class="bg-amber-500 h-2 rounded-full transition-all duration-1000" id="levelProgressBar" style="width: 0%"></div>
+                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-400">
+                    <div class="text-sm text-gray-500">距離下一等級 (<span id="nextLevelName">Lv 1</span>)</div>
+                    <div class="text-4xl font-bold text-gray-800" id="displayDistToUpgrade">15</div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                        <div class="bg-yellow-400 h-2.5 rounded-full" id="levelProgressBar" style="width: 0%"></div>
                     </div>
                 </div>
-                <div class="bg-white border-l-8 border-emerald-500 rounded-xl shadow-sm p-6">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">評分上限總計</div>
-                    <div class="text-4xl font-black text-gray-800">487</div>
-                    <div class="mt-3 flex items-center text-[10px] text-emerald-600 font-bold italic">
-                        <i class="fas fa-trophy mr-1"></i> 目標：487 分全滿
-                    </div>
+                <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+                    <div class="text-sm text-gray-500">所有學分總額</div>
+                    <div class="text-4xl font-bold text-gray-800" id="displayMaxScore">487</div>
+                    <div class="mt-2 text-sm text-green-600">目標：成為獨當一面的元素組成員</div>
                 </div>
             </div>
 
+            <!-- Analysis Tables -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Phase Table -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-700 text-sm">階段進度 (Course Analysis)</h3>
+                <!-- Course Analysis -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b bg-gray-50">
+                        <h3 class="font-bold text-gray-700">課程分析 (Course Analysis)</h3>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-100">
-                            <thead class="bg-gray-50/50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">類別</th>
-                                    <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">指標數</th>
-                                    <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">目前得分</th>
-                                    <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">完成度</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-50" id="courseAnalysisBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Brand Table -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-700 text-sm">品牌分析 (Brand Analysis)</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-100">
-                            <thead class="bg-gray-50/50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">品牌</th>
-                                    <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">目標課堂</th>
-                                    <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">已完成</th>
-                                    <th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">熟練度</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-50" id="brandAnalysisBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: INITIAL COURSE -->
-        <div id="initial" class="tab-content space-y-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="px-6 py-5 border-b border-gray-100 bg-amber-50 flex justify-between items-center">
-                    <div>
-                        <h3 class="font-bold text-amber-900">初始課程 (不計分，必須完成)</h3>
-                        <p class="text-xs text-amber-700 mt-1">請確實完成下列所有入職教育訓練</p>
-                    </div>
-                    <div class="text-xs font-bold text-amber-800 bg-white px-3 py-1 rounded-full border border-amber-200">
-                        進度: <span id="initialProgress">0/10</span>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-100 text-sm">
+                    <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">狀態</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">類別</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">名稱</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">時數</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">主講</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">備註</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">類別</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">總分</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">得分</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">完成度</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-50" id="initialCourseList"></tbody>
+                        <tbody class="bg-white divide-y divide-gray-200" id="courseAnalysisBody">
+                            <!-- Dynamic Content -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Brand Analysis -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b bg-gray-50">
+                        <h3 class="font-bold text-gray-700">品牌分析 (Brand Analysis)</h3>
+                    </div>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">品牌</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">選修課堂</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">完成數</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">完成度</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="brandAnalysisBody">
+                            <!-- Dynamic Content -->
+                        </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 3: COURSE SELECTION -->
-        <div id="courses" class="tab-content space-y-6">
-            <div id="scoredCourseSections" class="space-y-6"></div>
+        <!-- TAB 2: INITIAL COURSE (初始課程) -->
+        <div id="initial" class="tab-content space-y-6">
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 border-b bg-yellow-50 flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-yellow-800">初始課程 (不計分，必須完成)</h3>
+                        <p class="text-sm text-yellow-600">包含管理部、資訊組與基本操作教學</p>
+                    </div>
+                    <div class="text-sm font-bold text-gray-600">
+                        進度: <span id="initialProgress">0/10</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">狀態</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">類別</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">課程名稱</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">時數</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">主講人</th>
+                                <th class="px-4 py-3 text-left font-medium text-gray-500">備註</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="initialCourseList">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+
+        <!-- TAB 3: COURSE SELECTION (課程選擇) -->
+        <div id="courses" class="tab-content space-y-6">
+            <div class="bg-blue-50 p-4 rounded-md border border-blue-200 mb-4">
+                <p class="text-blue-800 text-sm">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    請依序完成各等級課程。勾選後分數會自動累計至個人資料儀表板。
+                </p>
+            </div>
+            
+            <!-- Lv 1 -->
+            <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                <div class="px-6 py-3 bg-gray-100 border-b border-gray-200 flex justify-between items-center cursor-pointer" onclick="toggleSection('lv1-content')">
+                    <h3 class="font-bold text-gray-800">Lv.1 新手篇 (4 分)</h3>
+                    <i class="fas fa-chevron-down text-gray-500"></i>
+                </div>
+                <div id="lv1-content">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="w-16 px-4 py-3 text-center">完成</th>
+                                <th class="px-4 py-3 text-left">課程名稱</th>
+                                <th class="px-4 py-3 text-left">分數</th>
+                                <th class="px-4 py-3 text-left">說明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lv1-rows" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lv 2 -->
+            <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                <div class="px-6 py-3 bg-gray-100 border-b border-gray-200 flex justify-between items-center cursor-pointer" onclick="toggleSection('lv2-content')">
+                    <h3 class="font-bold text-gray-800">Lv.2 理解篇 (153 分)</h3>
+                    <i class="fas fa-chevron-down text-gray-500"></i>
+                </div>
+                <div id="lv2-content">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="w-16 px-4 py-3 text-center">完成</th>
+                                <th class="px-4 py-3 text-left">類別/品牌</th>
+                                <th class="px-4 py-3 text-left">課程名稱</th>
+                                <th class="px-4 py-3 text-left">分數</th>
+                                <th class="px-4 py-3 text-left">說明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lv2-rows" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Lv 3 Planning (Placeholder based on analysis) -->
+            <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                <div class="px-6 py-3 bg-gray-100 border-b border-gray-200 flex justify-between items-center cursor-pointer" onclick="toggleSection('lv3-content')">
+                    <h3 class="font-bold text-gray-800">Lv.3 規劃篇 (80 分)</h3>
+                    <i class="fas fa-chevron-down text-gray-500"></i>
+                </div>
+                <div id="lv3-content">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="w-16 px-4 py-3 text-center">完成</th>
+                                <th class="px-4 py-3 text-left">課程名稱</th>
+                                <th class="px-4 py-3 text-left">分數</th>
+                                <th class="px-4 py-3 text-left">說明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lv3-rows" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+             <!-- Lv 4 Teamwork -->
+             <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                <div class="px-6 py-3 bg-gray-100 border-b border-gray-200 flex justify-between items-center cursor-pointer" onclick="toggleSection('lv4-content')">
+                    <h3 class="font-bold text-gray-800">Lv.4 團隊合作篇 (225 分)</h3>
+                    <i class="fas fa-chevron-down text-gray-500"></i>
+                </div>
+                <div id="lv4-content">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="w-16 px-4 py-3 text-center">完成</th>
+                                <th class="px-4 py-3 text-left">品牌</th>
+                                <th class="px-4 py-3 text-left">課程名稱</th>
+                                <th class="px-4 py-3 text-left">分數</th>
+                                <th class="px-4 py-3 text-left">說明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lv4-rows" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Self Growth -->
+            <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                <div class="px-6 py-3 bg-gray-100 border-b border-gray-200 flex justify-between items-center cursor-pointer" onclick="toggleSection('growth-content')">
+                    <h3 class="font-bold text-gray-800">自我成長 (25 分)</h3>
+                    <i class="fas fa-chevron-down text-gray-500"></i>
+                </div>
+                <div id="growth-content">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="w-16 px-4 py-3 text-center">完成</th>
+                                <th class="px-4 py-3 text-left">課程名稱</th>
+                                <th class="px-4 py-3 text-left">分數</th>
+                                <th class="px-4 py-3 text-left">說明</th>
+                            </tr>
+                        </thead>
+                        <tbody id="growth-rows" class="bg-white divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
     </div>
 
-    <!-- Firebase -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCvOqKFvnKXrj07BtfbLLTNZXiCw2jBgus",
-            authDomain: "training-834e3.firebaseapp.com",
-            projectId: "training-834e3",
-            storageBucket: "training-834e3.firebasestorage.app",
-            messagingSenderId: "284421517335",
-            appId: "1:284421517335:web:19e2d463497126b8ccac52"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = "element-training-v1-5-1";
-
-        // --- Data Definitions (Original) ---
+    <!-- Scripts -->
+    <script>
+        // Data Structures based on provided CSVs
+        
+        // 1. Initial Courses (Non-scored)
         const initialCoursesData = [
             { id: 'i1', category: '管理部課程', name: '繳交個人資料、填寫文件', time: '30 分鐘', lecturer: '王淑英', remark: '' },
             { id: 'i2', category: '管理部課程', name: '辦公室環境介紹 (茶水間、話機、WIFI)', time: '20 分鐘', lecturer: '許鏸文', remark: 'Rightek-guest密碼...' },
@@ -249,287 +310,464 @@
             { id: 'i10', category: '管理部課程', name: '估價單 (報價規則)、成本分析', time: '40 分鐘', lecturer: '許鏸文', remark: '' }
         ];
 
+        // 2. Scored Courses (The Core Logic)
+        // Recreated based on snippets and logical inferences for the missing middle parts to match totals
         const courseData = [
             // Lv 1 - Total 4
             { id: 'c1_1', level: '新手篇', category: '教育訓練類', brand: null, name: '勇於介紹自己(一)', points: 1, desc: '加入公司的Line，完成自我介紹' },
-            { id: 'c1_2', level: '新手篇', category: '教育訓練類', brand: null, name: '勇於介紹自己(二)', points: 1, desc: '跟公司所有人聯絡' },
-            { id: 'c1_3', level: '新手篇', category: '教育訓練類', brand: null, name: '能夠使用CRM工具', points: 1, desc: '完成 Daily Report' },
-            { id: 'c1_4', level: '新手篇', category: '教育訓練類', brand: null, name: '參與新手訓練課程', points: 1, desc: '完成全部初始課程' },
+            { id: 'c1_2', level: '新手篇', category: '教育訓練類', brand: null, name: '勇於介紹自己(二)', points: 1, desc: '跟公司所有人聯絡，了解負責工作' },
+            { id: 'c1_3', level: '新手篇', category: '教育訓練類', brand: null, name: '能夠使用CRM工具', points: 1, desc: '完成一個沒有錯誤的Daily Report' },
+            { id: 'c1_4', level: '新手篇', category: '教育訓練類', brand: null, name: '參與新手訓練課程', points: 1, desc: '完成全部初始介紹課程' },
 
             // Lv 2 - Total 153
-            { id: 'c2_1', level: '理解篇', category: '公司理解', brand: null, name: '理解自己的公司', points: 3, desc: '正式利泓介紹考核' },
+            { id: 'c2_1', level: '理解篇', category: '公司理解', brand: null, name: '理解自己的公司', points: 3, desc: '做正式的利泓介紹，通過組長考核' },
             { id: 'c2_2', level: '理解篇', category: '銷售觀摩', brand: null, name: '觀摩其他人的模式', points: 3, desc: '陪同拜訪四次並撰寫Report' },
-            { id: 'c2_m1', level: '理解篇', category: '產品理解', brand: 'Milestone', name: 'Milestone 基礎產品知識', points: 5, desc: '產品線總覽' },
+            // Generating placeholder product courses to match the Brand Analysis counts in CSV
+            // Milestone: 20 courses (assume mixed in lv2/3/4, allocating some here)
+            { id: 'c2_m1', level: '理解篇', category: '產品理解', brand: 'Milestone', name: 'Milestone 基礎產品知識', points: 5, desc: '產品線總覽與應用' },
             { id: 'c2_m2', level: '理解篇', category: '產品理解', brand: 'Milestone', name: 'Milestone 微波消化原理', points: 5, desc: '核心技術解說' },
             { id: 'c2_m3', level: '理解篇', category: '產品理解', brand: 'Milestone', name: 'Milestone 耗材與配件', points: 5, desc: '識別常用配件' },
-            { id: 'c2_l1', level: '理解篇', category: '產品理解', brand: 'Labtech', name: 'Labtech 產品概論', points: 5, desc: '品牌介紹' },
-            { id: 'c2_l2', level: '理解篇', category: '產品理解', brand: 'Labtech', name: 'Labtech 冷卻系統', points: 5, desc: 'Chiller 銷售' },
-            { id: 'c2_a1', level: '理解篇', category: '產品理解', brand: 'Analytik Jena', name: 'AJ 光議器原理 (AAS)', points: 5, desc: '原子吸收基礎' },
+            // Labtech: 8 courses
+            { id: 'c2_l1', level: '理解篇', category: '產品理解', brand: 'Labtech', name: 'Labtech 產品概論', points: 5, desc: '品牌與產品線介紹' },
+            { id: 'c2_l2', level: '理解篇', category: '產品理解', brand: 'Labtech', name: 'Labtech 冷卻系統', points: 5, desc: 'Chiller 原理與銷售' },
+            // Analytik Jena: 17 courses
+            { id: 'c2_a1', level: '理解篇', category: '產品理解', brand: 'Analytik Jena', name: 'AJ 光譜儀原理 (AAS)', points: 5, desc: '原子吸收光譜基礎' },
             { id: 'c2_a2', level: '理解篇', category: '產品理解', brand: 'Analytik Jena', name: 'AJ ICP-OES 介紹', points: 5, desc: '電感耦合電漿光譜儀' },
-            { id: 'c2_a3', level: '理解篇', category: '產品理解', brand: 'Analytik Jena', name: 'AJ 元素分析 (EA)', points: 5, desc: 'C/N/S/Cl 分析' },
+            { id: 'c2_a3', level: '理解篇', category: '產品理解', brand: 'Analytik Jena', name: 'AJ 元素分析 (EA)', points: 5, desc: 'C/N/S/Cl 分析原理' },
+            // Applied Spectra: 6 courses
             { id: 'c2_as1', level: '理解篇', category: '產品理解', brand: 'Applied Spectra', name: 'LIBS 技術簡介', points: 5, desc: '雷射誘導崩解光譜' },
+            // Metal Power: (Assuming remainder of points fit here to reach approx 153 total for Lv2)
+            // Added simplified generic fillers to reach the Total 153 target for simulation
             { id: 'c2_g1', level: '理解篇', category: '產品理解', brand: 'Metal Power', name: '金屬分析儀基礎', points: 5, desc: 'OES 原理' },
             { id: 'c2_fill1', level: '理解篇', category: '通用技能', brand: null, name: '實驗室基礎安全', points: 10, desc: '化學品處理與防護' },
             { id: 'c2_fill2', level: '理解篇', category: '通用技能', brand: null, name: '基本報價邏輯', points: 10, desc: '利潤計算與稅務' },
-            { id: 'c2_fill3', level: '理解篇', category: '通用技能', brand: null, name: '競爭對手分析', points: 10, desc: '市場競品調查' },
+            { id: 'c2_fill3', level: '理解篇', category: '通用技能', brand: null, name: '競爭對手分析', points: 10, desc: '市場主要競品調查' },
             { id: 'c2_fill4', level: '理解篇', category: '通用技能', brand: null, name: '客戶產業分布', points: 10, desc: '半導體/石化/學研' },
-            { id: 'c2_fill5', level: '理解篇', category: '通用技能', brand: null, name: '標案流程理解', points: 12, desc: '政府採購網操作' },
-            { id: 'c2_fill6', level: '理解篇', category: '通用技能', brand: null, name: '軟體操作基礎', points: 10, desc: '軟體介面熟悉' },
+            { id: 'c2_fill5', level: '理解篇', category: '通用技能', brand: null, name: '標案流程理解', points: 12, desc: '政府採購網操作與規範' },
+            { id: 'c2_fill6', level: '理解篇', category: '通用技能', brand: null, name: '軟體操作基礎', points: 10, desc: '各儀器軟體介面熟悉' },
             { id: 'c2_fill7', level: '理解篇', category: '通用技能', brand: null, name: '樣品前處理', points: 10, desc: '酸消化與稀釋技巧' },
             { id: 'c2_fill8', level: '理解篇', category: '通用技能', brand: null, name: '法規知識', points: 10, desc: '環保法規與檢測標準' },
-            { id: 'c2_fill9', level: '理解篇', category: '通用技能', brand: null, name: '業務話術演練', points: 10, desc: '應對演練' },
+            { id: 'c2_fill9', level: '理解篇', category: '通用技能', brand: null, name: '業務話術演練', points: 10, desc: '針對不同客戶的應對' },
 
-            // Lv 3 - Total 80
-            { id: 'c3_1', level: '規劃篇', category: '銷售規劃', name: '開發客戶(一)', points: 10, desc: '陌生電話約訪' },
-            { id: 'c3_2', level: '規劃篇', category: '銷售規劃', name: '開發客戶(二)', points: 10, desc: '陌生拜訪約訪' },
-            { id: 'c3_3', level: '規劃篇', category: '銷售規劃', name: '開發客戶(三)', points: 10, desc: '陌生信件約訪' },
-            { id: 'c3_4', level: '規劃篇', category: '策略規劃', name: '規劃銷售策略', points: 10, desc: '產品線銷售規劃' },
-            { id: 'c3_5', level: '規劃篇', category: '行銷規劃', name: '規劃行銷策略', points: 10, desc: '市場行銷策略' },
-            { id: 'c3_6', level: '規劃篇', category: '自我管理', name: '安排休息時間', points: 10, desc: '請假程序' },
-            { id: 'c3_7', level: '規劃篇', category: '區域管理', name: '區域客戶地圖', points: 10, desc: '客戶分佈圖' },
-            { id: 'c3_8', level: '規劃篇', category: '專案管理', name: '專案時程控管', points: 10, desc: '模擬案子時程' },
+            // Lv 3 - Planning (80 pts)
+            { id: 'c3_1', level: '規劃篇', category: '銷售規劃', brand: null, name: '學習開發客戶(一)', points: 10, desc: '完成五次陌生電話拜訪，約訪到客戶' },
+            { id: 'c3_2', level: '規劃篇', category: '銷售規劃', brand: null, name: '學習開發客戶(二)', points: 10, desc: '完成五次陌生拜訪，約訪到客戶' },
+            { id: 'c3_3', level: '規劃篇', category: '銷售規劃', brand: null, name: '學習開發客戶(三)', points: 10, desc: '完成五次陌生信件拜訪，約訪到客戶' },
+            { id: 'c3_4', level: '規劃篇', category: '策略規劃', brand: null, name: '規劃銷售策略', points: 10, desc: '設定一個產品線的銷售規劃' },
+            { id: 'c3_5', level: '規劃篇', category: '行銷規劃', brand: null, name: '規劃行銷策略', points: 10, desc: '設定一個產品線的市場行銷策略' },
+            { id: 'c3_6', level: '規劃篇', category: '自我管理', brand: null, name: '安排休息時間', points: 10, desc: '完成一個請假程序，沒有錯誤' },
+            { id: 'c3_7', level: '規劃篇', category: '區域管理', brand: null, name: '區域客戶地圖', points: 10, desc: '建立負責區域的客戶分佈圖' },
+            { id: 'c3_8', level: '規劃篇', category: '專案管理', brand: null, name: '專案時程控管', points: 10, desc: '模擬一個案子的從頭到尾時程' },
 
-            // Lv 4 - Total 225
-            { id: 'c4_1', level: '團隊合作篇', category: '售後合作', name: '售後團隊合作', points: 15, desc: '參與售後流程' },
-            { id: 'c4_m1', level: '團隊合作篇', category: '裝機訓練', brand: 'Milestone', name: '裝機教育訓練', points: 15, desc: '三次裝機實習' },
-            { id: 'c4_m2', level: '團隊合作篇', category: '售後服務', brand: 'Milestone', name: '售後服務案', points: 15, desc: '兩次售後服務' },
-            { id: 'c4_a1', level: '團隊合作篇', category: '裝機訓練', brand: 'Analytik Jena', name: 'AAS 裝機訓練', points: 15, desc: '兩次裝機' },
-            { id: 'c4_a2', level: '團隊合作篇', category: '售後服務', brand: 'Analytik Jena', name: 'TOC 售後服務案', points: 15, desc: '兩次售後服務' },
-            { id: 'c4_l1', level: '團隊合作篇', category: '裝機訓練', brand: 'Labtech', name: '裝機實習', points: 15, desc: '參與裝機' },
-            { id: 'c4_f1', level: '團隊合作篇', category: '團隊協作', name: '跨部門溝通', points: 15, desc: '跨部門客訴處理' },
-            { id: 'c4_f2', level: '團隊合作篇', category: '經驗分享', name: '教育訓練講師', points: 30, desc: '擔任主講人' },
-            { id: 'c4_f3', level: '團隊合作篇', category: '專案支援', name: '支援同事案子', points: 15, desc: '協助Demo/送樣' },
-            { id: 'c4_f4', level: '團隊合作篇', category: '展覽活動', name: '參展執行', points: 15, desc: '參與參展' },
-            { id: 'c4_f5', level: '團隊合作篇', category: '文件製作', name: '技術文件翻譯', points: 30, desc: '手冊中文化' },
-            { id: 'c4_f6', level: '團隊合作篇', category: '影片製作', name: '操作影片錄製', points: 30, desc: '簡易操作影片' },
+            // Lv 4 - Teamwork (225 pts)
+            { id: 'c4_1', level: '團隊合作篇', category: '售後合作', brand: null, name: '了解如何跟售後團隊合作', points: 15, desc: '參與產品售後流程並提供記錄' },
+            { id: 'c4_m1', level: '團隊合作篇', category: '裝機訓練', brand: 'Milestone', name: 'Milestone 裝機與教育訓練', points: 15, desc: '參與三次不同機型裝機' },
+            { id: 'c4_m2', level: '團隊合作篇', category: '售後服務', brand: 'Milestone', name: 'Milestone 售後服務案', points: 15, desc: '參與兩次不同機型售後服務' },
+            { id: 'c4_a1', level: '團隊合作篇', category: '裝機訓練', brand: 'Analytik Jena', name: 'AAS 裝機與教育訓練', points: 15, desc: '參與兩次 AAS 裝機' },
+            { id: 'c4_a2', level: '團隊合作篇', category: '售後服務', brand: 'Analytik Jena', name: 'TOC 售後服務案', points: 15, desc: '參與兩次 TOC 售後服務' },
+            { id: 'c4_l1', level: '團隊合作篇', category: '裝機訓練', brand: 'Labtech', name: 'Labtech 裝機實習', points: 15, desc: '參與裝機流程' },
+            // Fillers to reach 225
+            { id: 'c4_f1', level: '團隊合作篇', category: '團隊協作', brand: null, name: '跨部門溝通', points: 15, desc: '協助處理一件跨部門客訴' },
+            { id: 'c4_f2', level: '團隊合作篇', category: '經驗分享', brand: null, name: '內部教育訓練講師', points: 30, desc: '擔任一次內部產品主講人' },
+            { id: 'c4_f3', level: '團隊合作篇', category: '專案支援', brand: null, name: '支援同事案子', points: 15, desc: '協助同事完成Demo或送樣' },
+            { id: 'c4_f4', level: '團隊合作篇', category: '展覽活動', brand: null, name: '參展執行', points: 15, desc: '參與一次公司參展活動' },
+            { id: 'c4_f5', level: '團隊合作篇', category: '文件製作', brand: null, name: '技術文件翻譯', points: 30, desc: '完成一份原廠技術手冊中文化' },
+            { id: 'c4_f6', level: '團隊合作篇', category: '影片製作', brand: null, name: '操作影片錄製', points: 30, desc: '錄製一段儀器簡易操作影片' },
 
-            // Self - Total 25
-            { id: 'cg_1', level: '自我成長', category: '成長', name: '閱讀分享', points: 5, desc: '分享心得' },
-            { id: 'cg_2', level: '自我成長', category: '成長', name: '外部課程', points: 10, desc: '研討會參與' },
-            { id: 'cg_3', level: '自我成長', category: '成長', name: '語言能力', points: 10, desc: '外語能力提升' }
+            // Self Growth (25 pts)
+            { id: 'cg_1', level: '自我成長', category: '成長', brand: null, name: '閱讀分享', points: 5, desc: '分享一本相關書籍心得' },
+            { id: 'cg_2', level: '自我成長', category: '成長', brand: null, name: '外部課程', points: 10, desc: '參加一次外部相關研討會' },
+            { id: 'cg_3', level: '自我成長', category: '成長', brand: null, name: '語言能力', points: 10, desc: '提升外語能力證明' }
         ];
 
-        const brandTargets = { 'Milestone': 20, 'Labtech': 8, 'Analytik Jena': 17, 'Applied Spectra': 6, 'Metal Power': 5 };
+        // Levels Logic
+        const levelThresholds = [
+            { level: 0, min: 0, max: 14, next: 15 },
+            { level: 1, min: 15, max: 64, next: 65 },
+            { level: 2, min: 65, max: 179, next: 180 },
+            { level: 3, min: 180, max: 349, next: 350 },
+            { level: 4, min: 350, max: 429, next: 430 },
+            { level: 5, min: 430, max: 9999, next: null }
+        ];
 
-        // --- App Logic ---
-        let currentSyncId = null;
-        let unsubscribeSync = null;
-
-        window.onload = () => {
-            renderInitialList();
-            renderScoredSections();
-            initAuth();
+        const brandTargets = {
+            'Milestone': 20,
+            'Labtech': 8,
+            'Analytik Jena': 17,
+            'Applied Spectra': 6,
+            'Metal Power': 5 // estimated
         };
 
-        async function initAuth() {
-            try {
-                await signInAnonymously(auth);
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                // Auto-load last sync ID if present
-                const savedId = localStorage.getItem('training_sync_id');
-                if (savedId) {
-                    document.getElementById('syncKey').value = savedId;
-                    applySync();
-                }
-            } catch (err) { console.error(err); }
+        // Application State
+        let appState = {
+            userInfo: {
+                name: '',
+                region: '',
+                startDate: ''
+            },
+            completedInitial: [], // array of IDs
+            completedCourses: []  // array of IDs
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            renderInitialCourses();
+            renderScoredCourses();
+            updateDashboard();
+        });
+
+        // --- Core Functions ---
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('btn-' + tabId).classList.add('active');
         }
 
-        window.applySync = () => {
-            const id = document.getElementById('syncKey').value.trim();
-            if (!id) return;
-            
-            if (unsubscribeSync) unsubscribeSync();
-            currentSyncId = id;
-            localStorage.setItem('training_sync_id', id);
+        function toggleSection(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('hidden');
+        }
 
-            // Use Rule 1 Path (Public Data for cross-device sharing)
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', `user_${id}`);
-            
-            setSyncing(true, "正在載入...");
-            
-            unsubscribeSync = onSnapshot(docRef, (snap) => {
-                if (snap.exists()) {
-                    appState = snap.data();
-                    document.getElementById('userName').value = appState.userInfo.name || '';
-                    document.getElementById('userRegion').value = appState.userInfo.region || '';
-                    document.getElementById('startDate').value = appState.userInfo.startDate || '';
-                } else {
-                    // New record for this ID
-                    appState = { userInfo: { name: '', region: '', startDate: '' }, completedInitial: [], completedCourses: [] };
-                }
-                updateAllUI();
-                setSyncing(false);
-            });
-        };
-
-        function debouncedSave() {
-            if (!currentSyncId) {
-                document.getElementById('syncKey').focus();
-                return;
-            }
+        function saveInputs() {
             appState.userInfo.name = document.getElementById('userName').value;
             appState.userInfo.region = document.getElementById('userRegion').value;
             appState.userInfo.startDate = document.getElementById('startDate').value;
-            
-            updateAllUI();
-            
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(async () => {
-                setSyncing(true, "儲存中...");
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', `user_${currentSyncId}`);
-                await setDoc(docRef, appState);
-                setSyncing(false);
-            }, 1000);
+            saveData();
         }
 
-        function setSyncing(isSaving, msg) {
-            const el = document.getElementById('syncStatus');
-            if (isSaving) {
-                el.innerHTML = `<i class="fas fa-sync animate-spin mr-1"></i>${msg}`;
-                el.className = "ml-4 px-2 py-1 rounded text-[10px] font-bold bg-blue-100 text-blue-700";
-            } else {
-                el.innerHTML = `<i class="fas fa-check-circle mr-1"></i>雲端已同步 (${currentSyncId})`;
-                el.className = "ml-4 px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700";
+        function saveData() {
+            localStorage.setItem('trainingApp_v1.4', JSON.stringify(appState));
+            updateDashboard();
+        }
+
+        function loadData() {
+            const stored = localStorage.getItem('trainingApp_v1.4');
+            if (stored) {
+                appState = JSON.parse(stored);
+                // Restore Inputs
+                document.getElementById('userName').value = appState.userInfo.name;
+                document.getElementById('userRegion').value = appState.userInfo.region;
+                document.getElementById('startDate').value = appState.userInfo.startDate;
             }
         }
 
-        // --- UI Rendering ---
-        function renderInitialList() {
-            document.getElementById('initialCourseList').innerHTML = initialCoursesData.map(c => `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-3">
-                        <label class="custom-checkbox flex items-center cursor-pointer">
-                            <input type="checkbox" class="hidden" data-id="${c.id}" onchange="toggleInitial('${c.id}')">
-                            <div class="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center">
-                                <svg class="w-3 h-3 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3"></path></svg>
-                            </div>
-                        </label>
-                    </td>
-                    <td class="px-4 py-3 text-gray-400 font-bold text-[11px]">${c.category}</td>
-                    <td class="px-4 py-3 text-gray-900 font-bold">${c.name}</td>
-                    <td class="px-4 py-3 text-gray-500 text-xs">${c.time}</td>
-                    <td class="px-4 py-3 text-gray-500 text-xs">${c.lecturer}</td>
-                    <td class="px-4 py-3 text-gray-400 italic text-[11px]">${c.remark}</td>
-                </tr>
-            `).join('');
+        function resetData() {
+            if(confirm('確定要清除所有資料嗎？此動作無法復原。')) {
+                localStorage.removeItem('trainingApp_v1.4');
+                location.reload();
+            }
         }
 
-        function renderScoredSections() {
-            const levels = ['新手篇', '理解篇', '規劃篇', '團隊合作篇', '自我成長'];
-            document.getElementById('scoredCourseSections').innerHTML = levels.map(lv => `
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 bg-gray-50/50 flex justify-between items-center cursor-pointer" onclick="toggleSection('sec-${lv}')">
-                        <h3 class="font-black text-gray-700 uppercase tracking-wide">${lv}</h3>
-                        <i class="fas fa-chevron-down text-gray-300"></i>
-                    </div>
-                    <div id="sec-${lv}" class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-100 text-sm">
-                            <tbody class="divide-y divide-gray-50">
-                                ${courseData.filter(c => c.level === lv).map(c => `
-                                    <tr class="hover:bg-blue-50/30">
-                                        <td class="w-16 px-4 py-3 text-center">
-                                            <label class="custom-checkbox inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" class="hidden" data-id="${c.id}" onchange="toggleCourse('${c.id}')">
-                                                <div class="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center">
-                                                    <svg class="w-3 h-3 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3"></path></svg>
-                                                </div>
-                                            </label>
-                                        </td>
-                                        <td class="px-4 py-3 text-indigo-600 font-black text-xs w-32">${c.brand || c.category}</td>
-                                        <td class="px-4 py-3 text-gray-800 font-bold">${c.name}</td>
-                                        <td class="px-4 py-3 font-black text-blue-600">${c.points}</td>
-                                        <td class="px-4 py-3 text-xs text-gray-400 italic">${c.desc}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `).join('');
+        function toggleInitial(id) {
+            if (appState.completedInitial.includes(id)) {
+                appState.completedInitial = appState.completedInitial.filter(x => x !== id);
+            } else {
+                appState.completedInitial.push(id);
+            }
+            saveData();
+            updateInitialProgress();
         }
 
-        function updateAllUI() {
-            document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-                const id = cb.getAttribute('data-id');
-                cb.checked = appState.completedInitial.includes(id) || appState.completedCourses.includes(id);
-            });
+        function toggleCourse(id) {
+            if (appState.completedCourses.includes(id)) {
+                appState.completedCourses = appState.completedCourses.filter(x => x !== id);
+            } else {
+                appState.completedCourses.push(id);
+            }
+            saveData();
+        }
 
-            let total = 0;
-            const catStats = { '新手篇': {t:0, c:0}, '理解篇': {t:0, c:0}, '規劃篇': {t:0, c:0}, '團隊合作篇': {t:0, c:0}, '自我成長': {t:0, c:0} };
-            const brandStats = {};
+        // --- Export Function ---
+        function exportToExcel() {
+            // 1. Calculate Stats (Duplicate logic briefly to ensure snapshot accuracy)
+            let totalScore = 0;
+            const catStats = {
+                '新手篇': 0, '理解篇': 0, '規劃篇': 0, '團隊合作篇': 0, '自我成長': 0
+            };
+            
             courseData.forEach(c => {
-                catStats[c.level].t += c.points;
                 if (appState.completedCourses.includes(c.id)) {
-                    total += c.points;
-                    catStats[c.level].c += c.points;
-                    if (c.brand) brandStats[c.brand] = (brandStats[c.brand] || 0) + 1;
+                    totalScore += c.points;
+                    if(catStats[c.level] !== undefined) catStats[c.level] += c.points;
                 }
             });
 
-            const iDone = appState.completedInitial.length;
-            const iPct = Math.round((iDone / 10) * 100);
-
-            document.getElementById('displayTotalScore').innerText = total;
-            document.getElementById('displayScoreRatio').innerText = Math.round((total / 487) * 100) + '%';
-            
-            let curLv = levelThresholds[0];
-            for(let l of levelThresholds) { if(total >= l.min) curLv = l; else break; }
-            document.getElementById('displayLevel').innerText = 'Lv ' + curLv.level;
-            
-            if (curLv.next) {
-                document.getElementById('displayDistToUpgrade').innerText = curLv.next - total;
-                document.getElementById('nextLevelName').innerText = 'Lv ' + (curLv.level + 1);
-                document.getElementById('levelProgressBar').style.width = ((total - curLv.min) / (curLv.next - curLv.min) * 100) + '%';
+            let currentLevel = 0;
+            for (let l of levelThresholds) {
+                if (totalScore >= l.min) currentLevel = l.level;
+                else break;
             }
+            
+            // 2. Prepare Sheet 1: Dashboard
+            const dashboardData = [
+                ["基本資料", ""],
+                ["姓名", appState.userInfo.name],
+                ["區域", appState.userInfo.region],
+                ["到職日", appState.userInfo.startDate],
+                ["", ""],
+                ["統計概況", ""],
+                ["目前等級", "Lv " + currentLevel],
+                ["目前總得分", totalScore],
+                ["", ""],
+                ["分類得分", "得分"],
+                ["新手篇", catStats['新手篇']],
+                ["理解篇", catStats['理解篇']],
+                ["規劃篇", catStats['規劃篇']],
+                ["團隊合作篇", catStats['團隊合作篇']],
+                ["自我成長", catStats['自我成長']]
+            ];
 
-            // Phase Table (Including Mandatory)
-            const catRows = `
-                <tr class="bg-amber-50/50">
-                    <td class="px-6 py-4 text-sm font-black text-amber-700">必修課程 (Mandatory)</td>
-                    <td class="px-6 py-4 text-[10px] text-gray-400 font-bold uppercase">10 項目</td>
-                    <td class="px-6 py-4 text-sm font-black text-amber-600">${iDone}</td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center space-x-2"><span class="text-xs font-bold text-gray-400">${iPct}%</span><div class="w-12 h-1 bg-gray-200 rounded-full"><div class="h-full bg-amber-500" style="width: ${iPct}%"></div></div></div>
-                    </td>
-                </tr>
-            ` + Object.entries(catStats).map(([name, data]) => {
-                const pct = Math.round((data.c / data.t) * 100);
-                return `<tr><td class="px-6 py-4 text-sm font-black text-gray-700">${name}</td><td class="px-6 py-4 text-[10px] text-gray-400 font-bold uppercase">${data.t} 分</td><td class="px-6 py-4 text-sm font-black text-blue-600">${data.c}</td><td class="px-6 py-4"><div class="flex items-center space-x-2"><span class="text-xs font-bold text-gray-400">${pct}%</span><div class="w-12 h-1 bg-gray-200 rounded-full"><div class="h-full bg-blue-500" style="width: ${pct}%"></div></div></div></td></tr>`;
-            }).join('');
-            document.getElementById('courseAnalysisBody').innerHTML = catRows;
+            // 3. Prepare Sheet 2: Initial Courses
+            const sheet2Headers = [["狀態", "類別", "課程名稱", "時數", "主講人", "備註"]];
+            const sheet2Data = initialCoursesData.map(c => [
+                appState.completedInitial.includes(c.id) ? "已完成" : "未完成",
+                c.category,
+                c.name,
+                c.time,
+                c.lecturer,
+                c.remark
+            ]);
 
-            // Brand Table
-            document.getElementById('brandAnalysisBody').innerHTML = Object.entries(brandTargets).map(([name, target]) => {
-                const current = brandStats[name] || 0;
-                const pct = Math.round((current / target) * 100);
-                return `<tr><td class="px-6 py-4 text-sm font-black text-gray-700">${name}</td><td class="px-6 py-4 text-[10px] text-gray-400 font-bold uppercase">${target}</td><td class="px-6 py-4 text-sm font-bold text-indigo-600">${current}</td><td class="px-6 py-4"><div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="h-full bg-indigo-500" style="width: ${Math.min(100, pct)}%"></div></div></td></tr>`;
-            }).join('');
+            // 4. Prepare Sheet 3: Course Selection
+            const sheet3Headers = [["狀態", "等級", "類別/品牌", "課程名稱", "分數", "說明"]];
+            const sheet3Data = courseData.map(c => [
+                appState.completedCourses.includes(c.id) ? "已完成" : "未完成",
+                c.level,
+                c.brand || c.category,
+                c.name,
+                c.points,
+                c.desc
+            ]);
 
-            document.getElementById('initialProgress').innerText = `${iDone}/10`;
+            // 5. Build Workbook
+            const wb = XLSX.utils.book_new();
+            
+            const ws1 = XLSX.utils.aoa_to_sheet(dashboardData);
+            XLSX.utils.book_append_sheet(wb, ws1, "個人儀表板");
+            
+            const ws2 = XLSX.utils.aoa_to_sheet([...sheet2Headers, ...sheet2Data]);
+            XLSX.utils.book_append_sheet(wb, ws2, "初始課程(必修)");
+
+            const ws3 = XLSX.utils.aoa_to_sheet([...sheet3Headers, ...sheet3Data]);
+            XLSX.utils.book_append_sheet(wb, ws3, "課程選擇(計分)");
+
+            // 6. Download
+            const dateStr = new Date().toISOString().split('T')[0];
+            const fileName = `教育訓練進度_${appState.userInfo.name || 'User'}_${dateStr}.xlsx`;
+            XLSX.writeFile(wb, fileName);
         }
 
-        window.toggleInitial = (id) => {
-            if (appState.completedInitial.includes(id)) appState.completedInitial = appState.completedInitial.filter(x => x !== id);
-            else appState.completedInitial.push(id);
-            debouncedSave();
-        };
+        // --- Render Functions ---
 
-        window.toggleCourse = (id) => {
-            if (appState.completedCourses.includes(id)) appState.completedCourses = appState.completedCourses.filter(x => x !== id);
-            else appState.completedCourses.push(id);
-            debouncedSave();
-        };
+        function renderInitialCourses() {
+            const tbody = document.getElementById('initialCourseList');
+            tbody.innerHTML = '';
+            initialCoursesData.forEach(c => {
+                const isChecked = appState.completedInitial.includes(c.id);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-3 whitespace-nowrap">
+                        <label class="custom-checkbox flex items-center cursor-pointer">
+                            <input type="checkbox" class="hidden" ${isChecked ? 'checked' : ''} onchange="toggleInitial('${c.id}')">
+                            <div class="w-5 h-5 border-2 border-gray-400 rounded flex items-center justify-center transition-colors">
+                                <svg class="w-3 h-3 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                        </label>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-900">${c.category}</td>
+                    <td class="px-4 py-3 text-sm font-medium text-gray-900">${c.name}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${c.time}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500">${c.lecturer}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500 italic">${c.remark}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            updateInitialProgress();
+        }
 
-        window.switchTab = (id) => {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById('btn-' + id).classList.add('active');
-        };
+        function updateInitialProgress() {
+            const total = initialCoursesData.length;
+            const done = appState.completedInitial.length;
+            document.getElementById('initialProgress').innerText = `${done}/${total}`;
+        }
 
-        window.toggleSection = (id) => document.getElementById(id).classList.toggle('hidden');
-        window.resetData = async () => { if(confirm("確定重置此識別碼的進度？")) { appState = { userInfo: { name: '', region: '', startDate: '' }, completedInitial: [], completedCourses: [] }; debouncedSave(); } };
+        function renderScoredCourses() {
+            const renderRows = (filterLevel, tbodyId) => {
+                const tbody = document.getElementById(tbodyId);
+                const items = courseData.filter(c => c.level === filterLevel);
+                tbody.innerHTML = '';
+                
+                items.forEach(c => {
+                    const isChecked = appState.completedCourses.includes(c.id);
+                    const tr = document.createElement('tr');
+                    tr.classList.add('hover:bg-gray-50');
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 text-center">
+                            <label class="custom-checkbox inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="hidden" ${isChecked ? 'checked' : ''} onchange="toggleCourse('${c.id}')">
+                                <div class="w-5 h-5 border-2 border-gray-400 rounded flex items-center justify-center transition-colors">
+                                    <svg class="w-3 h-3 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            </label>
+                        </td>
+                        ${c.level === '理解篇' || c.level === '團隊合作篇' ? `<td class="px-4 py-3 text-sm text-blue-600 font-medium">${c.brand || c.category}</td>` : ''}
+                        <td class="px-4 py-3 text-sm font-medium text-gray-900">${c.name}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600 font-bold">${c.points}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500">${c.desc}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            };
 
+            renderRows('新手篇', 'lv1-rows');
+            renderRows('理解篇', 'lv2-rows');
+            renderRows('規劃篇', 'lv3-rows');
+            renderRows('團隊合作篇', 'lv4-rows');
+            renderRows('自我成長', 'growth-rows');
+        }
+
+        function updateDashboard() {
+            // Calculate Total Score
+            let totalScore = 0;
+            const catStats = {
+                '初始篇': { total: 0, score: 0, done: false }, // Special case
+                '新手篇': { total: 0, score: 0 },
+                '理解篇': { total: 0, score: 0 },
+                '規劃篇': { total: 0, score: 0 },
+                '團隊合作篇': { total: 0, score: 0 },
+                '自我成長': { total: 0, score: 0 }
+            };
+
+            const brandStats = {
+                'Milestone': { total: brandTargets['Milestone'], completed: 0 },
+                'Labtech': { total: brandTargets['Labtech'], completed: 0 },
+                'Analytik Jena': { total: brandTargets['Analytik Jena'], completed: 0 },
+                'Applied Spectra': { total: brandTargets['Applied Spectra'], completed: 0 },
+                'Metal Power': { total: brandTargets['Metal Power'], completed: 0 }
+            };
+
+            // Calc Scored Courses
+            courseData.forEach(c => {
+                if (!catStats[c.level]) catStats[c.level] = { total: 0, score: 0 }; // safety
+                
+                catStats[c.level].total += c.points;
+                
+                if (appState.completedCourses.includes(c.id)) {
+                    totalScore += c.points;
+                    catStats[c.level].score += c.points;
+                    
+                    if (c.brand && brandStats[c.brand]) {
+                        brandStats[c.brand].completed += 1;
+                    }
+                }
+            });
+
+            // Calc Initial Status
+            catStats['初始篇'].done = appState.completedInitial.length === initialCoursesData.length;
+
+            // Determine Level
+            let currentLevelObj = levelThresholds[0];
+            for (let l of levelThresholds) {
+                if (totalScore >= l.min) currentLevelObj = l;
+                else break;
+            }
+
+            // Update UI Numbers
+            document.getElementById('displayTotalScore').innerText = totalScore;
+            document.getElementById('displayLevel').innerText = 'Lv ' + currentLevelObj.level;
+            
+            // Score Ratio (487 is hardcoded max from csv logic)
+            const maxScore = 487; 
+            const ratio = Math.round((totalScore / maxScore) * 100);
+            document.getElementById('displayScoreRatio').innerText = ratio + '%';
+
+            // Next Level Logic
+            if (currentLevelObj.next !== null) {
+                const dist = currentLevelObj.next - totalScore;
+                document.getElementById('displayDistToUpgrade').innerText = dist;
+                document.getElementById('nextLevelName').innerText = 'Lv ' + (currentLevelObj.level + 1);
+                
+                // Progress bar within level
+                const levelRange = currentLevelObj.next - currentLevelObj.min;
+                const progressInLevel = totalScore - currentLevelObj.min;
+                const percent = Math.max(0, Math.min(100, (progressInLevel / levelRange) * 100));
+                document.getElementById('levelProgressBar').style.width = percent + '%';
+            } else {
+                document.getElementById('displayDistToUpgrade').innerText = 'MAX';
+                document.getElementById('nextLevelName').innerText = 'Max Level';
+                document.getElementById('levelProgressBar').style.width = '100%';
+            }
+
+            // Render Course Analysis Table
+            const catBody = document.getElementById('courseAnalysisBody');
+            catBody.innerHTML = '';
+            
+            // Initial Row
+            const initRow = `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">初始篇</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${catStats['初始篇'].done ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${catStats['初始篇'].done ? '已完成' : '尚未完成'}
+                        </span>
+                    </td>
+                </tr>
+            `;
+            catBody.insertAdjacentHTML('beforeend', initRow);
+
+            // Other Categories
+            const categories = ['新手篇', '理解篇', '規劃篇', '團隊合作篇', '自我成長'];
+            categories.forEach(cat => {
+                const data = catStats[cat];
+                const percent = data.total > 0 ? Math.round((data.score / data.total) * 100) : 0;
+                let statusColor = 'bg-gray-100 text-gray-800';
+                if (percent === 100) statusColor = 'bg-green-100 text-green-800';
+                else if (percent > 0) statusColor = 'bg-yellow-100 text-yellow-800';
+
+                const row = `
+                     <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${cat}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.total}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600">${data.score}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex items-center">
+                                <span class="mr-2">${percent}%</span>
+                                <div class="w-16 bg-gray-200 rounded-full h-1.5">
+                                    <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${percent}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                catBody.insertAdjacentHTML('beforeend', row);
+            });
+
+            // Render Brand Analysis Table
+            const brandBody = document.getElementById('brandAnalysisBody');
+            brandBody.innerHTML = '';
+            for (const [brand, data] of Object.entries(brandStats)) {
+                const percent = Math.round((data.completed / data.total) * 100);
+                const row = `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${brand}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.total}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${data.completed}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-purple-500 h-2.5 rounded-full" style="width: ${Math.min(100, percent)}%"></div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                brandBody.insertAdjacentHTML('beforeend', row);
+            }
+        }
     </script>
 </body>
 </html>
