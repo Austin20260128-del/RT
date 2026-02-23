@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>元素組教育訓練系統 v1.8.0 (System Final Fix)</title>
+    <title>利泓科技教育訓練系統 v1.8.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -46,6 +46,16 @@
             transform: translateY(-4px);
             box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
         }
+        
+        /* 時間輸入框樣式優化 */
+        .time-input {
+            font-size: 11px;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+            background-color: white;
+            color: #475569;
+        }
     </style>
 </head>
 <body class="text-gray-900">
@@ -60,7 +70,7 @@
         <div id="loadingError" class="hidden max-w-sm">
             <i class="fas fa-wifi-slash text-rose-500 text-5xl mb-4"></i>
             <h3 class="font-bold text-gray-800 text-xl">雲端連線逾時</h3>
-            <p class="text-gray-500 text-sm mt-2 mb-6">目前無法存取資料庫。請確認您的網路環境。您可以選擇進入離線模式進行編輯。</p>
+            <p class="text-gray-500 text-sm mt-2 mb-6">無法與雲端資料庫取得連線。請確認您的網路環境。您可以選擇進入離線模式進行編輯。</p>
             <div class="flex flex-col gap-2">
                 <button onclick="location.reload()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all">重新載入</button>
                 <button onclick="skipLoading()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-all">進入離線預覽模式</button>
@@ -74,7 +84,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        <i class="fas fa-graduation-cap mr-2"></i>教育訓練系統 v1.8.0
+                        <i class="fas fa-graduation-cap mr-2"></i>利泓科技教育訓練系統 v1.8.1
                     </span>
                     <span id="syncStatus" class="ml-4 px-2 py-1 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-400 transition-all">
                         <i class="fas fa-circle-notch animate-spin mr-1"></i>連線中
@@ -206,7 +216,8 @@
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">狀態</th>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">類別</th>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">名稱</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">主講/負責</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">負責人</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">上課日期及時間</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50" id="initialCourseList"></tbody>
@@ -302,7 +313,14 @@
 
         let currentConfig = JSON.parse(JSON.stringify(FALLBACK_PLAN));
         let adminEditing = JSON.parse(JSON.stringify(FALLBACK_PLAN));
-        let userState = { userInfo: { name: '', region: '', startDate: '' }, completedInitial: [], completedCourses: [] };
+        // userState 增加對課程時間的儲存
+        let userState = { 
+            userInfo: { name: '', region: '', startDate: '' }, 
+            completedInitial: [], 
+            completedCourses: [],
+            initialTimes: {}, // { courseId: "YYYY-MM-DDTHH:MM" }
+            courseTimes: {}    // { courseId: "YYYY-MM-DDTHH:MM" }
+        };
 
         let syncId = null;
         let unsubscribeSnap = null;
@@ -405,7 +423,6 @@
             try {
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', docId);
                 const snap = await getDoc(docRef);
-                // 核心修復：確保每次載入都更新 adminEditing 並渲染列表
                 if (snap.exists()) {
                     adminEditing = snap.data();
                 } else {
@@ -479,12 +496,24 @@
                 const recordRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'training_records', id);
                 unsubscribeSnap = onSnapshot(recordRef, (s) => {
                     if (s.exists()) {
-                        userState = s.data();
+                        const data = s.data();
+                        userState = {
+                            ...userState,
+                            ...data,
+                            initialTimes: data.initialTimes || {},
+                            courseTimes: data.courseTimes || {}
+                        };
                         document.getElementById('userName').value = userState.userInfo.name || '';
                         document.getElementById('userRegion').value = userState.userInfo.region || '';
                         document.getElementById('startDate').value = userState.userInfo.startDate || '';
                     } else {
-                        userState = { userInfo: { name: '', region: '', startDate: '' }, completedInitial: [], completedCourses: [] };
+                        userState = { 
+                            userInfo: { name: '', region: '', startDate: '' }, 
+                            completedInitial: [], 
+                            completedCourses: [],
+                            initialTimes: {},
+                            courseTimes: {}
+                        };
                     }
                     updateGlobalStats();
                     setConnStatus(`已連線 (${id})`, 'text-green-600');
@@ -509,10 +538,21 @@
             }, 1000);
         };
 
+        window.updateTime = (type, id, val) => {
+            if (type === 'initial') {
+                userState.initialTimes[id] = val;
+            } else {
+                userState.courseTimes[id] = val;
+            }
+            window.debouncedSave();
+        };
+
         window.resetData = async () => {
-            if (!confirm("此操作將永久清除此 ID 的所有勾選進度，確定執行？")) return;
+            if (!confirm("此操作將永久清除此 ID 的所有進度及日期記錄，確定執行？")) return;
             userState.completedInitial = [];
             userState.completedCourses = [];
+            userState.initialTimes = {};
+            userState.courseTimes = {};
             updateGlobalStats();
             if (syncId && authUser) {
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'training_records', syncId);
@@ -522,7 +562,7 @@
 
         window.exportToExcel = () => {
             const wb = XLSX.utils.book_new();
-            const dataRows = [["教育訓練報表"], ["姓名", userState.userInfo.name], ["積分", document.getElementById('displayTotalScore').innerText], ["LV", document.getElementById('displayLevel').innerText]];
+            const dataRows = [["利泓科技教育訓練報表"], ["姓名", userState.userInfo.name], ["積分", document.getElementById('displayTotalScore').innerText], ["LV", document.getElementById('displayLevel').innerText]];
             const ws = XLSX.utils.aoa_to_sheet(dataRows);
             XLSX.utils.book_append_sheet(wb, ws, "Report");
             XLSX.writeFile(wb, `Report_${userState.userInfo.name || 'User'}.xlsx`);
@@ -547,6 +587,11 @@
                     <td class="px-4 py-3 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">${c.category}</td>
                     <td class="px-4 py-3 text-gray-900 font-bold">${c.name}</td>
                     <td class="px-4 py-3 text-xs text-gray-500">${c.lecturer || '-'}</td>
+                    <td class="px-4 py-3">
+                        <input type="datetime-local" class="time-input" 
+                               value="${userState.initialTimes[c.id] || ''}" 
+                               onchange="updateTime('initial', '${c.id}', this.value)">
+                    </td>
                 </tr>
             `).join('');
             document.getElementById('initialPlanName').innerText = syncId ? `${syncId} 的個人必修計畫` : "標準計畫";
@@ -565,11 +610,12 @@
                             <thead class="bg-gray-50/50 text-[10px] text-gray-400 font-bold uppercase">
                                 <tr>
                                     <th class="px-4 py-2 text-center w-16">狀態</th>
-                                    <th class="px-4 py-2 text-left w-32">類別</th>
+                                    <th class="px-4 py-2 text-left w-24">類別</th>
                                     <th class="px-4 py-2 text-left">名稱</th>
-                                    <th class="px-4 py-2 text-left w-24">積分</th>
-                                    <th class="px-4 py-2 text-left w-32">講師</th>
+                                    <th class="px-4 py-2 text-left w-16">積分</th>
+                                    <th class="px-4 py-2 text-left w-24">講師</th>
                                     <th class="px-4 py-2 text-left">備註</th>
+                                    <th class="px-4 py-2 text-left w-40">上課日期及時間</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-50">
@@ -586,6 +632,11 @@
                                         <td class="px-4 py-3 font-black text-blue-600">${c.points} pts</td>
                                         <td class="px-4 py-3 text-xs text-gray-500 font-bold">${c.lecturer || '-'}</td>
                                         <td class="px-4 py-3 text-xs text-gray-400 italic">${c.remark || '-'}</td>
+                                        <td class="px-4 py-3">
+                                            <input type="datetime-local" class="time-input" 
+                                                   value="${userState.courseTimes[c.id] || ''}" 
+                                                   onchange="updateTime('course', '${c.id}', this.value)">
+                                        </td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -674,22 +725,18 @@
                 }
             });
 
-            // 5 階段等級計算修正
             const interval = max / 5;
             let lv = 1, nextThreshold = null, nextLabel = "";
             if (max > 0) {
                 if (total >= max) { 
                     lv = 5; nextThreshold = null; 
                 } else {
-                    // 修正：依照目前總積分計算 LV
                     lv = Math.floor(total / interval) + 1;
                     if (lv > 5) lv = 5;
-
                     if (lv < 5) {
                         nextThreshold = lv * interval;
                         nextLabel = "Lv " + (lv + 1);
                     } else {
-                        // 如果進入 Lv 5 但還沒滿分
                         nextThreshold = max;
                         nextLabel = "100% 達成";
                     }
@@ -714,12 +761,11 @@
                 document.getElementById('levelProgressBar').style.width = '100%';
             }
 
-            // 渲染階段列表
             document.getElementById('dashboardPhaseBody').innerHTML = `
                 <table class="min-w-full divide-y divide-gray-100">
                     <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">階段類別</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">積分進度</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">完成率</th></tr></thead>
                     <tbody class="divide-y divide-gray-50">
-                        <tr><td class="px-6 py-4 text-sm font-bold text-amber-700">核心必修核心</td><td class="px-6 py-4 text-sm font-bold">${(userState.completedInitial || []).length}/${currentConfig.initialCourses.length}</td><td class="px-6 py-4"><div class="w-24 h-1 bg-gray-100 rounded-full"><div class="h-full bg-amber-500" style="width: ${currentConfig.initialCourses.length === 0 ? 0 : Math.round(((userState.completedInitial || []).length / currentConfig.initialCourses.length) * 100)}%"></div></div></td></tr>
+                        <tr><td class="px-6 py-4 text-sm font-bold text-amber-700">核心必修課程</td><td class="px-6 py-4 text-sm font-bold">${(userState.completedInitial || []).length}/${currentConfig.initialCourses.length}</td><td class="px-6 py-4"><div class="w-24 h-1 bg-gray-100 rounded-full"><div class="h-full bg-amber-500" style="width: ${currentConfig.initialCourses.length === 0 ? 0 : Math.round(((userState.completedInitial || []).length / currentConfig.initialCourses.length) * 100)}%"></div></div></td></tr>
                         ${Object.entries(catStats).map(([n, d]) => {
                             const p = d.t === 0 ? 0 : Math.round((d.c / d.t) * 100);
                             return `<tr><td class="px-6 py-4 text-sm font-bold text-gray-700">${n}</td><td class="px-6 py-4 text-sm font-bold">${d.c}/${d.t}</td><td class="px-6 py-4"><div class="w-24 h-1 bg-gray-100 rounded-full transition-all"><div class="h-full bg-blue-500" style="width: ${p}%"></div></div></td></tr>`;
@@ -728,7 +774,6 @@
                 </table>
             `;
 
-            // 渲染品牌視覺卡片
             document.getElementById('dashboardBrandBody').innerHTML = Object.entries(brandStats).length === 0 
                 ? '<div class="col-span-full py-10 text-center text-gray-400 italic text-sm">尚未設定或完成品牌訓練項目</div>'
                 : Object.entries(brandStats).map(([name, data]) => {
