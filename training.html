@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>元素組教育訓練系統 v1.7.4 (Admin Edit Permissions)</title>
+    <title>元素組教育訓練系統 v1.7.5 (Admin Control Pro)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -32,7 +32,6 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* 禁用欄位的樣式優化 */
         input:disabled, select:disabled {
             background-color: #f1f5f9 !important;
             cursor: not-allowed;
@@ -52,10 +51,10 @@
         <div id="loadingError" class="hidden max-w-sm">
             <i class="fas fa-wifi-slash text-rose-500 text-5xl mb-4"></i>
             <h3 class="font-bold text-gray-800 text-xl">連線逾時</h3>
-            <p class="text-gray-500 text-sm mt-2 mb-6">無法與雲端資料庫取得連線。您可以進入離線模式，或是檢查網路後重新整理。</p>
+            <p class="text-gray-500 text-sm mt-2 mb-6">連線雲端資料庫失敗。請檢查網路或重新整理。</p>
             <div class="flex flex-col gap-2">
-                <button onclick="location.reload()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700">重新嘗試連線</button>
-                <button onclick="skipLoading()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold">進入離線預覽模式</button>
+                <button onclick="location.reload()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg">重新嘗試連線</button>
+                <button onclick="skipLoading()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold">離線模式進入</button>
             </div>
         </div>
     </div>
@@ -66,7 +65,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        <i class="fas fa-graduation-cap mr-2"></i>教育訓練系統 v1.7.4
+                        <i class="fas fa-graduation-cap mr-2"></i>教育訓練系統 v1.7.5
                     </span>
                     <span id="syncStatus" class="ml-4 px-2 py-1 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-400 transition-all">
                         <i class="fas fa-circle-notch animate-spin mr-1"></i>連線中
@@ -78,7 +77,8 @@
                     <button onclick="switchTab('courses')" id="btn-courses" class="nav-btn px-3 py-2 rounded-md text-sm font-medium border border-transparent transition-all">評分</button>
                     <button onclick="switchTab('admin')" id="btn-admin" class="nav-btn px-3 py-2 rounded-md text-sm font-medium border border-rose-200 text-rose-600 hover:bg-rose-50 transition-all"><i class="fas fa-user-shield mr-1"></i>管理端</button>
                     <button onclick="exportToExcel()" title="匯出 Excel" class="hidden md:block text-emerald-600 px-2 hover:bg-emerald-50 rounded transition-colors"><i class="fas fa-file-excel"></i></button>
-                    <button onclick="resetData()" title="重置個人進度" class="text-rose-600 px-2 hover:bg-rose-50 rounded transition-colors"><i class="fas fa-redo-alt"></i></button>
+                    <!-- 重置按鈕預設隱藏 (只有管理者登入後顯示) -->
+                    <button id="btnNavReset" onclick="resetData()" title="重置個人進度" class="hidden text-rose-600 px-2 hover:bg-rose-50 rounded transition-colors"><i class="fas fa-redo-alt"></i></button>
                 </div>
             </div>
         </div>
@@ -91,48 +91,47 @@
             <div class="bg-indigo-600 rounded-xl shadow-lg p-6 text-white border-b-4 border-indigo-800 transition-all">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-lg font-bold"><i class="fas fa-id-badge mr-2"></i>使用者識別碼同步</h2>
-                        <p class="text-xs opacity-70 mt-1 text-indigo-100">輸入您的識別碼以同步進度。姓名與區域資訊僅限管理者修改。</p>
+                        <h2 class="text-lg font-bold"><i class="fas fa-id-badge mr-2"></i>同步進度識別碼</h2>
+                        <p class="text-xs opacity-70 mt-1 text-indigo-100">輸入專屬識別碼以同步您的完成紀錄。姓名與區域資訊僅限管理員修改。</p>
                     </div>
                     <div class="flex gap-2">
                         <input type="text" id="syncKey" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-64 font-bold" placeholder="輸入 ID (如姓名)">
-                        <button onclick="applySync()" class="bg-white text-indigo-600 px-6 py-2 rounded-lg font-bold hover:bg-indigo-50 transition-all shadow-md">同步資料</button>
+                        <button onclick="applySync()" class="bg-white text-indigo-600 px-6 py-2 rounded-lg font-bold hover:bg-indigo-50 transition-all shadow-md">連線雲端</button>
                     </div>
                 </div>
             </div>
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative">
-                <!-- 權限提示標籤 -->
                 <div id="adminBadge" class="hidden absolute top-4 right-4 bg-rose-100 text-rose-600 text-[10px] font-bold px-2 py-1 rounded uppercase animate-pulse">
-                    <i class="fas fa-unlock mr-1"></i> 管理者編輯模式已開啟
+                    <i class="fas fa-unlock mr-1"></i> 管理者模式：開放個人資訊編輯
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">姓名 (管理員限定)</label>
-                        <input type="text" id="userName" oninput="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold" placeholder="需由管理者填寫">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">姓名</label>
+                        <input type="text" id="userName" oninput="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold" placeholder="等待管理者填寫">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">區域 (管理員限定)</label>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">區域</label>
                         <select id="userRegion" onchange="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold">
-                            <option value="">選擇區域</option>
+                            <option value="">尚未選取</option>
                             <option value="北區">北區</option>
                             <option value="中區">中區</option>
                             <option value="南區">南區</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">到職日 (管理員限定)</label>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">到職日</label>
                         <input type="date" id="startDate" oninput="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold">
                     </div>
                     <div class="flex flex-col justify-center items-center md:items-end">
                         <div id="displayLevel" class="text-5xl font-black text-blue-600 italic">Lv 0</div>
-                        <div class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Level Rank</div>
+                        <div class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Growth Rank</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 數據統計 -->
+            <!-- Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white border-l-8 border-blue-600 rounded-xl shadow-sm p-6">
                     <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">目前總積分</div>
@@ -141,7 +140,7 @@
                 </div>
                 <div class="bg-white border-l-8 border-amber-500 rounded-xl shadow-sm p-6 flex flex-col justify-between">
                     <div>
-                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">晉升 <span id="nextLevelName" class="text-amber-600">--</span></div>
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">晉升 <span id="nextLevelName" class="text-amber-600">--</span> 尚需</div>
                         <div class="flex items-baseline">
                             <span class="text-4xl font-black text-gray-800" id="displayDistToUpgrade">--</span>
                             <span class="ml-2 text-gray-400 text-xs italic">pts left</span>
@@ -152,8 +151,8 @@
                     </div>
                 </div>
                 <div class="bg-white border-l-8 border-emerald-500 rounded-xl shadow-sm p-6">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">計畫型態</div>
-                    <div class="text-2xl font-black text-gray-800 mt-2" id="planTypeDisplay">正在連線...</div>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">課程計畫</div>
+                    <div class="text-2xl font-black text-gray-800 mt-2" id="planTypeDisplay">同步中...</div>
                     <div class="mt-3 flex items-center text-[10px] text-emerald-600 font-bold italic">
                         <i class="fas fa-bullseye mr-1"></i> 目標分數: <span id="displayMaxScore" class="ml-1">0</span> pts
                     </div>
@@ -168,11 +167,11 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100 bg-amber-50 flex justify-between items-center">
                     <div>
-                        <h3 class="font-bold text-amber-900">必修核心課程</h3>
-                        <p class="text-xs text-amber-700 mt-1" id="initialPlanName">載入課程中...</p>
+                        <h3 class="font-bold text-amber-900">必修課程清單</h3>
+                        <p class="text-xs text-amber-700 mt-1" id="initialPlanName">載入中...</p>
                     </div>
                     <div class="text-xs font-bold text-amber-800 bg-white px-3 py-1 rounded-full border border-amber-200 shadow-sm">
-                        完成進度: <span id="initialProgress">0/0</span>
+                        進度: <span id="initialProgress">0/0</span>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -181,8 +180,8 @@
                             <tr>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">狀態</th>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">類別</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">名稱</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">負責人</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">課程名稱</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">主講/負責</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50" id="initialCourseList"></tbody>
@@ -191,7 +190,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: COURSES -->
+        <!-- TAB 3: COURSES (Scored) -->
         <div id="courses" class="tab-content space-y-6">
             <div id="scoredCourseSections" class="space-y-6"></div>
         </div>
@@ -202,32 +201,32 @@
                 <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-lock text-2xl"></i>
                 </div>
-                <h2 class="text-2xl font-black text-gray-800">管理端入口</h2>
-                <p class="text-xs text-gray-400 mt-2">修改全域或特定人員的訓練路徑與個人資訊</p>
+                <h2 class="text-2xl font-black text-gray-800">課程後台管理</h2>
+                <p class="text-xs text-gray-400 mt-2">請輸入管理金鑰以獲得編輯權限</p>
                 <input type="password" id="adminPass" class="block w-full mt-6 rounded-xl border-gray-200 shadow-sm p-4 border bg-gray-50 text-center font-bold tracking-widest outline-none focus:ring-2 focus:ring-rose-500 transition-all" placeholder="••••••••">
-                <button onclick="loginAdmin()" class="w-full mt-4 bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-700 transition-all">驗證權限並進入</button>
+                <button onclick="loginAdmin()" class="w-full mt-4 bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-700 transition-all">解鎖權限</button>
             </div>
 
             <div id="adminPanel" class="hidden space-y-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all">
                     <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">規劃範疇</label>
+                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">規劃對象切換</label>
                         <div class="flex items-center gap-4">
                             <select id="adminTargetType" onchange="toggleAdminScope()" class="bg-gray-100 border border-gray-200 rounded-lg px-4 py-2 font-bold outline-none focus:ring-2 focus:ring-rose-500 transition-all">
                                 <option value="global">全域標竿計畫 (預設)</option>
                                 <option value="custom">特定人員專屬規劃 (量身打造)</option>
                             </select>
                             <div id="targetUserIdContainer" class="hidden flex items-center gap-2">
-                                <input type="text" id="targetSyncId" class="border border-gray-200 rounded-lg px-4 py-2 w-48 font-bold" placeholder="輸入人員 ID">
+                                <input type="text" id="targetSyncId" class="border border-gray-200 rounded-lg px-4 py-2 w-48 font-bold" placeholder="識別碼">
                                 <button onclick="loadConfigForAdmin(document.getElementById('targetSyncId').value)" class="bg-rose-100 text-rose-600 px-4 py-2 rounded-lg font-bold hover:bg-rose-200 transition-colors">讀取計畫</button>
                             </div>
                         </div>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="saveAdminConfig()" id="btnPublish" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 flex items-center transition-all">
-                            <i class="fas fa-cloud-upload-alt mr-2"></i>發布變更
+                            <i class="fas fa-cloud-upload-alt mr-2"></i>發布所有變更
                         </button>
-                        <button onclick="logoutAdmin()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors">登出</button>
+                        <button onclick="logoutAdmin()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors">退出管理模式</button>
                     </div>
                 </div>
 
@@ -242,7 +241,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 核心配置：與 v1.7.3 保持一致，確保相容性
+        // 核心配置：與 v1.7.3 保持一致，修復 GitHub Pages 連線
         const firebaseConfig = {
             apiKey: "AIzaSyCvOqKFvnKXrj07BtfbLLTNZXiCw2jBgus",
             authDomain: "training-834e3.firebaseapp.com",
@@ -252,7 +251,7 @@
             appId: "1:284421517335:web:19e2d463497126b8ccac52",
             measurementId: "G-TBK012JC7N"
         };
-        const activeAppId = typeof __app_id !== 'undefined' ? __app_id : "element-training-v1-7-4";
+        const activeAppId = typeof __app_id !== 'undefined' ? __app_id : "element-training-v1-7-5";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -264,7 +263,7 @@
                 { id: 'i2', category: '管理部', name: '辦公室環境介紹', lecturer: '許鏸文' }
             ],
             courseData: [
-                { id: 'c1', level: '新手篇', category: '核心', name: '正式入職自我介紹', points: 5, desc: '在 Line 群組完成自我介紹' }
+                { id: 'c1', level: '新手篇', category: '核心', name: '正式入職自我介紹', points: 5, lecturer: '管理部', remark: '需於 Line 群組發言' }
             ]
         };
 
@@ -291,13 +290,12 @@
             try {
                 document.getElementById('loadingStatus').innerText = "驗證資料庫存取權限...";
                 
-                // 智慧偵測：優先使用環境 Token，若失敗回退至匿名登入
                 let tokenUsed = false;
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     try {
                         await signInWithCustomToken(auth, __initial_auth_token);
                         tokenUsed = true;
-                    } catch (e) { console.warn("Token 不匹配，切換至匿名模式。"); }
+                    } catch (e) { console.warn("Token mismatch, reverting to anonymous."); }
                 }
                 
                 if (!tokenUsed) await signInAnonymously(auth);
@@ -330,7 +328,7 @@
                         document.getElementById('loadingOverlay').classList.add('hidden');
                         setConnStatus('雲端已同步', 'text-green-600');
                     } catch (fsErr) {
-                        console.error("Firestore 錯誤:", fsErr);
+                        console.error("Firestore Error:", fsErr);
                         document.getElementById('loadingStatus').innerText = "連線成功但讀取權限受限...";
                     }
                 });
@@ -341,21 +339,22 @@
 
         window.skipLoading = () => document.getElementById('loadingOverlay').classList.add('hidden');
 
-        // --- 管理後台核心 ---
+        // --- 管理後台功能 ---
 
         window.loginAdmin = () => {
             if (document.getElementById('adminPass').value === 'admin888') {
                 isAdminActive = true;
-                // 更新 UI：隱藏登入，顯示後台
                 document.getElementById('adminLogin').classList.add('hidden');
                 document.getElementById('adminPanel').classList.remove('hidden');
                 
-                // 核心功能：解鎖儀表板個人資訊編輯
+                // 核心需求：解鎖個人資訊編輯
                 setInfoFieldsEnabled(true);
                 document.getElementById('adminBadge').classList.remove('hidden');
+                // 核心需求：顯示導航欄重置按鈕
+                document.getElementById('btnNavReset').classList.remove('hidden');
                 
                 loadConfigForAdmin('global');
-            } else { alert("管理密鑰錯誤。"); }
+            } else { alert("金鑰錯誤。"); }
         };
 
         window.logoutAdmin = () => {
@@ -364,12 +363,13 @@
             document.getElementById('adminPanel').classList.add('hidden');
             document.getElementById('adminPass').value = '';
             
-            // 重新鎖定個人資訊編輯
+            // 核心需求：鎖定個人資訊編輯
             setInfoFieldsEnabled(false);
             document.getElementById('adminBadge').classList.add('hidden');
+            // 核心需求：隱藏導航欄重置按鈕
+            document.getElementById('btnNavReset').classList.add('hidden');
         };
 
-        // 解鎖/鎖定 儀表板欄位
         function setInfoFieldsEnabled(enabled) {
             const fields = ['userName', 'userRegion', 'startDate'];
             fields.forEach(id => {
@@ -381,7 +381,7 @@
         async function loadConfigForAdmin(tid) {
             if (!authUser) return;
             const docId = tid && tid !== 'global' ? `user_${tid}` : 'global';
-            setConnStatus(`讀取計畫: ${docId}`, 'text-blue-500');
+            setConnStatus(`載入計畫: ${docId}`, 'text-blue-500');
             try {
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', docId);
                 const snap = await getDoc(docRef);
@@ -412,7 +412,7 @@
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', docId);
                 const dataToSave = JSON.parse(JSON.stringify(adminEditing));
                 await setDoc(docRef, dataToSave);
-                alert("計畫已成功發布！");
+                alert("發布成功！受影響的人員在重新整理後將看到最新課表。");
                 if (syncId === (docId === 'global' ? syncId : docId.replace('user_', ''))) {
                     location.reload(); 
                 }
@@ -426,7 +426,7 @@
             }
         };
 
-        // --- 使用者數據同步 ---
+        // --- 使用者端數據同步 ---
 
         window.applySync = async () => {
             const id = document.getElementById('syncKey').value.trim();
@@ -435,7 +435,7 @@
             if (unsubscribeSnap) unsubscribeSnap();
             syncId = id;
             localStorage.setItem('rt_training_id', id);
-            setConnStatus('下載同步設定...', 'text-blue-600');
+            setConnStatus('正在同步設定...', 'text-blue-600');
 
             try {
                 const customRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', `user_${id}`);
@@ -465,8 +465,8 @@
                     }
                     updateGlobalStats();
                     setConnStatus(`同步已連線 (${id})`, 'text-green-600');
-                }, (err) => { setConnStatus('同步中斷', 'text-amber-600'); });
-            } catch (err) { setConnStatus('連線失敗', 'text-rose-600'); }
+                }, (err) => { setConnStatus('連線不穩定', 'text-amber-600'); });
+            } catch (err) { setConnStatus('同步失敗', 'text-rose-600'); }
         };
 
         window.debouncedSave = () => {
@@ -488,13 +488,14 @@
         };
 
         window.resetData = async () => {
-            if (!confirm("確定要重置進度？所有已勾選的項目將被清除，但個人姓名資訊會保留。")) return;
+            if (!confirm("確定要重置進度？所有已勾選的項目將被清除。此動作僅限管理者執行。")) return;
             userState.completedInitial = [];
             userState.completedCourses = [];
             updateGlobalStats();
             if (syncId && authUser) {
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'training_records', syncId);
                 await setDoc(docRef, userState);
+                alert("進度已重置。");
             }
         };
 
@@ -506,13 +507,13 @@
                 ["總得分", document.getElementById('displayTotalScore').innerText],
                 ["時間", new Date().toLocaleString()],
                 [],
-                ["類別", "項目名稱", "完成情況"]
+                ["類別", "課程名稱", "講師", "狀態"]
             ];
-            currentConfig.initialCourses.forEach(c => dataRows.push(["必修", c.name, userState.completedInitial.includes(c.id) ? "已完成" : "-"]));
-            currentConfig.courseData.forEach(c => dataRows.push([c.level, c.name, userState.completedCourses.includes(c.id) ? `${c.points}分` : "-"]));
+            currentConfig.initialCourses.forEach(c => dataRows.push(["必修", c.name, c.lecturer || "-", userState.completedInitial.includes(c.id) ? "V" : "-"]));
+            currentConfig.courseData.forEach(c => dataRows.push([c.level, c.name, c.lecturer || "-", userState.completedCourses.includes(c.id) ? `${c.points}分` : "-"]));
             const ws = XLSX.utils.aoa_to_sheet(dataRows);
             XLSX.utils.book_append_sheet(wb, ws, "Progress");
-            XLSX.writeFile(wb, `EducationReport_${userState.userInfo.name || 'User'}.xlsx`);
+            XLSX.writeFile(wb, `Report_${userState.userInfo.name || 'User'}.xlsx`);
         };
 
         // --- 渲染引擎 ---
@@ -536,7 +537,7 @@
                     <td class="px-4 py-3 text-xs text-gray-500">${c.lecturer || '-'}</td>
                 </tr>
             `).join('');
-            document.getElementById('initialPlanName').innerText = syncId ? `${syncId} 的訓練核心` : "標準訓練核心";
+            document.getElementById('initialPlanName').innerText = syncId ? `${syncId} 的個人路徑` : "標準核心路徑";
         }
 
         function renderScoredSections() {
@@ -549,19 +550,30 @@
                     </div>
                     <div id="sec-${lv}" class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-100 text-sm">
+                            <thead class="bg-gray-50/50">
+                                <tr class="text-[10px] text-gray-400 font-bold">
+                                    <th class="px-4 py-2 text-center w-16">狀態</th>
+                                    <th class="px-4 py-2 text-left w-32">品牌/類別</th>
+                                    <th class="px-4 py-2 text-left">課程名稱</th>
+                                    <th class="px-4 py-2 text-left w-24">分值</th>
+                                    <th class="px-4 py-2 text-left w-32">講師</th>
+                                    <th class="px-4 py-2 text-left">備註</th>
+                                </tr>
+                            </thead>
                             <tbody class="divide-y divide-gray-50">
                                 ${currentConfig.courseData.filter(c => c.level === lv).map(c => `
                                     <tr class="hover:bg-blue-50/30">
-                                        <td class="w-16 px-4 py-3 text-center">
+                                        <td class="px-4 py-3 text-center">
                                             <label class="custom-checkbox inline-flex items-center cursor-pointer">
                                                 <input type="checkbox" class="hidden" data-id="${c.id}" onchange="toggleCourse('${c.id}')">
                                                 <div class="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center transition-all"><svg class="w-3 h-3 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg></div>
                                             </label>
                                         </td>
-                                        <td class="px-4 py-3 text-indigo-600 font-black text-xs w-32 uppercase">${c.brand || c.category}</td>
+                                        <td class="px-4 py-3 text-indigo-600 font-black text-xs uppercase">${c.brand || c.category}</td>
                                         <td class="px-4 py-3 text-gray-800 font-bold">${c.name}</td>
-                                        <td class="px-4 py-3 font-black text-blue-600">${c.points}</td>
-                                        <td class="px-4 py-3 text-xs text-gray-400 italic">${c.desc || ''}</td>
+                                        <td class="px-4 py-3 font-black text-blue-600">${c.points} pts</td>
+                                        <td class="px-4 py-3 text-xs text-gray-500 font-bold">${c.lecturer || '-'}</td>
+                                        <td class="px-4 py-3 text-xs text-gray-400 italic">${c.remark || '-'}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -575,14 +587,14 @@
             let html = `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden shadow-inner">
                     <div class="px-6 py-4 bg-amber-50 border-b border-amber-100 flex justify-between items-center">
-                        <h3 class="font-black text-amber-900 uppercase">1. 必修項目規劃</h3>
-                        <button onclick="adminAdd('i')" class="bg-amber-600 text-white px-3 py-1 rounded text-xs font-bold transition-all shadow-sm hover:bg-amber-700">+ 新增</button>
+                        <h3 class="font-black text-amber-900 uppercase">1. 必修課程管理 (編輯後需發布)</h3>
+                        <button onclick="adminAdd('i')" class="bg-amber-600 text-white px-3 py-1 rounded text-xs font-bold transition-all shadow-sm hover:bg-amber-700">+ 新增必修</button>
                     </div>
                     <div class="p-6 space-y-3">
                         ${adminEditing.initialCourses.map(c => `
                             <div class="grid grid-cols-1 md:grid-cols-6 gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
                                 <input type="text" value="${c.category}" oninput="adminUpdate('i', '${c.id}', 'category', this.value)" class="text-xs p-2 border rounded font-bold" placeholder="類別">
-                                <input type="text" value="${c.name}" oninput="adminUpdate('i', '${c.id}', 'name', this.value)" class="col-span-3 text-xs p-2 border rounded font-bold" placeholder="項目名稱">
+                                <input type="text" value="${c.name}" oninput="adminUpdate('i', '${c.id}', 'name', this.value)" class="col-span-3 text-xs p-2 border rounded font-bold" placeholder="名稱">
                                 <input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('i', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded" placeholder="負責人">
                                 <button onclick="adminDel('i', '${c.id}')" class="text-rose-500 hover:bg-rose-50 p-1 rounded transition-colors"><i class="fas fa-trash-alt"></i></button>
                             </div>
@@ -591,20 +603,32 @@
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mt-6">
                     <div class="px-6 py-4 bg-blue-50 border-b border-blue-100 flex justify-between items-center">
-                        <h3 class="font-black text-blue-900 uppercase">2. 評分指標規劃</h3>
-                        <button onclick="adminAdd('c')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold transition-all shadow-sm hover:bg-blue-700">+ 新增</button>
+                        <h3 class="font-black text-blue-900 uppercase">2. 評分課程管理 (可編輯講師與備註)</h3>
+                        <button onclick="adminAdd('c')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold transition-all shadow-sm hover:bg-blue-700">+ 新增評分項</button>
                     </div>
                     <div class="p-6 space-y-3">
                         ${adminEditing.courseData.map(c => `
-                            <div class="grid grid-cols-1 md:grid-cols-7 gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                                <select onchange="adminUpdate('c', '${c.id}', 'level', this.value)" class="text-[10px] p-2 border rounded font-bold outline-none">
-                                    ${['新手篇','理解篇','規劃篇','團隊合作篇','自我成長'].map(l => `<option ${c.level === l ? 'selected' : ''}>${l}</option>`).join('')}
-                                </select>
-                                <input type="text" value="${c.brand || ''}" oninput="adminUpdate('c', '${c.id}', 'brand', this.value)" class="text-[10px] p-2 border rounded" placeholder="品牌">
-                                <input type="text" value="${c.category}" oninput="adminUpdate('c', '${c.id}', 'category', this.value)" class="text-[10px] p-2 border rounded" placeholder="類別">
-                                <input type="text" value="${c.name}" oninput="adminUpdate('c', '${c.id}', 'name', this.value)" class="col-span-2 text-[10px] p-2 border rounded font-bold" placeholder="項目名稱">
-                                <input type="number" value="${c.points}" oninput="adminUpdate('c', '${c.id}', 'points', this.value)" class="text-[10px] p-2 border rounded font-black text-blue-600" placeholder="分">
-                                <button onclick="adminDel('c', '${c.id}')" class="text-rose-500 hover:bg-rose-50 p-1 rounded transition-colors"><i class="fas fa-trash-alt"></i></button>
+                            <div class="bg-white border rounded-lg p-4 space-y-2 border-gray-100 shadow-sm">
+                                <div class="grid grid-cols-1 md:grid-cols-7 gap-2">
+                                    <select onchange="adminUpdate('c', '${c.id}', 'level', this.value)" class="text-[10px] p-2 border rounded font-bold outline-none col-span-1">
+                                        ${['新手篇','理解篇','規劃篇','團隊合作篇','自我成長'].map(l => `<option ${c.level === l ? 'selected' : ''}>${l}</option>`).join('')}
+                                    </select>
+                                    <input type="text" value="${c.brand || ''}" oninput="adminUpdate('c', '${c.id}', 'brand', this.value)" class="text-[10px] p-2 border rounded col-span-1" placeholder="品牌">
+                                    <input type="text" value="${c.category}" oninput="adminUpdate('c', '${c.id}', 'category', this.value)" class="text-[10px] p-2 border rounded col-span-1" placeholder="類別">
+                                    <input type="text" value="${c.name}" oninput="adminUpdate('c', '${c.id}', 'name', this.value)" class="col-span-2 text-[10px] p-2 border rounded font-bold" placeholder="項目名稱">
+                                    <input type="number" value="${c.points}" oninput="adminUpdate('c', '${c.id}', 'points', this.value)" class="text-[10px] p-2 border rounded font-black text-blue-600 col-span-1" placeholder="分">
+                                    <button onclick="adminDel('c', '${c.id}')" class="text-rose-500 hover:bg-rose-50 p-1 rounded transition-colors text-center col-span-1"><i class="fas fa-trash-alt"></i></button>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] text-gray-400 font-bold whitespace-nowrap">講師：</span>
+                                        <input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('c', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded w-full font-bold text-indigo-600" placeholder="編輯講師">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] text-gray-400 font-bold whitespace-nowrap">備註：</span>
+                                        <input type="text" value="${c.remark || ''}" oninput="adminUpdate('c', '${c.id}', 'remark', this.value)" class="text-xs p-2 border rounded w-full italic" placeholder="編輯備註">
+                                    </div>
+                                </div>
                             </div>
                         `).join('')}
                     </div>
@@ -617,7 +641,7 @@
 
         window.adminAdd = (t) => {
             if (t === 'i') adminEditing.initialCourses.push({ id: 'i'+Date.now(), category: '管理', name: '新課程', lecturer: '' });
-            else adminEditing.courseData.push({ id: 'c'+Date.now(), level: '新手篇', category: '核心', name: '新評分項', points: 1, desc: '' });
+            else adminEditing.courseData.push({ id: 'c'+Date.now(), level: '新手篇', category: '一般', name: '新評分項', points: 1, lecturer: '', remark: '' });
             renderAdminEditor();
         };
         window.adminDel = (t, id) => {
