@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>元素組教育訓練系統 v1.6.9 (Connection & Tailoring Fix)</title>
+    <title>元素組教育訓練系統 v1.7.0 (Publishing Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -35,34 +35,34 @@
 </head>
 <body class="text-gray-900">
 
-    <!-- Loading Overlay -->
+    <!-- 加載遮罩 -->
     <div id="loadingOverlay" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center p-6 text-center">
         <div id="loadingCore">
             <div class="spinner mb-4 mx-auto"></div>
             <p class="text-gray-500 animate-pulse font-bold text-lg">系統啟動中...</p>
-            <p id="loadingStatus" class="text-gray-400 text-xs mt-2">正在初始化連線...</p>
+            <p id="loadingStatus" class="text-gray-400 text-xs mt-2">正在與雲端同步...</p>
         </div>
         <div id="loadingError" class="hidden max-w-sm">
-            <i class="fas fa-exclamation-triangle text-amber-500 text-5xl mb-4"></i>
-            <h3 class="font-bold text-gray-800 text-xl">連線較慢</h3>
-            <p class="text-gray-500 text-sm mt-2 mb-6">雲端連線反應時間較長，您可以嘗試「進入離線模式」先行編輯，或重新整理頁面。</p>
+            <i class="fas fa-exclamation-triangle text-rose-500 text-5xl mb-4"></i>
+            <h3 class="font-bold text-gray-800 text-xl">連線受阻</h3>
+            <p class="text-gray-500 text-sm mt-2 mb-6" id="errorMessage">目前無法存取雲端服務。這可能是由於網路限制或權限過期。您可以嘗試進入「離線預覽模式」。</p>
             <div class="flex flex-col gap-2">
-                <button onclick="location.reload()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg">重新嘗試</button>
-                <button onclick="skipLoading()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold">進入離線預覽</button>
+                <button onclick="location.reload()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg">重新嘗試連線</button>
+                <button onclick="skipLoading()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold">進入離線預覽模式</button>
             </div>
         </div>
     </div>
 
-    <!-- Top Navigation -->
+    <!-- 頂部導航 -->
     <nav class="bg-white shadow-sm sticky top-0 z-50 border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        <i class="fas fa-graduation-cap mr-2"></i>教育訓練系統 v1.6.9
+                        <i class="fas fa-graduation-cap mr-2"></i>教育訓練系統 v1.7.0
                     </span>
                     <span id="syncStatus" class="ml-4 px-2 py-1 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-400">
-                        <i class="fas fa-wifi-slash mr-1"></i>尚未同步
+                        <i class="fas fa-wifi-slash mr-1"></i>尚未連線
                     </span>
                 </div>
                 <div class="flex items-center space-x-1 md:space-x-2">
@@ -70,8 +70,8 @@
                     <button onclick="switchTab('initial')" id="btn-initial" class="nav-btn px-3 py-2 rounded-md text-sm font-medium border border-transparent">必修</button>
                     <button onclick="switchTab('courses')" id="btn-courses" class="nav-btn px-3 py-2 rounded-md text-sm font-medium border border-transparent">評分</button>
                     <button onclick="switchTab('admin')" id="btn-admin" class="nav-btn px-3 py-2 rounded-md text-sm font-medium border border-rose-200 text-rose-600 hover:bg-rose-50"><i class="fas fa-user-shield mr-1"></i>管理端</button>
-                    <button onclick="exportToExcel()" class="hidden md:block text-emerald-600 px-2 hover:bg-emerald-50 rounded"><i class="fas fa-file-excel"></i></button>
-                    <button onclick="resetData()" class="text-rose-600 px-2 hover:bg-rose-50 rounded"><i class="fas fa-redo-alt"></i></button>
+                    <button onclick="exportToExcel()" title="匯出 Excel" class="hidden md:block text-emerald-600 px-2 hover:bg-emerald-50 rounded"><i class="fas fa-file-excel"></i></button>
+                    <button onclick="resetData()" title="重置進度" class="text-rose-600 px-2 hover:bg-rose-50 rounded"><i class="fas fa-redo-alt"></i></button>
                 </div>
             </div>
         </div>
@@ -81,14 +81,14 @@
 
         <!-- TAB 1: DASHBOARD -->
         <div id="dashboard" class="tab-content active space-y-6">
-            <div class="bg-indigo-600 rounded-xl shadow-lg p-6 text-white border-b-4 border-indigo-800">
+            <div class="bg-indigo-600 rounded-xl shadow-lg p-6 text-white border-b-4 border-indigo-800 transition-all">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-lg font-bold"><i class="fas fa-sync-alt mr-2"></i>識別碼連線</h2>
-                        <p class="text-xs opacity-70 mt-1 text-indigo-100">輸入您的專屬 ID，系統將自動載入「全域」或管理者為您「量身規劃」的課程。</p>
+                        <h2 class="text-lg font-bold"><i class="fas fa-id-badge mr-2"></i>連線識別碼</h2>
+                        <p class="text-xs opacity-70 mt-1 text-indigo-100">輸入專屬識別碼，系統將載入為您量身打造的訓練課表。</p>
                     </div>
                     <div class="flex gap-2">
-                        <input type="text" id="syncKey" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-64" placeholder="輸入您的 ID">
+                        <input type="text" id="syncKey" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-64 font-bold" placeholder="輸入 ID (如：姓名)">
                         <button onclick="applySync()" class="bg-white text-indigo-600 px-6 py-2 rounded-lg font-bold hover:bg-indigo-50 transition-colors shadow-md">同步進度</button>
                     </div>
                 </div>
@@ -115,12 +115,11 @@
                     </div>
                     <div class="flex flex-col justify-center items-center md:items-end">
                         <div id="displayLevel" class="text-5xl font-black text-blue-600 italic">Lv 0</div>
-                        <div class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Rank</div>
+                        <div class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Training Rank</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Stats -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white border-l-8 border-blue-600 rounded-xl shadow-sm p-6">
                     <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">總積分</div>
@@ -140,17 +139,15 @@
                     </div>
                 </div>
                 <div class="bg-white border-l-8 border-emerald-500 rounded-xl shadow-sm p-6">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">計畫類別</div>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">計畫型態</div>
                     <div class="text-2xl font-black text-gray-800 mt-2" id="planTypeDisplay">載入中...</div>
                     <div class="mt-3 flex items-center text-[10px] text-emerald-600 font-bold italic">
-                        <i class="fas fa-trophy mr-1"></i> 目標分數: <span id="displayMaxScore" class="ml-1">0</span>
+                        <i class="fas fa-bullseye mr-1"></i> 目標分數: <span id="displayMaxScore" class="ml-1">0</span>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="dashboardAnalysis">
-                <!-- Content generated via JS -->
-            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="dashboardAnalysis"></div>
         </div>
 
         <!-- TAB 2: INITIAL -->
@@ -159,7 +156,7 @@
                 <div class="px-6 py-5 border-b border-gray-100 bg-amber-50 flex justify-between items-center">
                     <div>
                         <h3 class="font-bold text-amber-900">必修核心計畫</h3>
-                        <p class="text-xs text-amber-700 mt-1" id="initialPlanName">預設課程</p>
+                        <p class="text-xs text-amber-700 mt-1" id="initialPlanName">載入課程中...</p>
                     </div>
                     <div class="text-xs font-bold text-amber-800 bg-white px-3 py-1 rounded-full border border-amber-200">
                         進度: <span id="initialProgress">0/0</span>
@@ -171,8 +168,8 @@
                             <tr>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">狀態</th>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">類別</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">名稱</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">講師</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">課程名稱</th>
+                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400">主講/負責</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50" id="initialCourseList"></tbody>
@@ -190,37 +187,38 @@
         <div id="admin" class="tab-content space-y-6">
             <div id="adminLogin" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 border border-gray-200 mt-10 text-center">
                 <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-user-lock text-2xl"></i>
+                    <i class="fas fa-lock text-2xl"></i>
                 </div>
-                <h2 class="text-2xl font-black text-gray-800">管理端後台</h2>
+                <h2 class="text-2xl font-black text-gray-800">管理端入口</h2>
+                <p class="text-xs text-gray-400 mt-2">修改全域或特定人員的訓練路徑</p>
                 <input type="password" id="adminPass" class="block w-full mt-6 rounded-xl border-gray-200 shadow-sm p-4 border bg-gray-50 text-center font-bold tracking-widest" placeholder="••••••••">
-                <button onclick="loginAdmin()" class="w-full mt-4 bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg">進入編輯模式</button>
+                <button onclick="loginAdmin()" class="w-full mt-4 bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-700">驗證身分</button>
             </div>
 
             <div id="adminPanel" class="hidden space-y-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-400 mb-2">編輯模式</label>
+                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">規劃範圍</label>
                         <div class="flex items-center gap-4">
-                            <select id="adminTargetType" onchange="toggleAdminScope()" class="bg-gray-100 border border-gray-200 rounded-lg px-4 py-2 font-bold">
+                            <select id="adminTargetType" onchange="toggleAdminScope()" class="bg-gray-100 border border-gray-200 rounded-lg px-4 py-2 font-bold focus:ring-2 focus:ring-rose-500 outline-none transition-all">
                                 <option value="global">全域標竿計畫 (預設)</option>
-                                <option value="custom">特定人員量身規劃 (專屬)</option>
+                                <option value="custom">特定人員專屬規劃 (專屬)</option>
                             </select>
                             <div id="targetUserIdContainer" class="hidden flex items-center gap-2">
                                 <input type="text" id="targetSyncId" class="border border-gray-200 rounded-lg px-4 py-2 w-48 font-bold" placeholder="輸入人員 ID">
-                                <button onclick="loadConfigForAdmin(document.getElementById('targetSyncId').value)" class="bg-rose-100 text-rose-600 px-4 py-2 rounded-lg font-bold">載入</button>
+                                <button onclick="loadConfigForAdmin(document.getElementById('targetSyncId').value)" class="bg-rose-100 text-rose-600 px-4 py-2 rounded-lg font-bold hover:bg-rose-200">載入</button>
                             </div>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="saveAdminConfig()" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg">發布變更</button>
-                        <button onclick="logoutAdmin()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold">退出</button>
+                        <button onclick="saveAdminConfig()" id="btnPublish" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 flex items-center transition-all">
+                            <i class="fas fa-cloud-upload-alt mr-2"></i>發布變更
+                        </button>
+                        <button onclick="logoutAdmin()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold hover:bg-gray-200">登出</button>
                     </div>
                 </div>
 
-                <div id="adminListsContainer" class="grid grid-cols-1 gap-8">
-                    <!-- Lists generated via JS -->
-                </div>
+                <div id="adminListsContainer" class="grid grid-cols-1 gap-8"></div>
             </div>
         </div>
     </div>
@@ -229,32 +227,30 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Config
-        const apiKey = ""; 
+        // Firebase Config from rules
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: apiKey,
+            apiKey: "",
             authDomain: "training-834e3.firebaseapp.com",
             projectId: "training-834e3",
             storageBucket: "training-834e3.firebasestorage.app",
             messagingSenderId: "284421517335",
             appId: "1:284421517335:web:19e2d463497126b8ccac52"
         };
-        const appId = typeof __app_id !== 'undefined' ? __app_id : "element-training-v1-6-9";
+        const appId = typeof __app_id !== 'undefined' ? __app_id : "element-training-v1-7-0";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Constants & Defaults
         const FALLBACK = {
             initialCourses: [
                 { id: 'i1', category: '管理部', name: '繳交個人資料', lecturer: '王淑英' },
-                { id: 'i2', category: '管理部', name: '辦公室介紹', lecturer: '許鏸文' }
+                { id: 'i2', category: '管理部', name: '辦公室環境介紹', lecturer: '許鏸文' }
             ],
             courseData: [
-                { id: 'c1', level: '新手篇', category: '核心', name: '自我介紹', points: 5, desc: 'Line 群組自我介紹' }
+                { id: 'c1', level: '新手篇', category: '核心', name: '自我介紹', points: 5, desc: '在 Line 群組完成自我介紹' }
             ]
         };
 
@@ -268,39 +264,35 @@
         let isAdmin = false;
         let currentUser = null;
 
-        // --- Core Init ---
+        // --- Auth & Init ---
 
         async function init() {
-            const safety = setTimeout(() => {
-                if (document.getElementById('loadingOverlay').classList.contains('hidden')) return;
-                document.getElementById('loadingCore').classList.add('hidden');
-                document.getElementById('loadingError').classList.remove('hidden');
+            const safetyTimeout = setTimeout(() => {
+                if (!document.getElementById('loadingOverlay').classList.contains('hidden')) {
+                    document.getElementById('loadingCore').classList.add('hidden');
+                    document.getElementById('loadingError').classList.remove('hidden');
+                }
             }, 10000);
 
             try {
-                document.getElementById('loadingStatus').innerText = "驗證身分中...";
-                
-                // Mandatory Rule: Auth FIRST and AWAIT it
+                // Rule 3: Auth FIRST and AWAIT it
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
 
-                // Wait for user to be ready
                 onAuthStateChanged(auth, async (user) => {
                     currentUser = user;
                     if (!user) return;
 
+                    document.getElementById('loadingStatus').innerText = "下載計畫配置...";
                     try {
-                        document.getElementById('loadingStatus').innerText = "下載全域訓練計畫...";
-                        // Collection: configs, Doc: global
                         const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'global');
                         const snap = await getDoc(docRef);
                         if (snap.exists()) {
                             currentConfig = snap.data();
                         } else {
-                            // Seed default if not exists
                             await setDoc(docRef, FALLBACK);
                         }
 
@@ -314,23 +306,22 @@
                             updateStats();
                         }
 
-                        clearTimeout(safety);
+                        clearTimeout(safetyTimeout);
                         document.getElementById('loadingOverlay').classList.add('hidden');
-                    } catch (innerErr) {
-                        console.error("Firestore Init Error:", innerErr);
-                        document.getElementById('loadingStatus').innerText = "資料庫存取受限，進入離線模式...";
+                        setSyncStatus('連線成功');
+                    } catch (fsErr) {
+                        console.error("Firestore Init Error:", fsErr);
+                        document.getElementById('errorMessage').innerText = `資料庫權限錯誤 (${fsErr.code})。請確認您的 appId 權限。`;
                     }
                 });
-
             } catch (err) {
-                console.error("Init Error:", err);
-                document.getElementById('loadingStatus').innerText = "連線失敗，準備進入...";
+                console.error("Auth Init Error:", err);
             }
         }
 
         window.skipLoading = () => document.getElementById('loadingOverlay').classList.add('hidden');
 
-        // --- Data Logic ---
+        // --- User Core ---
 
         window.applySync = async () => {
             const id = document.getElementById('syncKey').value.trim();
@@ -339,26 +330,24 @@
             if (unsubscribe) unsubscribe();
             syncId = id;
             localStorage.setItem('training_id', id);
-            setSyncing(true, "讀取個人計畫...");
+            setSyncing(true, "載入計畫...");
 
             try {
-                // Rule 1 paths
                 const customRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', `user_${id}`);
                 const globalRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'global');
                 
                 let snap = await getDoc(customRef);
                 if (snap.exists()) {
                     currentConfig = snap.data();
-                    document.getElementById('planTypeDisplay').innerText = "量身專屬計畫";
+                    document.getElementById('planTypeDisplay').innerText = "專屬計畫";
                 } else {
                     const gSnap = await getDoc(globalRef);
                     currentConfig = gSnap.exists() ? gSnap.data() : FALLBACK;
-                    document.getElementById('planTypeDisplay').innerText = "全域標竿計畫";
+                    document.getElementById('planTypeDisplay').innerText = "全域計畫";
                 }
 
                 renderAll();
 
-                // Listen to records
                 const recordRef = doc(db, 'artifacts', appId, 'public', 'data', 'training_records', id);
                 unsubscribe = onSnapshot(recordRef, (s) => {
                     if (s.exists()) {
@@ -372,12 +361,11 @@
                     updateStats();
                     setSyncing(false);
                 }, (err) => { 
-                    console.error("Snapshot error:", err);
-                    setSyncing(false, "同步失敗"); 
+                    setSyncing(false, "同步異常"); 
                 });
             } catch (err) { 
                 console.error(err);
-                setSyncing(false, "權限不足或網路異常"); 
+                setSyncing(false, "權限不足"); 
             }
         };
 
@@ -388,7 +376,7 @@
             updateStats();
             
             if (!syncId || !currentUser) return;
-            setSyncing(true, "儲存...");
+            setSyncing(true, "儲存中...");
             clearTimeout(saveTimer);
             saveTimer = setTimeout(async () => {
                 try {
@@ -397,6 +385,35 @@
                     setSyncing(false);
                 } catch (e) { console.error(e); }
             }, 1000);
+        };
+
+        window.resetData = async () => {
+            if (!confirm("確定要重置進度？此操作將清除所有勾選項。")) return;
+            userState = { userInfo: { name: '', region: '', startDate: '' }, completedInitial: [], completedCourses: [] };
+            document.getElementById('userName').value = '';
+            document.getElementById('userRegion').value = '';
+            document.getElementById('startDate').value = '';
+            updateStats();
+            if (syncId && currentUser) {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'training_records', syncId);
+                await setDoc(docRef, userState);
+            }
+        };
+
+        window.exportToExcel = () => {
+            const wb = XLSX.utils.book_new();
+            const rows = [
+                ["訓練進度報告"],
+                ["姓名", userState.userInfo.name || "未填"],
+                ["總得分", document.getElementById('displayTotalScore').innerText],
+                [],
+                ["類別", "項目", "狀態"]
+            ];
+            currentConfig.initialCourses.forEach(c => rows.push([c.category, c.name, userState.completedInitial.includes(c.id) ? "完成" : "-"]));
+            currentConfig.courseData.forEach(c => rows.push([c.level, c.name, userState.completedCourses.includes(c.id) ? c.points : "-"]));
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            XLSX.utils.book_append_sheet(wb, ws, "Report");
+            XLSX.writeFile(wb, `Training_${userState.userInfo.name || 'User'}.xlsx`);
         };
 
         // --- Admin Core ---
@@ -432,32 +449,42 @@
         window.loadConfigForAdmin = loadConfigForAdmin;
 
         window.saveAdminConfig = async () => {
-            if (!currentUser) return;
+            if (!currentUser) return alert("資料庫連線尚未就緒，請稍候。");
             const scope = document.getElementById('adminTargetType').value;
+            const btn = document.getElementById('btnPublish');
             let docId = 'global';
             if (scope === 'custom') {
                 const tid = document.getElementById('targetSyncId').value.trim();
-                if (!tid) return alert("請輸入對象 ID");
+                if (!tid) return alert("請輸入目標 ID");
                 docId = `user_${tid}`;
             }
 
-            if (!confirm(`發布計畫至「${docId}」？此操作會立即覆蓋雲端設定。`)) return;
+            if (!confirm(`發布計畫至「${docId}」？這會覆蓋現有配置。`)) return;
 
-            setSyncing(true, "正在發布...");
+            setSyncing(true, "發布中...");
+            btn.disabled = true;
+            btn.innerText = "正在發布...";
+            
             try {
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', docId);
-                await setDoc(docRef, adminEditing);
-                alert("發布成功！");
+                // Ensure pure JSON data
+                const dataToSave = JSON.parse(JSON.stringify(adminEditing));
+                await setDoc(docRef, dataToSave);
+                alert("發布成功！課程計畫已即時更新。");
                 if (syncId === (docId === 'global' ? syncId : docId.replace('user_', ''))) {
                     location.reload(); 
                 }
             } catch (err) {
-                console.error(err);
-                alert("發布失敗，權限不足。");
-            } finally { setSyncing(false); }
+                console.error("Publish Error:", err);
+                alert(`發布失敗: ${err.message || '權限不足或路徑錯誤'}`);
+            } finally {
+                setSyncing(false);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-cloud-upload-alt mr-2"></i>發布變更';
+            }
         };
 
-        // --- Render Engine ---
+        // --- Render Helpers ---
 
         function renderAll() {
             renderInitialList();
@@ -466,7 +493,7 @@
 
         function renderInitialList() {
             document.getElementById('initialCourseList').innerHTML = currentConfig.initialCourses.map(c => `
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-50 transition-colors">
                     <td class="px-4 py-3">
                         <label class="custom-checkbox flex items-center cursor-pointer">
                             <input type="checkbox" class="hidden" data-id="${c.id}" onchange="toggleInitial('${c.id}')">
@@ -478,7 +505,7 @@
                     <td class="px-4 py-3 text-xs text-gray-500">${c.lecturer}</td>
                 </tr>
             `).join('');
-            document.getElementById('initialPlanName').innerText = syncId ? `${syncId} 的進度` : "預設必修";
+            document.getElementById('initialPlanName').innerText = syncId ? `${syncId} 的訓練路徑` : "系統預設路徑";
         }
 
         function renderScoredSections() {
@@ -517,36 +544,36 @@
             let html = `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 bg-amber-50 border-b border-amber-100 flex justify-between items-center">
-                        <h3 class="font-black text-amber-900">1. 必修課程</h3>
-                        <button onclick="adminAdd('i')" class="bg-amber-600 text-white px-3 py-1 rounded text-xs">+ 新增</button>
+                        <h3 class="font-black text-amber-900">1. 必修課程規劃</h3>
+                        <button onclick="adminAdd('i')" class="bg-amber-600 text-white px-3 py-1 rounded text-xs font-bold shadow-sm hover:bg-amber-700">+ 新增</button>
                     </div>
                     <div class="p-6 space-y-3">
                         ${adminEditing.initialCourses.map(c => `
-                            <div class="grid grid-cols-1 md:grid-cols-6 gap-2 p-3 bg-gray-50 rounded-lg">
-                                <input type="text" value="${c.category}" oninput="adminUpdate('i', '${c.id}', 'category', this.value)" class="text-xs p-2 border rounded font-bold">
-                                <input type="text" value="${c.name}" oninput="adminUpdate('i', '${c.id}', 'name', this.value)" class="col-span-3 text-xs p-2 border rounded font-bold">
-                                <input type="text" value="${c.lecturer}" oninput="adminUpdate('i', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded">
-                                <button onclick="adminDel('i', '${c.id}')" class="text-rose-500"><i class="fas fa-trash"></i></button>
+                            <div class="grid grid-cols-1 md:grid-cols-6 gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <input type="text" value="${c.category}" oninput="adminUpdate('i', '${c.id}', 'category', this.value)" class="text-xs p-2 border rounded font-bold" placeholder="類別">
+                                <input type="text" value="${c.name}" oninput="adminUpdate('i', '${c.id}', 'name', this.value)" class="col-span-3 text-xs p-2 border rounded font-bold" placeholder="名稱">
+                                <input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('i', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded" placeholder="負責人">
+                                <button onclick="adminDel('i', '${c.id}')" class="text-rose-500 hover:bg-rose-50 p-1 rounded"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         `).join('')}
                     </div>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 bg-blue-50 border-b border-blue-100 flex justify-between items-center">
-                        <h3 class="font-black text-blue-900">2. 積分課程</h3>
-                        <button onclick="adminAdd('c')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs">+ 新增</button>
+                        <h3 class="font-black text-blue-900">2. 積分項目規劃</h3>
+                        <button onclick="adminAdd('c')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold shadow-sm hover:bg-blue-700">+ 新增</button>
                     </div>
                     <div class="p-6 space-y-3">
                         ${adminEditing.courseData.map(c => `
-                            <div class="grid grid-cols-1 md:grid-cols-7 gap-2 p-3 bg-gray-50 rounded-lg">
+                            <div class="grid grid-cols-1 md:grid-cols-7 gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
                                 <select onchange="adminUpdate('c', '${c.id}', 'level', this.value)" class="text-[10px] p-2 border rounded font-bold">
                                     ${['新手篇','理解篇','規劃篇','團隊合作篇','自我成長'].map(l => `<option ${c.level === l ? 'selected' : ''}>${l}</option>`).join('')}
                                 </select>
                                 <input type="text" value="${c.brand || ''}" oninput="adminUpdate('c', '${c.id}', 'brand', this.value)" class="text-[10px] p-2 border rounded" placeholder="品牌">
-                                <input type="text" value="${c.category}" oninput="adminUpdate('c', '${c.id}', 'category', this.value)" class="text-[10px] p-2 border rounded">
-                                <input type="text" value="${c.name}" oninput="adminUpdate('c', '${c.id}', 'name', this.value)" class="col-span-2 text-[10px] p-2 border rounded font-bold">
-                                <input type="number" value="${c.points}" oninput="adminUpdate('c', '${c.id}', 'points', this.value)" class="text-[10px] p-2 border rounded font-black text-blue-600">
-                                <button onclick="adminDel('c', '${c.id}')" class="text-rose-500"><i class="fas fa-trash"></i></button>
+                                <input type="text" value="${c.category}" oninput="adminUpdate('c', '${c.id}', 'category', this.value)" class="text-[10px] p-2 border rounded" placeholder="類別">
+                                <input type="text" value="${c.name}" oninput="adminUpdate('c', '${c.id}', 'name', this.value)" class="col-span-2 text-[10px] p-2 border rounded font-bold" placeholder="項目">
+                                <input type="number" value="${c.points}" oninput="adminUpdate('c', '${c.id}', 'points', this.value)" class="text-[10px] p-2 border rounded font-black text-blue-600" placeholder="分">
+                                <button onclick="adminDel('c', '${c.id}')" class="text-rose-500 hover:bg-rose-50 p-1 rounded"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         `).join('')}
                     </div>
@@ -555,20 +582,9 @@
             document.getElementById('adminListsContainer').innerHTML = html;
         }
 
-        // --- UI Helpers ---
-
-        window.toggleInitial = (id) => { if (userState.completedInitial.includes(id)) userState.completedInitial = userState.completedInitial.filter(x => x !== id); else userState.completedInitial.push(id); debouncedSave(); };
-        window.toggleCourse = (id) => { if (userState.completedCourses.includes(id)) userState.completedCourses = userState.completedCourses.filter(x => x !== id); else userState.completedCourses.push(id); debouncedSave(); };
-        window.toggleSection = (id) => document.getElementById(id).classList.toggle('hidden');
-        window.toggleAdminScope = () => {
-            const scope = document.getElementById('adminTargetType').value;
-            document.getElementById('targetUserIdContainer').classList.toggle('hidden', scope !== 'custom');
-            if (scope === 'global') loadConfigForAdmin('global');
-        };
-
         window.adminAdd = (t) => {
-            if (t === 'i') adminEditing.initialCourses.push({ id: 'i'+Date.now(), category: '管理', name: '新課程', lecturer: '' });
-            else adminEditing.courseData.push({ id: 'c'+Date.now(), level: '新手篇', category: '通用', name: '新項目', points: 1, desc: '' });
+            if (t === 'i') adminEditing.initialCourses.push({ id: 'i'+Date.now(), category: '管理部', name: '新課程', lecturer: '' });
+            else adminEditing.courseData.push({ id: 'c'+Date.now(), level: '新手篇', category: '核心', name: '新項目', points: 1, desc: '' });
             renderAdminEditor();
         };
         window.adminDel = (t, id) => {
@@ -580,6 +596,17 @@
             const l = t === 'i' ? adminEditing.initialCourses : adminEditing.courseData;
             const i = l.find(x => x.id === id);
             if (i) i[f] = f === 'points' ? (parseInt(v) || 0) : v;
+        };
+
+        // --- UI Utils ---
+
+        window.toggleInitial = (id) => { if (userState.completedInitial.includes(id)) userState.completedInitial = userState.completedInitial.filter(x => x !== id); else userState.completedInitial.push(id); debouncedSave(); };
+        window.toggleCourse = (id) => { if (userState.completedCourses.includes(id)) userState.completedCourses = userState.completedCourses.filter(x => x !== id); else userState.completedCourses.push(id); debouncedSave(); };
+        window.toggleSection = (id) => document.getElementById(id).classList.toggle('hidden');
+        window.toggleAdminScope = () => {
+            const scope = document.getElementById('adminTargetType').value;
+            document.getElementById('targetUserIdContainer').classList.toggle('hidden', scope !== 'custom');
+            if (scope === 'global') loadConfigForAdmin('global');
         };
 
         window.switchTab = (id) => {
@@ -625,7 +652,7 @@
             document.getElementById('dashboardAnalysis').innerHTML = `
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-100">
-                        <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400">類別</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400">得分</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400">進度</th></tr></thead>
+                        <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">階段類別</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">得分</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">完成度</th></tr></thead>
                         <tbody class="divide-y divide-gray-50">
                             <tr><td class="px-6 py-4 text-sm font-bold text-amber-700">必修核心</td><td class="px-6 py-4 text-sm font-bold">${iD}/${iT}</td><td class="px-6 py-4"><div class="w-12 h-1 bg-gray-100 rounded-full"><div class="h-full bg-amber-500" style="width: ${iPct}%"></div></div></td></tr>
                             ${Object.entries(stats).map(([n, d]) => {
@@ -637,7 +664,7 @@
                 </div>
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <table class="min-w-full divide-y divide-gray-100">
-                        <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400">品牌</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400">完成項目</th></tr></thead>
+                        <thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">品牌</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">熟練項目</th></tr></thead>
                         <tbody class="divide-y divide-gray-50">
                             ${Object.entries(brandStats).length === 0 ? '<tr><td colspan="2" class="px-6 py-4 text-xs text-gray-400 italic">尚無完成品牌項目</td></tr>' : Object.entries(brandStats).map(([n, c]) => `<tr><td class="px-6 py-4 text-sm font-bold text-gray-700">${n}</td><td class="px-6 py-4 text-sm font-black text-indigo-600">${c}</td></tr>`).join('')}
                         </tbody>
@@ -651,11 +678,16 @@
             const el = document.getElementById('syncStatus');
             if (s) {
                 el.innerHTML = `<i class="fas fa-sync animate-spin mr-1"></i>${m}`;
-                el.className = "ml-4 px-2 py-1 rounded text-[10px] font-bold bg-blue-100 text-blue-700";
+                el.className = "ml-4 px-2 py-1 rounded text-[10px] font-bold bg-blue-100 text-blue-700 shadow-inner";
             } else {
-                el.innerHTML = `<i class="fas fa-check-circle mr-1"></i>連線中 (${syncId || '未登入'})`;
-                el.className = "ml-4 px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700";
+                setSyncStatus(syncId ? `已與 ${syncId} 同步` : '連線中');
             }
+        }
+
+        function setSyncStatus(msg) {
+            const el = document.getElementById('syncStatus');
+            el.innerHTML = `<i class="fas fa-check-circle mr-1"></i>${msg}`;
+            el.className = "ml-4 px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700";
         }
 
         window.onload = init;
