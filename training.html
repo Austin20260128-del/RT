@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>利泓科技教育訓練系統 v1.8.8</title>
+    <title>利泓科技教育訓練系統 v1.8.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -75,7 +75,7 @@
         </div>
         <div id="loadingError" class="hidden max-w-sm">
             <i class="fas fa-wifi-slash text-rose-500 text-5xl mb-4"></i>
-            <h3 class="font-bold text-gray-800 text-xl">連線超時</h3>
+            <h3 class="font-bold text-gray-800 text-xl">連線失敗</h3>
             <p class="text-gray-500 text-sm mt-2 mb-6">無法從資料庫獲取資料，請檢查網路連線。您可以選擇離線預覽模式。</p>
             <div class="flex flex-col gap-2">
                 <button onclick="location.reload()" class="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition-all">重新整理</button>
@@ -90,7 +90,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        <i class="fas fa-graduation-cap mr-2"></i>利泓科技教育訓練系統 v1.8.8
+                        <i class="fas fa-graduation-cap mr-2"></i>利泓科技教育訓練系統 v1.8.9
                     </span>
                     <span id="syncStatus" class="ml-4 px-2 py-1 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-400 transition-all">
                         <i class="fas fa-circle-notch animate-spin mr-1"></i>連線中
@@ -115,11 +115,11 @@
             <div class="bg-indigo-600 rounded-xl shadow-lg p-6 text-white border-b-4 border-indigo-800 transition-all">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-lg font-bold"><i class="fas fa-id-badge mr-2"></i>訓練數據同步中心</h2>
-                        <p class="text-xs opacity-70 mt-1 text-indigo-100">輸入專屬識別碼以載入進度。姓名與區域僅限管理員修改。</p>
+                        <h2 class="text-lg font-bold"><i class="fas fa-sync-alt mr-2"></i>同步進度識別碼</h2>
+                        <p class="text-xs opacity-70 mt-1 text-indigo-100">輸入專屬識別碼以載入訓練進度。個人基本資訊僅限管理員修改。</p>
                     </div>
                     <div class="flex gap-2">
-                        <input type="text" id="syncKey" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-64 font-bold" placeholder="輸入姓名或員編">
+                        <input type="text" id="syncKey" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-64 font-bold" placeholder="輸入 ID (如姓名)">
                         <button onclick="applySync()" class="bg-white text-indigo-600 px-6 py-2 rounded-lg font-bold hover:bg-indigo-50 transition-all shadow-md">連線同步</button>
                     </div>
                 </div>
@@ -127,16 +127,16 @@
 
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative transition-all">
                 <div id="adminBadge" class="hidden absolute top-4 right-4 bg-rose-100 text-rose-600 text-[10px] font-bold px-2 py-1 rounded uppercase animate-pulse">
-                    <i class="fas fa-unlock mr-1"></i> 管理者編輯模式已啟動
+                    <i class="fas fa-unlock mr-1"></i> 管理者編輯權限已解鎖
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">姓名 (唯讀)</label>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">姓名</label>
                         <input type="text" id="userName" oninput="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold" placeholder="待管理者填寫">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">區域 (唯讀)</label>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">區域</label>
                         <select id="userRegion" onchange="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold">
                             <option value="">尚未選取</option>
                             <option value="北區">北區</option>
@@ -145,23 +145,24 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">到職日 (唯讀)</label>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">到職日</label>
                         <input type="date" id="startDate" oninput="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold">
                     </div>
-                    <div class="flex flex-col justify-center items-center md:items-end text-center">
+                    <div class="flex flex-col justify-center items-center md:items-end">
                         <div id="displayLevel" class="text-5xl font-black text-blue-600 italic transition-all">Lv 1</div>
                         <div class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Training Rank</div>
                     </div>
                 </div>
             </div>
 
+            <!-- Stats Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white border-l-8 border-blue-600 rounded-xl shadow-sm p-6">
+                <div class="bg-white border-l-8 border-blue-600 rounded-xl shadow-sm p-6 transition-all">
                     <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">目前累計總積分</div>
                     <div class="text-4xl font-black mt-1 text-gray-800" id="displayTotalScore">0</div>
                     <div class="mt-4 text-xs font-bold text-blue-600 bg-blue-50 inline-block px-2 py-1 rounded">達成率: <span id="displayScoreRatio">0%</span></div>
                 </div>
-                <div class="bg-white border-l-8 border-amber-500 rounded-xl shadow-sm p-6 flex flex-col justify-between">
+                <div class="bg-white border-l-8 border-amber-500 rounded-xl shadow-sm p-6 flex flex-col justify-between transition-all">
                     <div>
                         <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">晉升 <span id="nextLevelName" class="text-amber-600">--</span></div>
                         <div class="flex items-baseline">
@@ -173,20 +174,16 @@
                         <div class="bg-amber-500 h-2 rounded-full transition-all duration-1000" id="levelProgressBar" style="width: 0%"></div>
                     </div>
                 </div>
-                <div class="bg-white border-l-8 border-emerald-500 rounded-xl shadow-sm p-6">
+                <div class="bg-white border-l-8 border-emerald-500 rounded-xl shadow-sm p-6 transition-all">
                     <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">計畫型態</div>
                     <div class="text-2xl font-black text-gray-800 mt-2" id="planTypeDisplay">正在同步...</div>
                     <div class="mt-3 flex items-center text-[10px] text-emerald-600 font-bold italic">
-                        <i class="fas fa-bullseye mr-1"></i> 滿分目標: <span id="displayMaxScore" class="ml-1">0</span> pts
+                        <i class="fas fa-bullseye mr-1"></i> 計畫總分: <span id="displayMaxScore" class="ml-1">0</span> pts
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="dashboardAnalysis">
-                <!-- 放置下方兩個區塊 -->
-            </div>
-            
-            <!-- 這些元素原本是在 JS 中被設置 innerHTML 的，確保它們存在於 DOM 中 -->
+            <!-- Dashboard Visuals -->
             <div class="space-y-6">
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
@@ -197,7 +194,7 @@
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-                        <h3 class="font-bold text-gray-700 text-sm uppercase tracking-tighter">品牌掌握視覺分析 (Brand Mastery)</h3>
+                        <h3 class="font-bold text-gray-700 text-sm uppercase tracking-tighter">品牌掌握視覺化 (Brand Mastery)</h3>
                     </div>
                     <div class="p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6" id="dashboardBrandBody"></div>
                 </div>
@@ -209,11 +206,11 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100 bg-amber-50 flex justify-between items-center">
                     <div>
-                        <h3 class="font-bold text-amber-900 text-lg">核心必修課程</h3>
-                        <p class="text-xs text-amber-700 mt-1" id="initialPlanName">載入中...</p>
+                        <h3 class="font-bold text-amber-900 text-lg">核心必修訓練計畫</h3>
+                        <p class="text-xs text-amber-700 mt-1" id="initialPlanName">正在獲取計畫...</p>
                     </div>
                     <div class="text-xs font-bold text-amber-800 bg-white px-3 py-1 rounded-full border border-amber-200 shadow-sm">
-                        進度: <span id="initialProgress">0/0</span>
+                        完成項目: <span id="initialProgress">0/0</span>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -242,17 +239,18 @@
         <!-- TAB 4: ADMIN (管理) -->
         <div id="admin" class="tab-content space-y-6">
             <div id="adminLogin" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 border border-gray-200 mt-10 text-center">
-                <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 transition-transform hover:scale-110">
                     <i class="fas fa-lock text-2xl"></i>
                 </div>
-                <h2 class="text-2xl font-black text-gray-800">管理者驗證</h2>
-                <input type="password" id="adminPass" class="block w-full mt-6 rounded-xl border-gray-200 shadow-sm p-4 border bg-gray-50 text-center font-bold tracking-widest outline-none focus:ring-2 focus:ring-rose-500" placeholder="••••••••">
-                <button onclick="loginAdmin()" class="w-full mt-4 bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-700 transition-all">解鎖後台</button>
+                <h2 class="text-2xl font-black text-gray-800">管理者驗證門檻</h2>
+                <p class="text-xs text-gray-400 mt-2">請輸入管理金鑰 (預設: admin888)</p>
+                <input type="password" id="adminPass" class="block w-full mt-6 rounded-xl border-gray-200 shadow-sm p-4 border bg-gray-50 text-center font-bold tracking-widest outline-none focus:ring-2 focus:ring-rose-500 transition-all" placeholder="••••••••">
+                <button onclick="loginAdmin()" class="w-full mt-4 bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-700 transition-all">解鎖權限</button>
             </div>
             <div id="adminPanel" class="hidden space-y-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all">
                     <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">規畫配置與計畫複製</label>
+                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">規畫配置與複製</label>
                         <div class="flex flex-wrap items-center gap-4">
                             <select id="adminTargetType" onchange="toggleAdminScope()" class="bg-gray-100 border border-gray-200 rounded-lg px-4 py-2 font-bold outline-none focus:ring-2 focus:ring-rose-500 transition-all text-sm">
                                 <option value="global">全域標竿計畫 (系統預設)</option>
@@ -264,15 +262,15 @@
                             </div>
                             <div class="h-6 w-px bg-gray-200 mx-2 hidden md:block"></div>
                             <button onclick="openCloneModal()" class="text-sm bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-100 transition-all border border-blue-100">
-                                <i class="fas fa-copy mr-1"></i> 從其他 ID 複製
+                                <i class="fas fa-copy mr-1"></i> 從其他計畫複製
                             </button>
                         </div>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="saveAdminConfig()" id="btnPublish" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 flex items-center transition-all">
-                            <i class="fas fa-cloud-upload-alt mr-2"></i>發布所有計畫變更
+                            <i class="fas fa-cloud-upload-alt mr-2"></i>發布計畫變更
                         </button>
-                        <button onclick="logoutAdmin()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors">結束編輯</button>
+                        <button onclick="logoutAdmin()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors">退出管理</button>
                     </div>
                 </div>
                 <div id="adminListsContainer" class="grid grid-cols-1 gap-8"></div>
@@ -286,6 +284,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Firebase Configuration (Matching screenshot and conversation requirement)
         const firebaseConfig = {
             apiKey: "AIzaSyCvOqKFvnKXrj07BtfbLLTNZXiCw2jBgus",
             authDomain: "training-834e3.firebaseapp.com",
@@ -307,7 +306,7 @@
                 { id: 'i2', category: '管理部', name: '辦公環境導覽', lecturer: '許鏸文', duration: '1h' }
             ],
             courseData: [
-                { id: 'c1', level: '新手篇', category: '核心', name: '新人自我介紹', points: 10, lecturer: '', remark: '需於 Line 團隊群組完成' }
+                { id: 'c1', level: '新手篇', category: '核心', name: '新人自我介紹', points: 10, lecturer: '', remark: '需在 Line 群組完成' }
             ]
         };
 
@@ -316,7 +315,7 @@
             'Applied Spectra': 'fas fa-bolt', 'Metal Power': 'fas fa-industry', 'Default': 'fas fa-box'
         };
 
-        // State
+        // Global State
         let currentConfig = JSON.parse(JSON.stringify(FALLBACK_PLAN));
         let adminEditing = JSON.parse(JSON.stringify(FALLBACK_PLAN));
         let userState = { 
@@ -332,6 +331,7 @@
         let authUser = null;
 
         // --- Core Init ---
+
         async function init() {
             const timeoutGuard = setTimeout(() => {
                 if (!document.getElementById('loadingOverlay').classList.contains('hidden')) {
@@ -372,7 +372,8 @@
 
         window.skipLoading = () => document.getElementById('loadingOverlay').classList.add('hidden');
 
-        // --- Admin Functions ---
+        // --- Admin Logic ---
+
         window.loginAdmin = () => {
             if (document.getElementById('adminPass').value === 'admin888') {
                 isAdminActive = true;
@@ -382,7 +383,7 @@
                 document.getElementById('adminBadge').classList.remove('hidden');
                 document.getElementById('btnNavReset').classList.remove('hidden');
                 loadConfigForAdmin('global');
-            } else { alert("管理密碼錯誤。"); }
+            } else { alert("金鑰錯誤。"); }
         };
 
         window.logoutAdmin = () => {
@@ -405,25 +406,33 @@
         async function loadConfigForAdmin(tid) {
             if (!authUser) return;
             const docId = tid && tid !== 'global' ? `user_${tid}` : 'global';
-            setConnStatus(`抓取計畫: ${docId}`, 'text-blue-500');
+            setConnStatus(`載入配置: ${docId}`, 'text-blue-500');
             try {
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', docId);
                 const snap = await getDoc(docRef);
                 if (snap.exists()) {
                     adminEditing = snap.data();
                 } else {
-                    adminEditing = JSON.parse(JSON.stringify(FALLBACK_PLAN));
+                    // 若專屬計畫不存在，以全域為基準初始化
+                    const globalRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', 'global');
+                    const globalSnap = await getDoc(globalRef);
+                    adminEditing = globalSnap.exists() ? globalSnap.data() : JSON.parse(JSON.stringify(FALLBACK_PLAN));
                 }
+                // 確保數組結構存在
                 adminEditing.initialCourses = adminEditing.initialCourses || [];
                 adminEditing.courseData = adminEditing.courseData || [];
+                
                 renderAdminEditor();
-                setConnStatus('計畫載入成功', 'text-green-600');
-            } catch (err) { alert("讀取計畫失敗。"); }
+                setConnStatus('配置載入成功', 'text-green-600');
+            } catch (err) { 
+                console.error(err);
+                alert("計畫讀取異常，請稍後再試。"); 
+            }
         }
         window.loadConfigForAdmin = loadConfigForAdmin;
 
         window.openCloneModal = async () => {
-            const sourceId = prompt("請輸入欲複製的來源 ID (如姓名或員編)：");
+            const sourceId = prompt("請輸入欲複製的來源 ID (姓名或員編)：");
             if (!sourceId) return;
             setConnStatus(`複製中: ${sourceId}`, 'text-blue-500');
             try {
@@ -435,21 +444,37 @@
                     adminEditing.initialCourses = adminEditing.initialCourses || [];
                     adminEditing.courseData = adminEditing.courseData || [];
                     renderAdminEditor();
-                    alert(`成功複製「${sourceId}」計畫。請發布變更以套用。`);
-                } else { alert("找不到來源計畫。"); }
+                    alert(`成功複製計畫。請記得點擊「發布計畫變更」儲存。`);
+                } else { alert("找不到對應計畫。"); }
             } catch (e) { alert("複製過程出錯。"); }
             finally { updateGlobalStats(); }
         };
 
+        // 修復核心：專屬規劃新增內容失敗的問題
         window.adminAdd = (t) => {
+            // 確保物件結構完整
             if (!adminEditing) adminEditing = { initialCourses: [], courseData: [] };
             if (!adminEditing.initialCourses) adminEditing.initialCourses = [];
             if (!adminEditing.courseData) adminEditing.courseData = [];
 
             if (t === 'i') {
-                adminEditing.initialCourses.push({ id: 'i' + Date.now(), category: '新類別', name: '新核心課程', lecturer: '負責人', duration: '時數' });
+                adminEditing.initialCourses.push({ 
+                    id: 'i' + Date.now(), 
+                    category: '新階段', 
+                    name: '新必修項目', 
+                    lecturer: '負責人', 
+                    duration: '時數' 
+                });
             } else {
-                adminEditing.courseData.push({ id: 'c' + Date.now(), level: '新手篇', category: '新類別', name: '新選修項目', points: 1, lecturer: '', remark: '' });
+                adminEditing.courseData.push({ 
+                    id: 'c' + Date.now(), 
+                    level: '新手篇', 
+                    category: '新類別', 
+                    name: '新選修內容', 
+                    points: 1, 
+                    lecturer: '', 
+                    remark: '' 
+                });
             }
             renderAdminEditor();
         };
@@ -484,13 +509,14 @@
             try {
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', docId);
                 await setDoc(docRef, JSON.parse(JSON.stringify(adminEditing)));
-                alert("已成功發布變更！");
+                alert("已完成發布！");
                 if (syncId === (docId === 'global' ? syncId : docId.replace('user_', ''))) location.reload();
             } catch (err) { alert(`發布失敗: ${err.message}`); }
             finally { btn.disabled = false; }
         };
 
-        // --- User Operations ---
+        // --- User Sync Logic ---
+
         window.applySync = async () => {
             const id = document.getElementById('syncKey').value.trim();
             if (!id || !authUser) return;
@@ -504,7 +530,7 @@
                 const globalRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', 'global');
                 let snap = await getDoc(customRef);
                 if (snap.exists()) { currentConfig = snap.data(); document.getElementById('planTypeDisplay').innerText = "量身專屬計畫"; }
-                else { const gSnap = await getDoc(globalRef); currentConfig = gSnap.exists() ? gSnap.data() : FALLBACK_PLAN; document.getElementById('planTypeDisplay').innerText = "標準計畫"; }
+                else { const gSnap = await getDoc(globalRef); currentConfig = gSnap.exists() ? gSnap.data() : FALLBACK_PLAN; document.getElementById('planTypeDisplay').innerText = "標準標竿計畫"; }
 
                 renderAllDisplay();
 
@@ -523,7 +549,7 @@
                         userState = { userInfo: { name: '', region: '', startDate: '' }, completedInitial: [], completedCourses: [], initialTimes: {}, courseTimes: {}, courseLecturers: {} };
                     }
                     updateGlobalStats();
-                    setConnStatus(`已同步 (${id})`, 'text-green-600');
+                    setConnStatus(`同步完成 (${id})`, 'text-green-600');
                 });
             } catch (err) { setConnStatus('同步失敗', 'text-rose-600'); }
         };
@@ -534,13 +560,13 @@
             userState.userInfo.startDate = document.getElementById('startDate').value;
             updateGlobalStats();
             if (!syncId || !authUser) return;
-            setConnStatus('雲端存儲中...', 'text-blue-500');
+            setConnStatus('雲端備份中...', 'text-blue-500');
             clearTimeout(saveTimer);
             saveTimer = setTimeout(async () => {
                 try {
                     const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'training_records', syncId);
                     await setDoc(docRef, userState);
-                    setConnStatus(`數據已同步`, 'text-green-600');
+                    setConnStatus(`進度已更新`, 'text-green-600');
                 } catch (e) { console.error(e); }
             }, 1000);
         };
@@ -557,7 +583,7 @@
         };
 
         window.resetData = async () => {
-            if (!confirm("確定重置進度？")) return;
+            if (!confirm("此操作將永久清除 ID 「" + syncId + "」的所有已勾選進度及日期講師記錄。")) return;
             userState.completedInitial = []; userState.completedCourses = []; userState.initialTimes = {}; userState.courseTimes = {}; userState.courseLecturers = {};
             updateGlobalStats();
             if (syncId && authUser) {
@@ -568,41 +594,48 @@
 
         window.exportToExcel = () => {
             const wb = XLSX.utils.book_new();
+            
+            // 計算數據
             const catStats = { '新手篇': {t:0, c:0}, '理解篇': {t:0, c:0}, '規劃篇': {t:0, c:0}, '團隊合作篇': {t:0, c:0}, '自我成長': {t:0, c:0} };
             (currentConfig.courseData || []).forEach(c => {
                 catStats[c.level].t += c.points;
                 if (userState.completedCourses.includes(c.id)) catStats[c.level].c += c.points;
             });
 
+            // 分頁 1: Dashboard
             const dashData = [
-                ["利泓科技培訓報告 - 概況"], ["身份資訊"], ["姓名", userState.userInfo.name || "未填"], ["區域", userState.userInfo.region || "未選"], ["到職日", userState.userInfo.startDate || "未填"],
-                [], ["成就概況"], ["積分", document.getElementById('displayTotalScore').innerText], ["目標", document.getElementById('displayMaxScore').innerText], ["LV", document.getElementById('displayLevel').innerText],
-                [], ["類別進度"], ["類別", "總分", "得分", "達成率"]
+                ["利泓科技培訓報告 - 概況統計"], ["使用者資訊"], ["姓名", userState.userInfo.name || "未填"], ["區域", userState.userInfo.region || "未選"], ["到職日", userState.userInfo.startDate || "未填"],
+                [], ["成就概況"], ["總積分", document.getElementById('displayTotalScore').innerText], ["滿分目標", document.getElementById('displayMaxScore').innerText], ["當前等級", document.getElementById('displayLevel').innerText],
+                [], ["各類別進度"], ["類別", "總分", "得分", "達成率"]
             ];
-            Object.entries(catStats).forEach(([n, d]) => dashData.push([n, d.t, d.c, d.t === 0 ? "0%" : Math.round((d.c/d.t)*100)+"%"]));
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dashData), "儀表板概況");
+            Object.entries(catStats).forEach(([name, d]) => dashData.push([name, d.t, d.c, d.t === 0 ? "0%" : Math.round((d.c/d.t)*100)+"%"]));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dashData), "儀表板統計");
 
-            const initialData = [["狀態", "類別", "名稱", "負責人", "時數", "日期時間"]];
-            (currentConfig.initialCourses || []).map(c => initialData.push([userState.completedInitial.includes(c.id) ? "完成" : "-", c.category, c.name, c.lecturer || "-", c.duration || "-", userState.initialTimes[c.id] || ""]));
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(initialData), "必修課程紀錄");
+            // 分頁 2: Mandatory
+            const initialHeader = [["狀態", "階段/類別", "必修核心名稱", "負責人", "建議時數", "上課日期及時間"]];
+            const initialRows = (currentConfig.initialCourses || []).map(c => [
+                userState.completedInitial.includes(c.id) ? "完成" : "未完成", c.category, c.name, c.lecturer || "-", c.duration || "-", userState.initialTimes[c.id] || ""
+            ]);
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(initialHeader.concat(initialRows)), "必修課程紀錄");
 
-            const electiveData = [["狀態", "類別", "名稱", "積分", "講師", "備註", "日期時間"]];
-            (currentConfig.courseData || []).map(c => electiveData.push([userState.completedCourses.includes(c.id) ? "完成" : "-", c.brand || c.category, c.name, c.points, userState.courseLecturers[c.id] || c.lecturer || "-", c.remark || "-", userState.courseTimes[c.id] || ""]));
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(electiveData), "選修課程紀錄");
+            // 分頁 3: Elective
+            const electiveHeader = [["狀態", "類別/品牌", "選修項目名稱", "積分權重", "授課講師", "考核備註", "日期及時間"]];
+            const electiveRows = (currentConfig.courseData || []).map(c => [
+                userState.completedCourses.includes(c.id) ? "完成" : "未完成", c.brand || c.category, c.name, c.points, userState.courseLecturers[c.id] || c.lecturer || "-", c.remark || "-", userState.courseTimes[c.id] || ""
+            ]);
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(electiveHeader.concat(electiveRows)), "選修課程紀錄");
 
-            XLSX.writeFile(wb, `利泓科技培訓報告_${userState.userInfo.name || 'User'}.xlsx`);
+            XLSX.writeFile(wb, `培訓數據報表_${userState.userInfo.name || syncId}.xlsx`);
         };
 
-        // --- Render Engine ---
-        function renderAllDisplay() {
-            renderInitialList();
-            renderScoredSections();
-        }
+        // --- UI Utils ---
+
+        function renderAllDisplay() { renderInitialList(); renderScoredSections(); }
 
         function renderInitialList() {
-            const listEl = document.getElementById('initialCourseList');
-            if (listEl) {
-                listEl.innerHTML = (currentConfig.initialCourses || []).map(c => `
+            const el = document.getElementById('initialCourseList');
+            if (el) {
+                el.innerHTML = (currentConfig.initialCourses || []).map(c => `
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-4 py-3"><label class="custom-checkbox flex items-center cursor-pointer"><input type="checkbox" class="hidden" data-id="${c.id}" onchange="toggleInitial('${c.id}')"><div class="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center transition-all"><svg class="w-3 h-3 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg></div></label></td>
                         <td class="px-4 py-3 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">${c.category}</td><td class="px-4 py-3 text-gray-900 font-bold">${c.name}</td><td class="px-4 py-3 text-xs text-gray-500 font-bold">${c.lecturer || '-'}</td><td class="px-4 py-3 text-xs font-bold text-blue-600">${c.duration || '-'}</td>
@@ -619,16 +652,16 @@
                 container.innerHTML = groups.map(lv => `
                     <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                         <div class="px-6 py-4 bg-gray-50/50 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-all" onclick="toggleSection('sec-${lv}')">
-                            <h3 class="font-black text-gray-700 uppercase tracking-wide text-sm">${lv} 選修</h3><i class="fas fa-chevron-down text-gray-300"></i>
+                            <h3 class="font-black text-gray-700 uppercase tracking-wide text-sm">${lv} 選修內容</h3><i class="fas fa-chevron-down text-gray-300"></i>
                         </div>
                         <div id="sec-${lv}" class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-100 text-sm">
-                                <thead class="bg-gray-50/50 text-[10px] text-gray-400 font-bold uppercase"><tr><th class="px-4 py-2 text-center w-16">狀態</th><th class="px-4 py-2 text-left w-32">類別</th><th class="px-4 py-2 text-left">名稱</th><th class="px-4 py-2 text-left w-16">積分</th><th class="px-4 py-2 text-left w-24">講師</th><th class="px-4 py-2 text-left">備註</th><th class="px-4 py-2 text-left w-40">日期時間</th></tr></thead>
+                                <thead class="bg-gray-50/50 text-[10px] text-gray-400 font-bold uppercase"><tr><th class="px-4 py-2 text-center w-16">狀態</th><th class="px-4 py-2 text-left w-24">類別</th><th class="px-4 py-2 text-left">名稱</th><th class="px-4 py-2 text-left w-16">積分</th><th class="px-4 py-2 text-left w-24">授課講師</th><th class="px-4 py-2 text-left">計畫備註</th><th class="px-4 py-2 text-left w-40">日期時間</th></tr></thead>
                                 <tbody class="divide-y divide-gray-50">${(currentConfig.courseData || []).filter(c => c.level === lv).map(c => `
                                     <tr class="hover:bg-blue-50/30 transition-colors">
                                         <td class="px-4 py-3 text-center"><label class="custom-checkbox inline-flex items-center cursor-pointer"><input type="checkbox" class="hidden" data-id="${c.id}" onchange="toggleCourse('${c.id}')"><div class="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center transition-all"><svg class="w-3 h-3 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg></div></label></td>
                                         <td class="px-4 py-3 text-indigo-600 font-black text-xs uppercase tracking-tighter">${c.brand || c.category}</td><td class="px-4 py-3 text-gray-800 font-bold">${c.name}</td><td class="px-4 py-3 font-black text-blue-600">${c.points} pts</td>
-                                        <td class="px-4 py-3"><input type="text" class="text-edit-input" data-id="${c.id}" data-type="lecturer" onchange="updateLecturer('${c.id}', this.value)"></td><td class="px-4 py-3 text-xs text-gray-400 italic">${c.remark || '-'}</td>
+                                        <td class="px-4 py-3"><input type="text" class="text-edit-input" placeholder="填寫講師" data-id="${c.id}" data-type="lecturer" onchange="updateLecturer('${c.id}', this.value)"></td><td class="px-4 py-3 text-xs text-gray-400 italic">${c.remark || '-'}</td>
                                         <td class="px-4 py-3"><input type="datetime-local" class="time-input" data-id="${c.id}" data-type="course" onchange="updateTime('course', '${c.id}', this.value)"></td>
                                     </tr>
                                 `).join('')}</tbody>
@@ -639,8 +672,33 @@
             }
         }
 
-        // 核心修正：加入 DOM 檢查以防 null 錯誤
+        function renderAdminEditor() {
+            document.getElementById('adminListsContainer').innerHTML = `
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden shadow-inner transition-all">
+                    <div class="px-6 py-4 bg-amber-50 flex justify-between items-center"><h3 class="font-black text-amber-900 text-xs uppercase">1. 必修核心課程項目規劃</h3><button onclick="adminAdd('i')" class="bg-amber-600 text-white px-3 py-1 rounded text-xs font-bold shadow-md hover:bg-amber-700 transition-transform active:scale-95">+ 新增必修</button></div>
+                    <div class="p-6 space-y-3">${(adminEditing.initialCourses || []).map(c => `
+                        <div class="grid grid-cols-1 md:grid-cols-7 gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-amber-200 transition-all">
+                            <input type="text" value="${c.category}" oninput="adminUpdate('i', '${c.id}', 'category', this.value)" class="text-xs p-2 border rounded font-bold" placeholder="類別">
+                            <input type="text" value="${c.name}" oninput="adminUpdate('i', '${c.id}', 'name', this.value)" class="col-span-2 text-xs p-2 border rounded font-bold" placeholder="核心課程名稱">
+                            <input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('i', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded" placeholder="預設負責人">
+                            <input type="text" value="${c.duration || ''}" oninput="adminUpdate('i', '${c.id}', 'duration', this.value)" class="text-xs p-2 border rounded font-bold text-blue-600" placeholder="時數">
+                            <button onclick="adminDel('i', '${c.id}')" class="text-rose-500 hover:bg-rose-50 p-1 rounded transition-colors"><i class="fas fa-trash-alt"></i></button>
+                        </div>
+                    `).join('')}</div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mt-6 shadow-inner transition-all">
+                    <div class="px-6 py-4 bg-blue-50 flex justify-between items-center"><h3 class="font-black text-blue-900 text-xs uppercase">2. 選修計畫課程項目規劃</h3><button onclick="adminAdd('c')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold shadow-md hover:bg-blue-700 transition-transform active:scale-95">+ 新增選修</button></div>
+                    <div class="p-6 space-y-4">${(adminEditing.courseData || []).map(c => `<div class="bg-white border rounded-lg p-4 space-y-3 hover:border-blue-200 transition-all"><div class="grid grid-cols-1 md:grid-cols-7 gap-2"><select onchange="adminUpdate('c', '${c.id}', 'level', this.value)" class="text-[10px] p-2 border rounded font-bold">${['新手篇','理解篇','規劃篇','團隊合作篇','自我成長'].map(l => `<option ${c.level === l ? 'selected' : ''}>${l}</option>`).join('')}</select><input type="text" value="${c.brand || ''}" oninput="adminUpdate('c', '${c.id}', 'brand', this.value)" class="text-[10px] p-2 border rounded" placeholder="品牌"><input type="text" value="${c.category}" oninput="adminUpdate('c', '${c.id}', 'category', this.value)" class="text-[10px] p-2 border rounded" placeholder="類別"><input type="text" value="${c.name}" oninput="adminUpdate('c', '${c.id}', 'name', this.value)" class="col-span-2 text-[10px] p-2 border rounded font-bold" placeholder="選修名稱"><input type="number" value="${c.points}" oninput="adminUpdate('c', '${c.id}', 'points', this.value)" class="text-[10px] p-2 border rounded font-black text-blue-600"><button onclick="adminDel('c', '${c.id}')" class="text-rose-500 text-center"><i class="fas fa-trash-alt"></i></button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-dashed pt-3"><input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('c', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded font-bold text-indigo-600" placeholder="管理者填寫建議講師"><input type="text" value="${c.remark || ''}" oninput="adminUpdate('c', '${c.id}', 'remark', this.value)" class="text-xs p-2 border rounded italic" placeholder="計畫備註說明"></div></div>`).join('')}</div>
+                </div>
+            `;
+        }
+
         function updateGlobalStats() {
+            // 防禦性檢查防止 Null Error
+            const catStats = { '新手篇': {t:0, c:0}, '理解篇': {t:0, c:0}, '規劃篇': {t:0, c:0}, '團隊合作篇': {t:0, c:0}, '自我成長': {t:0, c:0} };
+            const brandStats = {};
+            let total = 0, max = 0;
+
             document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
                 const id = cb.getAttribute('data-id');
                 cb.checked = (userState.completedInitial || []).includes(id) || (userState.completedCourses || []).includes(id);
@@ -656,9 +714,6 @@
                 if (document.activeElement !== input) { input.value = val; }
             });
 
-            let total = 0, max = 0;
-            const catStats = { '新手篇': {t:0, c:0}, '理解篇': {t:0, c:0}, '規劃篇': {t:0, c:0}, '團隊合作篇': {t:0, c:0}, '自我成長': {t:0, c:0} };
-            const brandStats = {};
             (currentConfig.courseData || []).forEach(c => {
                 catStats[c.level].t += c.points; max += c.points;
                 if ((userState.completedCourses || []).includes(c.id)) {
@@ -671,54 +726,50 @@
             const interval = max / 5;
             let lv = (max > 0) ? (total >= max ? 5 : Math.floor(total / interval) + 1) : 1;
             
-            // 安全更新數據
-            const safeSet = (id, prop, val) => { const el = document.getElementById(id); if (el) el[prop] = val; };
-            safeSet('displayLevel', 'innerText', total >= max && max > 0 ? 'MAX' : 'Lv ' + lv);
-            safeSet('displayTotalScore', 'innerText', total);
-            safeSet('displayMaxScore', 'innerText', max);
-            safeSet('displayScoreRatio', 'innerText', max === 0 ? '0%' : Math.round((total / max) * 100) + '%');
+            const setUI = (id, prop, val) => { const el = document.getElementById(id); if (el) el[prop] = val; };
+            setUI('displayLevel', 'innerText', total >= max && max > 0 ? 'MAX' : 'Lv ' + lv);
+            setUI('displayTotalScore', 'innerText', total);
+            setUI('displayMaxScore', 'innerText', max);
+            setUI('displayScoreRatio', 'innerText', max === 0 ? '0%' : Math.round((total / max) * 100) + '%');
             
             const nextT = (lv < 5) ? lv * interval : (total < max ? max : null);
             if (nextT !== null) {
-                safeSet('displayDistToUpgrade', 'innerText', Math.ceil(nextT - total));
-                safeSet('nextLevelName', 'innerText', lv < 5 ? 'Lv ' + (lv + 1) : '100% 達成');
-                const p = Math.min(100, ((total - ((lv - 1) * interval)) / interval) * 100);
-                const bar = document.getElementById('levelProgressBar'); if(bar) bar.style.width = p + '%';
+                setUI('displayDistToUpgrade', 'innerText', Math.ceil(nextT - total));
+                setUI('nextLevelName', 'innerText', lv < 5 ? 'Lv ' + (lv + 1) : '100% 達成');
+                const bar = document.getElementById('levelProgressBar'); if(bar) bar.style.width = Math.min(100, ((total - ((lv - 1) * interval)) / interval) * 100) + '%';
             } else {
-                safeSet('displayDistToUpgrade', 'innerText', '0');
-                safeSet('nextLevelName', 'innerText', '目標已達成');
+                setUI('displayDistToUpgrade', 'innerText', '0');
+                setUI('nextLevelName', 'innerText', '培訓標竿達成');
                 const bar = document.getElementById('levelProgressBar'); if(bar) bar.style.width = '100%';
             }
 
-            // 階段分析渲染
             const phaseEl = document.getElementById('dashboardPhaseBody');
             if (phaseEl) {
                 phaseEl.innerHTML = `
-                    <table class="min-w-full divide-y divide-gray-100"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">階段指標</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">積分</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">完成度</th></tr></thead>
-                    <tbody class="divide-y divide-gray-50"><tr><td class="px-6 py-4 text-sm font-bold text-amber-700">核心必修課程</td><td class="px-6 py-4 text-sm font-bold">${(userState.completedInitial || []).length}/${(currentConfig.initialCourses || []).length}</td><td class="px-6 py-4"><div class="w-24 h-1 bg-gray-100 rounded-full"><div class="h-full bg-amber-500" style="width: ${(currentConfig.initialCourses || []).length === 0 ? 0 : Math.round(((userState.completedInitial || []).length / currentConfig.initialCourses.length) * 100)}%"></div></div></td></tr>
+                    <table class="min-w-full divide-y divide-gray-100"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">階段指標</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">總分/得分</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">完成度</th></tr></thead>
+                    <tbody class="divide-y divide-gray-50"><tr><td class="px-6 py-4 text-sm font-bold text-amber-700">核心必修核心</td><td class="px-6 py-4 text-sm font-bold">${(userState.completedInitial || []).length}/${(currentConfig.initialCourses || []).length}</td><td class="px-6 py-4"><div class="w-24 h-1 bg-gray-100 rounded-full"><div class="h-full bg-amber-500" style="width: ${(currentConfig.initialCourses || []).length === 0 ? 0 : Math.round(((userState.completedInitial || []).length / currentConfig.initialCourses.length) * 100)}%"></div></div></td></tr>
                     ${Object.entries(catStats).map(([n, d]) => `<tr><td class="px-6 py-4 text-sm font-bold text-gray-700">${n}</td><td class="px-6 py-4 text-sm font-bold">${d.c}/${d.t}</td><td class="px-6 py-4"><div class="w-24 h-1 bg-gray-100 rounded-full transition-all"><div class="h-full bg-blue-500" style="width: ${d.t === 0 ? 0 : Math.round((d.c / d.t) * 100)}%"></div></div></td></tr>`).join('')}</tbody></table>
                 `;
             }
 
-            // 品牌卡片渲染
             const brandEl = document.getElementById('dashboardBrandBody');
             if (brandEl) {
                 brandEl.innerHTML = Object.entries(brandStats).length === 0 
-                    ? '<div class="col-span-full py-10 text-center text-gray-400 italic text-sm">尚未設定選修品牌項目</div>'
+                    ? '<div class="col-span-full py-10 text-center text-gray-400 italic text-sm">尚未設定選修品牌數據</div>'
                     : Object.entries(brandStats).map(([name, data]) => {
                         const p = Math.round((data.c / data.t) * 100);
-                        return `<div class="brand-card bg-gray-50 rounded-2xl p-4 flex flex-col items-center text-center border border-gray-100 group"><div class="mb-3 w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm transition-all group-hover:scale-110"><i class="${brandIcons[name] || brandIcons['Default']} text-xl"></i></div><div class="text-sm font-black text-gray-800 mb-1">${name}</div><div class="text-[10px] font-bold text-gray-400 mb-3">${data.c} / ${data.t} 堂</div><div class="w-full bg-gray-200 h-1.5 rounded-full mt-auto"><div class="bg-blue-600 h-1.5 rounded-full transition-all duration-1000" style="width: ${p}%"></div></div><div class="mt-2 text-[10px] font-black text-blue-600">${p}%</div>${p === 100 ? '<div class="absolute top-1 right-1 text-emerald-500"><i class="fas fa-check-circle text-xs"></i></div>' : ''}</div>`;
+                        return `<div class="brand-card bg-gray-50 rounded-2xl p-4 flex flex-col items-center text-center border border-gray-100 group transition-all"><div class="mb-3 w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm group-hover:scale-110 transition-all"><i class="${brandIcons[name] || brandIcons['Default']} text-xl"></i></div><div class="text-sm font-black text-gray-800 mb-1">${name}</div><div class="text-[10px] font-bold text-gray-400 mb-3">${data.c} / ${data.t} 堂</div><div class="w-full bg-gray-200 h-1.5 rounded-full mt-auto"><div class="bg-blue-600 h-1.5 rounded-full transition-all duration-1000" style="width: ${p}%"></div></div><div class="mt-2 text-[10px] font-black text-blue-600">${p}%</div>${p === 100 ? '<div class="absolute top-1 right-1 text-emerald-500 animate-bounce"><i class="fas fa-check-circle text-xs"></i></div>' : ''}</div>`;
                     }).join('');
             }
-            safeSet('initialProgress', 'innerText', `${(userState.completedInitial || []).length}/${(currentConfig.initialCourses || []).length}`);
+            setUI('initialProgress', 'innerText', `${(userState.completedInitial || []).length}/${(currentConfig.initialCourses || []).length}`);
         }
 
         window.toggleInitial = (id) => { if (userState.completedInitial.includes(id)) userState.completedInitial = userState.completedInitial.filter(x => x !== id); else userState.completedInitial.push(id); debouncedSave(); };
         window.toggleCourse = (id) => { if (userState.completedCourses.includes(id)) userState.completedCourses = userState.completedCourses.filter(x => x !== id); else userState.completedCourses.push(id); debouncedSave(); };
         window.toggleSection = (id) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden'); };
-        window.toggleAdminScope = () => { const scope = document.getElementById('adminTargetType').value; document.getElementById('targetUserIdContainer').classList.toggle('hidden', scope !== 'custom'); if (scope === 'global') loadConfigForAdmin('global'); };
-        window.switchTab = (id) => { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active')); const btn = document.getElementById('btn-' + id); if(btn) btn.classList.add('active'); if (id === 'admin' && isAdminActive) renderAdminEditor(); };
-        function setConnStatus(msg, colorClass) { const el = document.getElementById('syncStatus'); if (el) { el.innerHTML = `<i class="fas fa-check-circle mr-1"></i>${msg}`; el.className = `ml-4 px-2 py-1 rounded text-[10px] font-bold transition-all bg-white border border-gray-100 ${colorClass}`; } }
+        window.toggleAdminScope = () => { const s = document.getElementById('adminTargetType').value; document.getElementById('targetUserIdContainer').classList.toggle('hidden', s !== 'custom'); if (s === 'global') loadConfigForAdmin('global'); };
+        window.switchTab = (id) => { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active')); const b = document.getElementById('btn-' + id); if(b) b.classList.add('active'); if (id === 'admin' && isAdminActive) renderAdminEditor(); };
+        function setConnStatus(m, c) { const el = document.getElementById('syncStatus'); if (el) { el.innerHTML = `<i class="fas fa-check-circle mr-1"></i>${m}`; el.className = `ml-4 px-2 py-1 rounded text-[10px] font-bold transition-all bg-white border border-gray-100 ${c}`; } }
 
         window.onload = init;
     </script>
