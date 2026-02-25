@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>利泓科技教育訓練系統 v1.8.6</title>
+    <title>利泓科技教育訓練系統 v1.8.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -90,7 +90,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        <i class="fas fa-graduation-cap mr-2"></i>利泓科技教育訓練系統 v1.8.6
+                        <i class="fas fa-graduation-cap mr-2"></i>利泓科技教育訓練系統 v1.8.7
                     </span>
                     <span id="syncStatus" class="ml-4 px-2 py-1 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-400 transition-all">
                         <i class="fas fa-circle-notch animate-spin mr-1"></i>連線中
@@ -115,28 +115,28 @@
             <div class="bg-indigo-600 rounded-xl shadow-lg p-6 text-white border-b-4 border-indigo-800 transition-all">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-lg font-bold"><i class="fas fa-id-badge mr-2"></i>數據同步中心</h2>
-                        <p class="text-xs opacity-70 mt-1 text-indigo-100">輸入專屬識別碼以載入進度。姓名與區域僅限管理員修改。</p>
+                        <h2 class="text-lg font-bold"><i class="fas fa-id-badge mr-2"></i>訓練數據同步與載入</h2>
+                        <p class="text-xs opacity-70 mt-1 text-indigo-100">輸入專屬識別碼以同步進度。身分資訊與課程結構僅限管理員修改。</p>
                     </div>
                     <div class="flex gap-2">
-                        <input type="text" id="syncKey" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-64 font-bold" placeholder="輸入姓名或員工編號">
+                        <input type="text" id="syncKey" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-64 font-bold" placeholder="輸入 ID (如姓名)">
                         <button onclick="applySync()" class="bg-white text-indigo-600 px-6 py-2 rounded-lg font-bold hover:bg-indigo-50 transition-all shadow-md">連線同步</button>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative transition-all">
                 <div id="adminBadge" class="hidden absolute top-4 right-4 bg-rose-100 text-rose-600 text-[10px] font-bold px-2 py-1 rounded uppercase animate-pulse">
-                    <i class="fas fa-unlock mr-1"></i> 管理者編輯模式已啟動
+                    <i class="fas fa-unlock mr-1"></i> 管理者編輯權限已解鎖
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">姓名</label>
-                        <input type="text" id="userName" oninput="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold" placeholder="待管理者填寫">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">姓名 (唯讀)</label>
+                        <input type="text" id="userName" oninput="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold" placeholder="需由管理者編輯">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">區域</label>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">區域 (唯讀)</label>
                         <select id="userRegion" onchange="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold">
                             <option value="">尚未選取</option>
                             <option value="北區">北區</option>
@@ -145,16 +145,17 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">到職日</label>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">到職日 (唯讀)</label>
                         <input type="date" id="startDate" oninput="debouncedSave()" disabled class="block w-full rounded-lg border-gray-200 shadow-sm sm:text-sm border p-2.5 bg-gray-50 font-bold">
                     </div>
-                    <div class="flex flex-col justify-center items-center md:items-end">
-                        <div id="displayLevel" class="text-5xl font-black text-blue-600 italic">Lv 1</div>
+                    <div class="flex flex-col justify-center items-center md:items-end text-center">
+                        <div id="displayLevel" class="text-5xl font-black text-blue-600 italic transition-all">Lv 1</div>
                         <div class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Training Rank</div>
                     </div>
                 </div>
             </div>
 
+            <!-- Stats Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white border-l-8 border-blue-600 rounded-xl shadow-sm p-6">
                     <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">目前累計總積分</div>
@@ -174,21 +175,29 @@
                     </div>
                 </div>
                 <div class="bg-white border-l-8 border-emerald-500 rounded-xl shadow-sm p-6">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">計畫型態</div>
-                    <div class="text-2xl font-black text-gray-800 mt-2" id="planTypeDisplay">正在同步...</div>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">課程計畫</div>
+                    <div class="text-2xl font-black text-gray-800 mt-2" id="planTypeDisplay">正在載入...</div>
                     <div class="mt-3 flex items-center text-[10px] text-emerald-600 font-bold italic">
                         <i class="fas fa-bullseye mr-1"></i> 滿分目標: <span id="displayMaxScore" class="ml-1">0</span> pts
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="dashboardAnalysis"></div>
-            
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-                    <h3 class="font-bold text-gray-700 text-sm uppercase tracking-tighter">品牌掌握視覺分析 (Brand Mastery)</h3>
+            <!-- Dashboard Analysis -->
+            <div class="space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-700 text-sm uppercase tracking-widest">階段進度統計 (Phase Analysis)</h3>
+                    </div>
+                    <div class="overflow-x-auto" id="dashboardPhaseBody"></div>
                 </div>
-                <div class="p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6" id="dashboardBrandBody"></div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                        <h3 class="font-bold text-gray-700 text-sm uppercase tracking-tighter">品牌掌握視覺化 (Brand Mastery)</h3>
+                    </div>
+                    <div class="p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6" id="dashboardBrandBody"></div>
+                </div>
             </div>
         </div>
 
@@ -197,23 +206,23 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="px-6 py-5 border-b border-gray-100 bg-amber-50 flex justify-between items-center">
                     <div>
-                        <h3 class="font-bold text-amber-900 text-lg">核心必修課程</h3>
-                        <p class="text-xs text-amber-700 mt-1" id="initialPlanName">載入中...</p>
+                        <h3 class="font-bold text-amber-900 text-lg">核心必修訓練計畫</h3>
+                        <p class="text-xs text-amber-700 mt-1" id="initialPlanName">正在獲取計畫...</p>
                     </div>
-                    <div class="text-xs font-bold text-amber-800 bg-white px-3 py-1 rounded-full border border-amber-200">
-                        進度: <span id="initialProgress">0/0</span>
+                    <div class="text-xs font-bold text-amber-800 bg-white px-3 py-1 rounded-full border border-amber-200 shadow-sm">
+                        完成度: <span id="initialProgress">0/0</span>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-100 text-sm">
                         <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">狀態</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">類別</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">名稱</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">負責人</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase w-20">課程時數</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase">上課日期及時間</th>
+                            <tr class="text-[10px] text-gray-400 font-bold uppercase">
+                                <th class="px-4 py-3 text-left">狀態</th>
+                                <th class="px-4 py-3 text-left">類別</th>
+                                <th class="px-4 py-3 text-left">名稱</th>
+                                <th class="px-4 py-3 text-left">負責人</th>
+                                <th class="px-4 py-3 text-left w-20">時數</th>
+                                <th class="px-4 py-3 text-left">上課日期及時間</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50" id="initialCourseList"></tbody>
@@ -230,37 +239,39 @@
         <!-- TAB 4: ADMIN (管理) -->
         <div id="admin" class="tab-content space-y-6">
             <div id="adminLogin" class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 border border-gray-200 mt-10 text-center">
-                <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 transition-transform hover:scale-110">
                     <i class="fas fa-lock text-2xl"></i>
                 </div>
-                <h2 class="text-2xl font-black text-gray-800">管理端後台驗證</h2>
-                <input type="password" id="adminPass" class="block w-full mt-6 rounded-xl border-gray-200 shadow-sm p-4 border bg-gray-50 text-center font-bold tracking-widest outline-none focus:ring-2 focus:ring-rose-500" placeholder="••••••••">
-                <button onclick="loginAdmin()" class="w-full mt-4 bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-700 transition-all">開啟管理模式</button>
+                <h2 class="text-2xl font-black text-gray-800">管理端身份驗證</h2>
+                <p class="text-xs text-gray-400 mt-2">請輸入管理金鑰以獲得編輯權限</p>
+                <input type="password" id="adminPass" class="block w-full mt-6 rounded-xl border-gray-200 shadow-sm p-4 border bg-gray-50 text-center font-bold tracking-widest outline-none focus:ring-2 focus:ring-rose-500 transition-all" placeholder="••••••••">
+                <button onclick="loginAdmin()" class="w-full mt-4 bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-700 transition-all">解鎖後台</button>
             </div>
             <div id="adminPanel" class="hidden space-y-8">
+                <!-- Admin Toolbar -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all">
                     <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">規畫配置與複製</label>
+                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">規畫配置與計畫複製</label>
                         <div class="flex flex-wrap items-center gap-4">
                             <select id="adminTargetType" onchange="toggleAdminScope()" class="bg-gray-100 border border-gray-200 rounded-lg px-4 py-2 font-bold outline-none focus:ring-2 focus:ring-rose-500 transition-all text-sm">
-                                <option value="global">全域標竿計畫 (預設)</option>
+                                <option value="global">全域標竿計畫 (系統預設)</option>
                                 <option value="custom">特定人員專屬規劃 (量身打造)</option>
                             </select>
                             <div id="targetUserIdContainer" class="hidden flex items-center gap-2">
-                                <input type="text" id="targetSyncId" class="border border-gray-200 rounded-lg px-4 py-2 w-48 font-bold text-sm" placeholder="輸入人員 ID">
+                                <input type="text" id="targetSyncId" class="border border-gray-200 rounded-lg px-4 py-2 w-48 font-bold text-sm" placeholder="輸入同步 ID">
                                 <button onclick="loadConfigForAdmin(document.getElementById('targetSyncId').value)" class="bg-rose-100 text-rose-600 px-4 py-2 rounded-lg font-bold hover:bg-rose-200 transition-colors text-sm">載入計畫</button>
                             </div>
                             <div class="h-6 w-px bg-gray-200 mx-2 hidden md:block"></div>
                             <button onclick="openCloneModal()" class="text-sm bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-100 transition-all border border-blue-100">
-                                <i class="fas fa-copy mr-1"></i> 從現有 ID 複製計畫
+                                <i class="fas fa-copy mr-1"></i> 從現有計畫複製
                             </button>
                         </div>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="saveAdminConfig()" id="btnPublish" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 flex items-center transition-all">
-                            <i class="fas fa-cloud-upload-alt mr-2"></i>發布所有計畫變更
+                            <i class="fas fa-cloud-upload-alt mr-2"></i>發布計畫變更
                         </button>
-                        <button onclick="logoutAdmin()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold hover:bg-gray-200">退出管理模式</button>
+                        <button onclick="logoutAdmin()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors">退出管理</button>
                     </div>
                 </div>
                 <div id="adminListsContainer" class="grid grid-cols-1 gap-8"></div>
@@ -274,7 +285,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase 完整設定 (與您的截圖一致)
+        // Firebase Configuration (Matching v1.5.3 environment)
         const firebaseConfig = {
             apiKey: "AIzaSyCvOqKFvnKXrj07BtfbLLTNZXiCw2jBgus",
             authDomain: "training-834e3.firebaseapp.com",
@@ -284,7 +295,7 @@
             appId: "1:284421517335:web:19e2d463497126b8ccac52",
             measurementId: "G-TBK012JC7N"
         };
-        const activeAppId = typeof __app_id !== 'undefined' ? __app_id : "element-training-final";
+        const activeAppId = typeof __app_id !== 'undefined' ? __app_id : "利泓科技教育訓練系統";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -296,7 +307,7 @@
                 { id: 'i2', category: '管理部', name: '辦公環境導覽', lecturer: '許鏸文', duration: '1h' }
             ],
             courseData: [
-                { id: 'c1', level: '新手篇', category: '核心', name: '新人自我介紹', points: 10, lecturer: '', remark: '需在 Line 群組完成' }
+                { id: 'c1', level: '新手篇', category: '核心', name: '首日自我介紹', points: 10, lecturer: '', remark: '需於 Line 團隊群組完成' }
             ]
         };
 
@@ -309,7 +320,7 @@
             'Default': 'fas fa-box'
         };
 
-        // 狀態管理
+        // State Management
         let currentConfig = JSON.parse(JSON.stringify(FALLBACK_PLAN));
         let adminEditing = JSON.parse(JSON.stringify(FALLBACK_PLAN));
         let userState = { 
@@ -338,10 +349,10 @@
             }, 8000);
 
             try {
-                document.getElementById('loadingStatus').innerText = "驗證通訊權限...";
+                document.getElementById('loadingStatus').innerText = "身份驗證中...";
                 let tokenUsed = false;
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    try { await signInWithCustomToken(auth, __initial_auth_token); tokenUsed = true; } catch (e) { console.warn("Token mismatch."); }
+                    try { await signInWithCustomToken(auth, __initial_auth_token); tokenUsed = true; } catch (e) { console.warn("Custom token fail."); }
                 }
                 if (!tokenUsed) await signInAnonymously(auth);
 
@@ -361,7 +372,7 @@
 
                         clearTimeout(timeoutGuard);
                         document.getElementById('loadingOverlay').classList.add('hidden');
-                        setConnStatus('雲端已連線', 'text-green-600');
+                        setConnStatus('數據已連通', 'text-green-600');
                     } catch (fsErr) { console.error(fsErr); }
                 });
             } catch (err) { console.error(err); }
@@ -369,7 +380,7 @@
 
         window.skipLoading = () => document.getElementById('loadingOverlay').classList.add('hidden');
 
-        // --- Admin Mode Logic ---
+        // --- Admin Functions ---
 
         window.loginAdmin = () => {
             if (document.getElementById('adminPass').value === 'admin888') {
@@ -380,7 +391,7 @@
                 document.getElementById('adminBadge').classList.remove('hidden');
                 document.getElementById('btnNavReset').classList.remove('hidden');
                 loadConfigForAdmin('global');
-            } else { alert("管理密碼錯誤。"); }
+            } else { alert("驗證金鑰錯誤。"); }
         };
 
         window.logoutAdmin = () => {
@@ -403,7 +414,7 @@
         async function loadConfigForAdmin(tid) {
             if (!authUser) return;
             const docId = tid && tid !== 'global' ? `user_${tid}` : 'global';
-            setConnStatus(`讀取計畫: ${docId}`, 'text-blue-500');
+            setConnStatus(`載入配置: ${docId}`, 'text-blue-500');
             try {
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', docId);
                 const snap = await getDoc(docRef);
@@ -412,39 +423,60 @@
                 } else {
                     adminEditing = JSON.parse(JSON.stringify(FALLBACK_PLAN));
                 }
+                // Ensure arrays exist before rendering
+                adminEditing.initialCourses = adminEditing.initialCourses || [];
+                adminEditing.courseData = adminEditing.courseData || [];
+                
                 renderAdminEditor();
-                setConnStatus('計畫載入成功', 'text-green-600');
-            } catch (err) { alert("讀取計畫失敗。"); }
+                setConnStatus('計畫同步完成', 'text-green-600');
+            } catch (err) { alert("無法讀取雲端配置。"); }
         }
         window.loadConfigForAdmin = loadConfigForAdmin;
 
         window.openCloneModal = async () => {
-            const sourceId = prompt("請輸入欲複製的來源 ID：");
+            const sourceId = prompt("請輸入欲複製的來源 ID (如姓名)：");
             if (!sourceId) return;
-            
-            setConnStatus(`正在複製「${sourceId}」計畫...`, 'text-blue-500');
+            setConnStatus(`複製中: ${sourceId}`, 'text-blue-500');
             try {
                 const docId = sourceId.toLowerCase() === 'global' ? 'global' : `user_${sourceId}`;
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', docId);
                 const snap = await getDoc(docRef);
                 if (snap.exists()) {
                     adminEditing = snap.data();
+                    adminEditing.initialCourses = adminEditing.initialCourses || [];
+                    adminEditing.courseData = adminEditing.courseData || [];
                     renderAdminEditor();
-                    alert(`已成功複製計畫！請務必點擊「發布所有計畫變更」以儲存。`);
-                } else {
-                    alert(`找不到 ID 為 「${sourceId}」 的計畫。`);
-                }
-            } catch (e) { alert("複製發生錯誤。"); }
+                    alert(`成功從「${sourceId}」複製計畫配置。發布前請再次檢查。`);
+                } else { alert("找不到該 ID 的計畫內容。"); }
+            } catch (e) { alert("複製過程出錯。"); }
             finally { updateGlobalStats(); }
         };
 
+        // 修正：特定人員專屬規劃新增內容失敗的問題
         window.adminAdd = (t) => {
+            // 強制初始化陣列以防萬一
+            if (!adminEditing) adminEditing = { initialCourses: [], courseData: [] };
+            if (!adminEditing.initialCourses) adminEditing.initialCourses = [];
+            if (!adminEditing.courseData) adminEditing.courseData = [];
+
             if (t === 'i') {
-                if (!adminEditing.initialCourses) adminEditing.initialCourses = [];
-                adminEditing.initialCourses.push({ id: 'i'+Date.now(), category: '管理', name: '新課程', lecturer: '', duration: '' });
+                adminEditing.initialCourses.push({ 
+                    id: 'i' + Date.now(), 
+                    category: '新類別', 
+                    name: '新核心課程', 
+                    lecturer: '負責人', 
+                    duration: '時數' 
+                });
             } else {
-                if (!adminEditing.courseData) adminEditing.courseData = [];
-                adminEditing.courseData.push({ id: 'c'+Date.now(), level: '新手篇', category: '一般', name: '新項目', points: 1, lecturer: '', remark: '' });
+                adminEditing.courseData.push({ 
+                    id: 'c' + Date.now(), 
+                    level: '新手篇', 
+                    category: '新類別', 
+                    name: '新選修項目', 
+                    points: 1, 
+                    lecturer: '', 
+                    remark: '' 
+                });
             }
             renderAdminEditor();
         };
@@ -474,18 +506,18 @@
                 if (!tid) return alert("請輸入對象 ID");
                 docId = `user_${tid}`;
             }
-            if (!confirm(`確定發布變更至「${docId}」？`)) return;
+            if (!confirm(`確定將目前變更發布至「${docId}」？`)) return;
             btn.disabled = true;
             try {
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', docId);
                 await setDoc(docRef, JSON.parse(JSON.stringify(adminEditing)));
-                alert("已成功發布變更！");
+                alert("已成功更新計畫配置！");
                 if (syncId === (docId === 'global' ? syncId : docId.replace('user_', ''))) location.reload();
             } catch (err) { alert(`發布失敗: ${err.message}`); }
             finally { btn.disabled = false; }
         };
 
-        // --- User Sync Logic ---
+        // --- User Operations ---
 
         window.applySync = async () => {
             const id = document.getElementById('syncKey').value.trim();
@@ -493,7 +525,7 @@
             if (unsubscribeSnap) unsubscribeSnap();
             syncId = id;
             localStorage.setItem('rt_training_id', id);
-            setConnStatus('同步中...', 'text-blue-600');
+            setConnStatus('同步進度中...', 'text-blue-600');
 
             try {
                 const customRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', `user_${id}`);
@@ -524,7 +556,7 @@
                     updateGlobalStats();
                     setConnStatus(`已同步 (${id})`, 'text-green-600');
                 });
-            } catch (err) { setConnStatus('連線失敗', 'text-rose-600'); }
+            } catch (err) { setConnStatus('載入失敗', 'text-rose-600'); }
         };
 
         window.debouncedSave = () => {
@@ -533,13 +565,13 @@
             userState.userInfo.startDate = document.getElementById('startDate').value;
             updateGlobalStats();
             if (!syncId || !authUser) return;
-            setConnStatus('自動儲存中...', 'text-blue-500');
+            setConnStatus('雲端備份中...', 'text-blue-500');
             clearTimeout(saveTimer);
             saveTimer = setTimeout(async () => {
                 try {
                     const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'training_records', syncId);
                     await setDoc(docRef, userState);
-                    setConnStatus(`雲端已更新`, 'text-green-600');
+                    setConnStatus(`數據已更新`, 'text-green-600');
                 } catch (e) { console.error(e); }
             }, 1000);
         };
@@ -556,7 +588,7 @@
         };
 
         window.resetData = async () => {
-            if (!confirm("確定重置進度？此操作僅限管理者。")) return;
+            if (!confirm("此操作將清空 ID 「" + syncId + "」的所有已勾選項目與填寫日期。")) return;
             userState.completedInitial = []; userState.completedCourses = []; userState.initialTimes = {}; userState.courseTimes = {}; userState.courseLecturers = {};
             updateGlobalStats();
             if (syncId && authUser) {
@@ -568,37 +600,36 @@
         window.exportToExcel = () => {
             const wb = XLSX.utils.book_new();
             
-            // 階段數據計算
+            // 計算數據
             const catStats = { '新手篇': {t:0, c:0}, '理解篇': {t:0, c:0}, '規劃篇': {t:0, c:0}, '團隊合作篇': {t:0, c:0}, '自我成長': {t:0, c:0} };
             (currentConfig.courseData || []).forEach(c => {
                 catStats[c.level].t += c.points;
                 if (userState.completedCourses.includes(c.id)) catStats[c.level].c += c.points;
             });
 
-            // 1. 儀表板
+            // Sheet 1: Dashboard
             const dashData = [
-                ["利泓科技培訓系統 - 概況統計"],
-                ["使用者資訊"],
+                ["利泓科技培訓報告 - 概況統計"],
+                ["身份資訊"],
                 ["姓名", userState.userInfo.name || "未填"],
                 ["區域", userState.userInfo.region || "未選"],
                 ["到職日", userState.userInfo.startDate || "未填"],
                 [],
-                ["訓練成就"],
+                ["數據總覽"],
                 ["總積分", document.getElementById('displayTotalScore').innerText],
-                ["計畫滿分", document.getElementById('displayMaxScore').innerText],
-                ["達成率", document.getElementById('displayScoreRatio').innerText],
+                ["滿分目標", document.getElementById('displayMaxScore').innerText],
                 ["當前等級", document.getElementById('displayLevel').innerText],
                 [],
-                ["階段數據"],
-                ["類別", "總分", "得分", "達成率"]
+                ["各類別詳細進度"],
+                ["類別", "總積分", "已得積分", "達成率"]
             ];
             Object.entries(catStats).forEach(([name, d]) => {
                 dashData.push([name, d.t, d.c, d.t === 0 ? "0%" : Math.round((d.c/d.t)*100)+"%"]);
             });
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dashData), "儀表板概況");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dashData), "儀表板統計");
 
-            // 2. 必修課程
-            const initialHeader = [["狀態", "類別", "名稱", "負責人", "時數", "日期及時間"]];
+            // Sheet 2: Mandatory
+            const initialHeader = [["完成狀態", "類別", "核心項目名稱", "負責人", "建議時數", "上課日期及時間"]];
             const initialRows = (currentConfig.initialCourses || []).map(c => [
                 userState.completedInitial.includes(c.id) ? "已完成" : "未完成",
                 c.category,
@@ -609,8 +640,8 @@
             ]);
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(initialHeader.concat(initialRows)), "必修課程紀錄");
 
-            // 3. 選修課程
-            const electiveHeader = [["狀態", "類別", "名稱", "積分", "授課講師", "備註", "日期及時間"]];
+            // Sheet 3: Elective
+            const electiveHeader = [["完成狀態", "類別", "選修項目名稱", "積分", "授課講師", "計畫備註", "日期及時間"]];
             const electiveRows = (currentConfig.courseData || []).map(c => [
                 userState.completedCourses.includes(c.id) ? "已完成" : "未完成",
                 c.brand || c.category,
@@ -622,10 +653,10 @@
             ]);
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(electiveHeader.concat(electiveRows)), "選修課程紀錄");
 
-            XLSX.writeFile(wb, `利泓培訓報告_${userState.userInfo.name || 'User'}.xlsx`);
+            XLSX.writeFile(wb, `利泓科技培訓報表_${userState.userInfo.name || syncId || 'User'}.xlsx`);
         };
 
-        // --- Render Engine ---
+        // --- Render Functions ---
 
         function renderAllDisplay() {
             renderInitialList();
@@ -659,7 +690,7 @@
             document.getElementById('scoredCourseSections').innerHTML = groups.map(lv => `
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 bg-gray-50/50 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-all" onclick="toggleSection('sec-${lv}')">
-                        <h3 class="font-black text-gray-700 uppercase tracking-wide text-sm">${lv} 選修課程</h3>
+                        <h3 class="font-black text-gray-700 uppercase tracking-wide text-sm">${lv} 選修項目</h3>
                         <i class="fas fa-chevron-down text-gray-300"></i>
                     </div>
                     <div id="sec-${lv}" class="overflow-x-auto">
@@ -671,7 +702,7 @@
                                     <th class="px-4 py-2 text-left">名稱</th>
                                     <th class="px-4 py-2 text-left w-16">積分</th>
                                     <th class="px-4 py-2 text-left w-24">授課講師</th>
-                                    <th class="px-4 py-2 text-left">備註</th>
+                                    <th class="px-4 py-2 text-left">計畫備註</th>
                                     <th class="px-4 py-2 text-left w-40">日期及時間</th>
                                 </tr>
                             </thead>
@@ -689,7 +720,7 @@
                                         <td class="px-4 py-3 font-black text-blue-600">${c.points} pts</td>
                                         <td class="px-4 py-3">
                                             <input type="text" class="text-edit-input" 
-                                                   placeholder="輸入講師"
+                                                   placeholder="輸入授課者"
                                                    data-id="${c.id}" data-type="lecturer"
                                                    onchange="updateLecturer('${c.id}', this.value)">
                                         </td>
@@ -711,20 +742,20 @@
         function renderAdminEditor() {
             document.getElementById('adminListsContainer').innerHTML = `
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden shadow-inner">
-                    <div class="px-6 py-4 bg-amber-50 flex justify-between items-center"><h3 class="font-black text-amber-900 text-xs uppercase">1. 必修課程結構編輯</h3><button onclick="adminAdd('i')" class="bg-amber-600 text-white px-3 py-1 rounded text-xs font-bold">+ 新增核心項</button></div>
+                    <div class="px-6 py-4 bg-amber-50 flex justify-between items-center"><h3 class="font-black text-amber-900 text-xs uppercase">1. 必修核心課程規劃</h3><button onclick="adminAdd('i')" class="bg-amber-600 text-white px-3 py-1 rounded text-xs font-bold shadow-md hover:bg-amber-700 transition-transform active:scale-95">+ 新增</button></div>
                     <div class="p-6 space-y-3">${(adminEditing.initialCourses || []).map(c => `
                         <div class="grid grid-cols-1 md:grid-cols-7 gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200 transition-all hover:border-amber-200">
                             <input type="text" value="${c.category}" oninput="adminUpdate('i', '${c.id}', 'category', this.value)" class="text-xs p-2 border rounded font-bold" placeholder="類別">
-                            <input type="text" value="${c.name}" oninput="adminUpdate('i', '${c.id}', 'name', this.value)" class="col-span-2 text-xs p-2 border rounded font-bold" placeholder="項目名稱">
+                            <input type="text" value="${c.name}" oninput="adminUpdate('i', '${c.id}', 'name', this.value)" class="col-span-2 text-xs p-2 border rounded font-bold" placeholder="核心項目名稱">
                             <input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('i', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded" placeholder="負責人">
                             <input type="text" value="${c.duration || ''}" oninput="adminUpdate('i', '${c.id}', 'duration', this.value)" class="text-xs p-2 border rounded font-bold text-blue-600" placeholder="時數">
-                            <button onclick="adminDel('i', '${c.id}')" class="text-rose-500 hover:bg-rose-50 p-1 rounded"><i class="fas fa-trash-alt"></i></button>
+                            <button onclick="adminDel('i', '${c.id}')" class="text-rose-500 hover:bg-rose-50 p-1 rounded transition-colors"><i class="fas fa-trash-alt"></i></button>
                         </div>
                     `).join('')}</div>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden mt-6">
-                    <div class="px-6 py-4 bg-blue-50 flex justify-between items-center"><h3 class="font-black text-blue-900 text-xs uppercase">2. 選修課程結構編輯</h3><button onclick="adminAdd('c')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold">+ 新增選修項</button></div>
-                    <div class="p-6 space-y-4">${(adminEditing.courseData || []).map(c => `<div class="bg-white border rounded-lg p-4 space-y-3 transition-all hover:border-blue-200"><div class="grid grid-cols-1 md:grid-cols-7 gap-2"><select onchange="adminUpdate('c', '${c.id}', 'level', this.value)" class="text-[10px] p-2 border rounded font-bold">${['新手篇','理解篇','規劃篇','團隊合作篇','自我成長'].map(l => `<option ${c.level === l ? 'selected' : ''}>${l}</option>`).join('')}</select><input type="text" value="${c.brand || ''}" oninput="adminUpdate('c', '${c.id}', 'brand', this.value)" class="text-[10px] p-2 border rounded"><input type="text" value="${c.category}" oninput="adminUpdate('c', '${c.id}', 'category', this.value)" class="text-[10px] p-2 border rounded"><input type="text" value="${c.name}" oninput="adminUpdate('c', '${c.id}', 'name', this.value)" class="col-span-2 text-[10px] p-2 border rounded font-bold"><input type="number" value="${c.points}" oninput="adminUpdate('c', '${c.id}', 'points', this.value)" class="text-[10px] p-2 border rounded font-black text-blue-600"><button onclick="adminDel('c', '${c.id}')" class="text-rose-500 text-center"><i class="fas fa-trash-alt"></i></button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-dashed pt-3"><input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('c', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded font-bold text-indigo-600" placeholder="預設講師 (亦可由使用者自行填寫)"><input type="text" value="${c.remark || ''}" oninput="adminUpdate('c', '${c.id}', 'remark', this.value)" class="text-xs p-2 border rounded italic" placeholder="計畫備註內容"></div></div>`).join('')}</div>
+                    <div class="px-6 py-4 bg-blue-50 flex justify-between items-center"><h3 class="font-black text-blue-900 text-xs uppercase">2. 選修計畫課程規劃</h3><button onclick="adminAdd('c')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold shadow-md hover:bg-blue-700 transition-transform active:scale-95">+ 新增</button></div>
+                    <div class="p-6 space-y-4">${(adminEditing.courseData || []).map(c => `<div class="bg-white border rounded-lg p-4 space-y-3 transition-all hover:border-blue-200"><div class="grid grid-cols-1 md:grid-cols-7 gap-2"><select onchange="adminUpdate('c', '${c.id}', 'level', this.value)" class="text-[10px] p-2 border rounded font-bold">${['新手篇','理解篇','規劃篇','團隊合作篇','自我成長'].map(l => `<option ${c.level === l ? 'selected' : ''}>${l}</option>`).join('')}</select><input type="text" value="${c.brand || ''}" oninput="adminUpdate('c', '${c.id}', 'brand', this.value)" class="text-[10px] p-2 border rounded" placeholder="品牌"><input type="text" value="${c.category}" oninput="adminUpdate('c', '${c.id}', 'category', this.value)" class="text-[10px] p-2 border rounded" placeholder="類別"><input type="text" value="${c.name}" oninput="adminUpdate('c', '${c.id}', 'name', this.value)" class="col-span-2 text-[10px] p-2 border rounded font-bold" placeholder="課程名稱"><input type="number" value="${c.points}" oninput="adminUpdate('c', '${c.id}', 'points', this.value)" class="text-[10px] p-2 border rounded font-black text-blue-600"><button onclick="adminDel('c', '${c.id}')" class="text-rose-500 text-center"><i class="fas fa-trash-alt"></i></button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-dashed pt-3"><input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('c', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded font-bold text-indigo-600" placeholder="預設講師 (亦可由使用者自行填寫)"><input type="text" value="${c.remark || ''}" oninput="adminUpdate('c', '${c.id}', 'remark', this.value)" class="text-xs p-2 border rounded italic" placeholder="計畫備註內容"></div></div>`).join('')}</div>
                 </div>
             `;
         }
@@ -774,7 +805,8 @@
             
             const nextT = (lv < 5) ? lv * interval : (total < max ? max : null);
             if (nextT !== null) {
-                document.getElementById('displayDistToUpgrade').innerText = Math.ceil(nextT - total);
+                const diff = Math.ceil(nextT - total);
+                document.getElementById('displayDistToUpgrade').innerText = diff > 0 ? diff : 0;
                 document.getElementById('nextLevelName').innerText = lv < 5 ? 'Lv ' + (lv + 1) : '100% 達成';
                 const progressInLv = ((total - ((lv - 1) * interval)) / interval) * 100;
                 document.getElementById('levelProgressBar').style.width = Math.min(100, progressInLv) + '%';
@@ -785,25 +817,19 @@
             }
 
             document.getElementById('dashboardAnalysis').innerHTML = `
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"><table class="min-w-full divide-y divide-gray-100"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">階段指標</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">積分進度</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">完成度</th></tr></thead><tbody class="divide-y divide-gray-50"><tr><td class="px-6 py-4 text-sm font-bold text-amber-700 uppercase">核心必修項目</td><td class="px-6 py-4 text-sm font-bold">${(userState.completedInitial || []).length}/${(currentConfig.initialCourses || []).length}</td><td class="px-6 py-4"><div class="w-24 h-1 bg-gray-100 rounded-full"><div class="h-full bg-amber-500" style="width: ${(currentConfig.initialCourses || []).length === 0 ? 0 : Math.round(((userState.completedInitial || []).length / currentConfig.initialCourses.length) * 100)}%"></div></div></td></tr>${Object.entries(catStats).map(([n, d]) => `<tr><td class="px-6 py-4 text-sm font-bold text-gray-700">${n}</td><td class="px-6 py-4 text-sm font-bold">${d.c}/${d.t}</td><td class="px-6 py-4"><div class="w-24 h-1 bg-gray-100 rounded-full transition-all"><div class="h-full bg-blue-500" style="width: ${d.t === 0 ? 0 : Math.round((d.c / d.t) * 100)}%"></div></div></td></tr>`).join('')}</tbody></table></div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"><table class="min-w-full divide-y divide-gray-100"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">階段類別</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">總分/得分</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">完成度</th></tr></thead><tbody class="divide-y divide-gray-50"><tr><td class="px-6 py-4 text-sm font-bold text-amber-700 uppercase">核心必修項目</td><td class="px-6 py-4 text-sm font-bold">${(userState.completedInitial || []).length}/${(currentConfig.initialCourses || []).length}</td><td class="px-6 py-4"><div class="w-24 h-1 bg-gray-100 rounded-full"><div class="h-full bg-amber-500" style="width: ${(currentConfig.initialCourses || []).length === 0 ? 0 : Math.round(((userState.completedInitial || []).length / currentConfig.initialCourses.length) * 100)}%"></div></div></td></tr>${Object.entries(catStats).map(([n, d]) => `<tr><td class="px-6 py-4 text-sm font-bold text-gray-700">${n}</td><td class="px-6 py-4 text-sm font-bold">${d.c}/${d.t}</td><td class="px-6 py-4"><div class="w-24 h-1 bg-gray-100 rounded-full transition-all"><div class="h-full bg-blue-500" style="width: ${d.t === 0 ? 0 : Math.round((d.c / d.t) * 100)}%"></div></div></td></tr>`).join('')}</tbody></table></div>
             `;
 
             document.getElementById('dashboardBrandBody').innerHTML = Object.entries(brandStats).length === 0 
-                ? '<div class="col-span-full py-10 text-center text-gray-400 italic text-sm">尚未設定選修品牌訓練項目</div>'
+                ? '<div class="col-span-full py-10 text-center text-gray-400 italic text-sm">尚未設定任何選修品牌數據</div>'
                 : Object.entries(brandStats).map(([name, data]) => {
-                    const pct = Math.round((data.c / data.t) * 100);
-                    return `<div class="brand-card bg-gray-50 rounded-2xl p-4 flex flex-col items-center text-center border border-gray-100 group"><div class="mb-3 w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm transition-all group-hover:scale-110"><i class="${brandIcons[name] || brandIcons['Default']} text-xl"></i></div><div class="text-sm font-black text-gray-800 mb-1">${name}</div><div class="text-[10px] font-bold text-gray-400 mb-3">${data.c} / ${data.t} 堂</div><div class="w-full bg-gray-200 h-1.5 rounded-full mt-auto"><div class="bg-blue-600 h-1.5 rounded-full transition-all duration-1000" style="width: ${pct}%"></div></div><div class="mt-2 text-[10px] font-black text-blue-600">${pct}%</div></div>`;
+                    const p = Math.round((data.c / data.t) * 100);
+                    return `<div class="brand-card bg-gray-50 rounded-2xl p-4 flex flex-col items-center text-center border border-gray-100 group"><div class="mb-3 w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm transition-all group-hover:scale-110"><i class="${brandIcons[name] || brandIcons['Default']} text-xl"></i></div><div class="text-sm font-black text-gray-800 mb-1">${name}</div><div class="text-[10px] font-bold text-gray-400 mb-3">${data.c} / ${data.t} 堂</div><div class="w-full bg-gray-200 h-1.5 rounded-full mt-auto"><div class="bg-blue-600 h-1.5 rounded-full transition-all duration-1000" style="width: ${p}%"></div></div><div class="mt-2 text-[10px] font-black text-blue-600">${p}%</div></div>`;
                 }).join('');
 
             document.getElementById('initialProgress').innerText = `${(userState.completedInitial || []).length}/${(currentConfig.initialCourses || []).length}`;
         }
 
-        window.toggleInitial = (id) => { if (userState.completedInitial.includes(id)) userState.completedInitial = userState.completedInitial.filter(x => x !== id); else userState.completedInitial.push(id); debouncedSave(); };
-        window.toggleCourse = (id) => { if (userState.completedCourses.includes(id)) userState.completedCourses = userState.completedCourses.filter(x => x !== id); else userState.completedCourses.push(id); debouncedSave(); };
-        window.toggleSection = (id) => document.getElementById(id).classList.toggle('hidden');
-        window.toggleAdminScope = () => { const scope = document.getElementById('adminTargetType').value; document.getElementById('targetUserIdContainer').classList.toggle('hidden', scope !== 'custom'); if (scope === 'global') loadConfigForAdmin('global'); };
-        window.switchTab = (id) => { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById(id).classList.add('active'); document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active')); const btn = document.getElementById('btn-' + id); if(btn) btn.classList.add('active'); if (id === 'admin' && isAdminActive) renderAdminEditor(); };
-        
         function setConnStatus(msg, colorClass) { const el = document.getElementById('syncStatus'); el.innerHTML = `<i class="fas fa-check-circle mr-1"></i>${msg}`; el.className = `ml-4 px-2 py-1 rounded text-[10px] font-bold transition-all bg-white border border-gray-100 ${colorClass}`; }
 
         window.onload = init;
