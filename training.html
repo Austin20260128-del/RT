@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>利泓科技教育訓練系統 v1.9.9</title>
+    <title>利泓科技教育訓練系統 v2.1.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -114,7 +114,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <span class="text-xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                        <i class="fas fa-graduation-cap mr-2"></i>利泓科技教育訓練系統 v1.9.9
+                        <i class="fas fa-graduation-cap mr-2"></i>利泓科技教育訓練系統 v2.1.2
                     </span>
                     <span id="syncStatus" class="ml-4 px-2 py-1 rounded text-[10px] font-bold uppercase bg-gray-100 text-gray-400 transition-all">
                         <i class="fas fa-circle-notch animate-spin mr-1"></i>連線中
@@ -143,8 +143,8 @@
                         <p class="text-xs opacity-70 mt-1 text-indigo-100">輸入專屬識別碼以載入進度。姓名與區域資訊僅限管理員修改。</p>
                     </div>
                     <div class="flex gap-2">
-                        <input type="text" id="syncKey" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-64 font-bold" placeholder="輸入 ID (如姓名)">
-                        <button onclick="applySync()" class="bg-white text-indigo-600 px-6 py-2 rounded-lg font-bold hover:bg-indigo-50 transition-all shadow-md">連線同步</button>
+                        <input type="text" id="syncKey" class="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/50 w-full md:w-64 font-bold" placeholder="輸入您的 ID">
+                        <button onclick="applySync()" class="bg-white text-indigo-600 px-6 py-2 rounded-lg font-bold hover:bg-indigo-50 transition-all shadow-md">同步進度</button>
                     </div>
                 </div>
             </div>
@@ -182,7 +182,7 @@
             <!-- Stats Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div class="bg-white border-l-8 border-blue-600 rounded-xl shadow-sm p-6 transition-all">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">目前總累積積分</div>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">累計總積分</div>
                     <div class="text-4xl font-black mt-1 text-gray-800" id="displayTotalScore">0</div>
                     <div class="mt-4 text-xs font-bold text-blue-600 bg-blue-50 inline-block px-2 py-1 rounded">達成率: <span id="displayScoreRatio">0%</span></div>
                 </div>
@@ -199,10 +199,10 @@
                     </div>
                 </div>
                 <div class="bg-white border-l-8 border-emerald-500 rounded-xl shadow-sm p-6 transition-all">
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">計畫型態</div>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">當前計畫型態</div>
                     <div class="text-2xl font-black text-gray-800 mt-2" id="planTypeDisplay">正在同步...</div>
                     <div class="mt-3 flex items-center text-[10px] text-emerald-600 font-bold italic">
-                        <i class="fas fa-bullseye mr-1"></i> 計畫總分: <span id="displayMaxScore" class="ml-1">0</span> pts
+                        <i class="fas fa-bullseye mr-1"></i> 目標分數: <span id="displayMaxScore" class="ml-1">0</span> pts
                     </div>
                 </div>
             </div>
@@ -217,7 +217,7 @@
 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
-                        <h3 class="font-bold text-gray-700 text-sm uppercase tracking-tighter">品牌掌握視覺化 (Brand Mastery)</h3>
+                        <h3 class="font-bold text-gray-700 text-sm uppercase tracking-tighter">品牌掌握視覺分析 (Brand Mastery)</h3>
                     </div>
                     <div class="p-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6" id="dashboardBrandBody"></div>
                 </div>
@@ -264,33 +264,32 @@
                 <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 transition-transform hover:scale-110">
                     <i class="fas fa-lock text-2xl"></i>
                 </div>
-                <h2 class="text-2xl font-black text-gray-800">管理者驗證</h2>
-                <p class="text-xs text-gray-400 mt-2">請輸入管理金鑰以獲得權限 (admin888)</p>
+                <h2 class="text-2xl font-black text-gray-800">管理端後台驗證</h2>
                 <input type="password" id="adminPass" class="block w-full mt-6 rounded-xl border-gray-200 shadow-sm p-4 border bg-gray-50 text-center font-bold tracking-widest outline-none focus:ring-2 focus:ring-rose-500 transition-all" placeholder="••••••••">
-                <button onclick="loginAdmin()" class="w-full mt-4 bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-700 transition-all">解鎖後台</button>
+                <button onclick="loginAdmin()" class="w-full mt-4 bg-rose-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-rose-700 transition-all">開啟管理模式</button>
             </div>
             <div id="adminPanel" class="hidden space-y-8">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-6 transition-all">
                     <div class="flex-1">
-                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">規畫配置與計畫複製</label>
+                        <label class="block text-xs font-bold text-gray-400 mb-2 uppercase">規畫配置與計畫複製</label>
                         <div class="flex flex-wrap items-center gap-4">
                             <select id="adminTargetType" onchange="toggleAdminScope()" class="bg-gray-100 border border-gray-200 rounded-lg px-4 py-2 font-bold outline-none focus:ring-2 focus:ring-rose-500 transition-all text-sm">
                                 <option value="global">全域標竿計畫 (系統預設)</option>
                                 <option value="custom">特定人員專屬規劃 (量身打造)</option>
                             </select>
                             <div id="targetUserIdContainer" class="hidden flex items-center gap-2">
-                                <input type="text" id="targetSyncId" class="border border-gray-200 rounded-lg px-4 py-2 w-48 font-bold text-sm" placeholder="輸入 ID">
-                                <button onclick="loadConfigForAdmin(document.getElementById('targetSyncId').value)" class="bg-rose-100 text-rose-600 px-4 py-2 rounded-lg font-bold hover:bg-rose-200 transition-colors text-sm">載入</button>
+                                <input type="text" id="targetSyncId" class="border border-gray-200 rounded-lg px-4 py-2 w-48 font-bold text-sm" placeholder="輸入人員 ID">
+                                <button onclick="loadConfigForAdmin(document.getElementById('targetSyncId').value)" class="bg-rose-100 text-rose-600 px-4 py-2 rounded-lg font-bold hover:bg-rose-200 transition-colors text-sm">載入計畫</button>
                             </div>
                             <div class="h-6 w-px bg-gray-200 mx-2 hidden md:block"></div>
                             <button onclick="openCloneModal()" class="text-sm bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-100 transition-all border border-blue-100">
-                                <i class="fas fa-copy mr-1"></i> 從其他 ID 複製計畫
+                                <i class="fas fa-copy mr-1"></i> 從現有 ID 複製計畫
                             </button>
                         </div>
                     </div>
                     <div class="flex gap-2">
                         <button onclick="saveAdminConfig()" id="btnPublish" class="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 flex items-center transition-all">
-                            <i class="fas fa-cloud-upload-alt mr-2"></i>發布所有變更
+                            <i class="fas fa-cloud-upload-alt mr-2"></i>發布所有計畫變更
                         </button>
                         <button onclick="logoutAdmin()" class="bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors text-center">退出管理模式</button>
                     </div>
@@ -327,7 +326,7 @@
                 { id: 'i2', category: '管理部', name: '辦公環境導覽', lecturer: '許鏸文', duration: '1h' }
             ],
             courseData: [
-                { id: 'c1', level: '新手篇', category: '核心', name: '正式入職自我介紹', points: 10, lecturer: '', remark: '需在 Line 團隊群組完成' }
+                { id: 'c1', level: '新手篇', category: '核心', name: '正式新人自我介紹', points: 10, lecturer: '', remark: '需在 Line 團隊群組完成' }
             ]
         };
 
@@ -461,14 +460,14 @@
         async function loadConfigForAdmin(tid) {
             if (!authUser) return;
             const docId = tid && tid !== 'global' ? `user_${tid}` : 'global';
-            setConnStatus(`載入配置: ${docId}`, 'text-blue-500');
+            setConnStatus(`讀取計畫: ${docId}`, 'text-blue-500');
             try {
                 const docRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', docId);
                 const snap = await getDoc(docRef);
-                if (snap.exists()) {
-                    adminEditing = snap.data();
-                } else {
-                    const globalSnap = await getDoc(doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', 'global'));
+                if (snap.exists()) adminEditing = snap.data();
+                else {
+                    const globalRef = doc(db, 'artifacts', activeAppId, 'public', 'data', 'configs', 'global');
+                    const globalSnap = await getDoc(globalRef);
                     adminEditing = globalSnap.exists() ? globalSnap.data() : JSON.parse(JSON.stringify(FALLBACK_PLAN));
                 }
                 adminEditing.initialCourses = adminEditing.initialCourses || [];
@@ -500,6 +499,8 @@
 
         window.adminAdd = (t) => {
             if (!adminEditing) adminEditing = { initialCourses: [], courseData: [] };
+            if (!adminEditing.initialCourses) adminEditing.initialCourses = [];
+            if (!adminEditing.courseData) adminEditing.courseData = [];
             if (t === 'i') adminEditing.initialCourses.push({ id: 'i' + Date.now(), category: '新類別', name: '新核心課程', lecturer: '負責人', duration: '時數' });
             else adminEditing.courseData.push({ id: 'c' + Date.now(), level: '新手篇', category: '新類別', name: '新選修內容', points: 1, lecturer: '', remark: '' });
             renderAdminEditor();
@@ -544,8 +545,6 @@
             } catch (err) { showAlert(`發布失敗: ${err.message}`, "錯誤", "warning"); }
             finally { btn.disabled = false; }
         };
-
-        // --- User Sync Logic ---
 
         window.applySync = async () => {
             const id = document.getElementById('syncKey').value.trim();
@@ -606,6 +605,7 @@
 
         window.exportToExcel = () => {
             const wb = XLSX.utils.book_new();
+            
             const catStats = { '新手篇': {t:0, c:0}, '理解篇': {t:0, c:0}, '規劃篇': {t:0, c:0}, '團隊合作篇': {t:0, c:0}, '自我成長': {t:0, c:0} };
             const brandStats = {};
             (currentConfig.courseData || []).forEach(c => {
@@ -618,28 +618,37 @@
                 }
             });
 
-            // 1. 儀表板
+            // 1. 儀表板分頁
             const dashData = [
                 ["利泓科技培訓報告 - 概況統計"], ["使用者資訊"], ["姓名", userState.userInfo.name || "未填"], ["區域", userState.userInfo.region || "未選"], ["到職日", userState.userInfo.startDate || "未填"],
-                [], ["成就概況"], ["目前總積分", document.getElementById('displayTotalScore').innerText], ["計畫滿分", document.getElementById('displayMaxScore').innerText], ["達成率", document.getElementById('displayScoreRatio').innerText], ["等級", document.getElementById('displayLevel').innerText],
-                [], ["階段統計"], ["類別", "總分", "得分", "達成率"]
+                [], ["成就概況"], ["目前總積分", document.getElementById('displayTotalScore').innerText], ["等級", document.getElementById('displayLevel').innerText],
+                [], ["各階段進度"], ["階段類別", "總分", "得分", "達成率"]
             ];
             Object.entries(catStats).forEach(([name, d]) => dashData.push([name, d.t, d.c, d.t === 0 ? "0%" : Math.round((d.c/d.t)*100)+"%"]));
             dashData.push([], ["品牌掌握統計"], ["品牌名稱", "總堂數", "已完成", "熟練度(%)"]);
             Object.entries(brandStats).forEach(([name, d]) => dashData.push([name, d.t, d.c, d.t === 0 ? "0%" : Math.round((d.c/d.t)*100)+"%"]));
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dashData), "儀表板概況");
 
-            // 2. 必修
-            const initH = [["狀態", "類別", "名稱", "負責人", "時數", "時間"]];
-            const initR = (currentConfig.initialCourses || []).map(c => [userState.completedInitial.includes(c.id) ? "完成" : "-", c.category, c.name, c.lecturer || "-", c.duration || "-", userState.initialTimes[c.id] || ""]);
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(initH.concat(initR)), "必修課程紀錄");
+            // 2. 必修分頁
+            const initialHeader = [["狀態", "類別", "名稱", "負責人", "時數", "上課日期時間"]];
+            const initialRows = (currentConfig.initialCourses || []).map(c => [userState.completedInitial.includes(c.id) ? "完成" : "-", c.category, c.name, c.lecturer || "-", c.duration || "-", userState.initialTimes[c.id] || ""]);
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(initialHeader.concat(initialRows)), "必修紀錄");
 
-            // 3. 選修
-            const electH = [["狀態", "品牌", "類別", "名稱", "積分", "講師", "備註", "時間", "選修階段標籤"]];
-            const electR = (currentConfig.courseData || []).map(c => [
-                userState.completedCourses.includes(c.id) ? "完成" : "-", c.brand || "-", c.category || "-", c.name, c.points, userState.courseLecturers[c.id] || c.lecturer || "-", c.remark || "-", userState.courseTimes[c.id] || "", `${c.level} 選修`
+            // 3. 選修分頁 (核心修正：調整 I 列階段標籤至 A, B 欄中間)
+            const electiveHeader = [["狀態", "選修階段標籤", "品牌", "類別", "名稱", "積分", "講師", "備註", "日期時間"]];
+            const electiveRows = (currentConfig.courseData || []).map(c => [
+                userState.completedCourses.includes(c.id) ? "完成" : "-", 
+                `${c.level} 選修`, // 移至第二欄
+                c.brand || "-", 
+                c.category || "-", 
+                c.name, 
+                c.points, 
+                userState.courseLecturers[c.id] || c.lecturer || "-", 
+                c.remark || "-", 
+                userState.courseTimes[c.id] || ""
             ]);
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(electH.concat(electR)), "選修課程紀錄");
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(electiveHeader.concat(electiveRows)), "選修紀錄");
+
             XLSX.writeFile(wb, `Report_${userState.userInfo.name || syncId}.xlsx`);
         };
 
@@ -649,7 +658,7 @@
             const el = document.getElementById('initialCourseList');
             if (el) {
                 el.innerHTML = (currentConfig.initialCourses || []).map(c => `
-                    <tr class="hover:bg-gray-50 transition-colors">
+                    <tr class="hover:bg-gray-50 border-b transition-colors">
                         <td class="px-4 py-3"><label class="custom-checkbox flex items-center cursor-pointer"><input type="checkbox" class="hidden" data-id="${c.id}" onchange="toggleInitial('${c.id}')"><div class="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center transition-all"><svg class="w-3 h-3 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg></div></label></td>
                         <td class="px-4 py-3 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">${c.category}</td><td class="px-4 py-3 text-gray-900 font-bold">${c.name}</td><td class="px-4 py-3 text-xs text-gray-500 font-bold">${c.lecturer || '-'}</td><td class="px-4 py-3 text-xs font-bold text-blue-600">${c.duration || '-'}</td>
                         <td class="px-4 py-3"><input type="datetime-local" class="time-input" data-id="${c.id}" data-type="initial" onchange="updateTime('initial', '${c.id}', this.value)"></td>
@@ -663,13 +672,13 @@
             const container = document.getElementById('scoredCourseSections');
             if (container) {
                 container.innerHTML = groups.map(lv => `
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 transition-all hover:shadow-md">
                         <div class="px-6 py-4 bg-gray-50/50 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-all" onclick="toggleSection('sec-${lv}')">
                             <h3 class="font-black text-gray-700 uppercase tracking-wide text-sm">${lv} 選修</h3><i class="fas fa-chevron-down text-gray-300"></i>
                         </div>
                         <div id="sec-${lv}" class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-100 text-sm">
-                                <thead class="bg-gray-50/50 text-[10px] text-gray-400 font-bold uppercase"><tr><th class="px-4 py-2 text-center w-16">狀態</th><th class="px-4 py-2 text-left w-24">品牌</th><th class="px-4 py-2 text-left">名稱</th><th class="px-4 py-2 text-left w-16">積分</th><th class="px-4 py-2 text-left w-24">講師</th><th class="px-4 py-2 text-left">備註</th><th class="px-4 py-2 text-left w-40">日期時間</th></tr></thead>
+                                <thead class="bg-gray-50/50 text-[10px] text-gray-400 font-bold uppercase"><tr><th class="px-4 py-2 text-center w-16">狀態</th><th class="px-4 py-2 text-left w-24">類別</th><th class="px-4 py-2 text-left">名稱</th><th class="px-4 py-2 text-left w-16">積分</th><th class="px-4 py-2 text-left w-24">講師</th><th class="px-4 py-2 text-left">備註</th><th class="px-4 py-2 text-left w-40">日期時間</th></tr></thead>
                                 <tbody class="divide-y divide-gray-50">${(currentConfig.courseData || []).filter(c => c.level === lv).map(c => `
                                     <tr class="hover:bg-blue-50/30 transition-colors">
                                         <td class="px-4 py-3 text-center"><label class="custom-checkbox inline-flex items-center cursor-pointer"><input type="checkbox" class="hidden" data-id="${c.id}" onchange="toggleCourse('${c.id}')"><div class="w-5 h-5 border-2 border-gray-300 rounded flex items-center justify-center transition-all"><svg class="w-3 h-3 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg></div></label></td>
@@ -687,12 +696,12 @@
 
         function renderAdminEditor() {
             document.getElementById('adminListsContainer').innerHTML = `
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-3">
-                    <div class="flex justify-between items-center"><h3 class="font-black text-amber-900 text-xs uppercase">1. 必修核心課程規劃</h3><button onclick="adminAdd('i')" class="bg-amber-600 text-white px-3 py-1 rounded text-xs font-bold">+ 新增</button></div>
-                    ${(adminEditing.initialCourses || []).map(c => `<div class="grid grid-cols-1 md:grid-cols-7 gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200"><input type="text" value="${c.category}" oninput="adminUpdate('i', '${c.id}', 'category', this.value)" class="text-xs p-2 border rounded font-bold"><input type="text" value="${c.name}" oninput="adminUpdate('i', '${c.id}', 'name', this.value)" class="col-span-2 text-xs p-2 border rounded font-bold"><input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('i', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded"><input type="text" value="${c.duration || ''}" oninput="adminUpdate('i', '${c.id}', 'duration', this.value)" class="text-xs p-2 border rounded font-bold text-blue-600"><button onclick="adminDel('i', '${c.id}')" class="text-rose-500"><i class="fas fa-trash-alt"></i></button></div>`).join('')}
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-3 shadow-inner">
+                    <div class="flex justify-between items-center"><h3 class="font-black text-amber-900 text-xs uppercase">1. 必修項目規劃</h3><button onclick="adminAdd('i')" class="bg-amber-600 text-white px-3 py-1 rounded text-xs font-bold shadow-md hover:bg-amber-700 transition-transform active:scale-95">+ 新增</button></div>
+                    ${(adminEditing.initialCourses || []).map(c => `<div class="grid grid-cols-1 md:grid-cols-7 gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200 transition-all hover:border-amber-200"><input type="text" value="${c.category}" oninput="adminUpdate('i', '${c.id}', 'category', this.value)" class="text-xs p-2 border rounded font-bold"><input type="text" value="${c.name}" oninput="adminUpdate('i', '${c.id}', 'name', this.value)" class="col-span-2 text-xs p-2 border rounded font-bold"><input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('i', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded"><input type="text" value="${c.duration || ''}" oninput="adminUpdate('i', '${c.id}', 'duration', this.value)" class="text-xs p-2 border rounded font-bold text-blue-600"><button onclick="adminDel('i', '${c.id}')" class="text-rose-500 hover:bg-rose-50 p-1 rounded transition-colors"><i class="fas fa-trash-alt"></i></button></div>`).join('')}
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 mt-6 p-6 space-y-4">
-                    <div class="flex justify-between items-center"><h3 class="font-black text-blue-900 text-xs uppercase">2. 選修計畫規劃</h3><button onclick="adminAdd('c')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold">+ 新增</button></div>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 mt-6 p-6 space-y-4 shadow-inner">
+                    <div class="flex justify-between items-center"><h3 class="font-black text-blue-900 text-xs uppercase">2. 選修計畫規劃</h3><button onclick="adminAdd('c')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold shadow-md hover:bg-blue-700 transition-transform active:scale-95">+ 新增</button></div>
                     ${(adminEditing.courseData || []).map(c => `<div class="bg-white border rounded-lg p-4 space-y-3 hover:border-blue-200 transition-all"><div class="grid grid-cols-1 md:grid-cols-7 gap-2"><select onchange="adminUpdate('c', '${c.id}', 'level', this.value)" class="text-[10px] p-2 border rounded font-bold">${['新手篇','理解篇','規劃篇','團隊合作篇','自我成長'].map(l => `<option ${c.level === l ? 'selected' : ''}>${l}</option>`).join('')}</select><input type="text" value="${c.brand || ''}" oninput="adminUpdate('c', '${c.id}', 'brand', this.value)" class="text-[10px] p-2 border rounded"><input type="text" value="${c.category}" oninput="adminUpdate('c', '${c.id}', 'category', this.value)" class="text-[10px] p-2 border rounded"><input type="text" value="${c.name}" oninput="adminUpdate('c', '${c.id}', 'name', this.value)" class="col-span-2 text-[10px] p-2 border rounded font-bold"><input type="number" value="${c.points}" oninput="adminUpdate('c', '${c.id}', 'points', this.value)" class="text-[10px] p-2 border rounded font-black text-blue-600"><button onclick="adminDel('c', '${c.id}')" class="text-rose-500 text-center"><i class="fas fa-trash-alt"></i></button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-dashed pt-3"><input type="text" value="${c.lecturer || ''}" oninput="adminUpdate('c', '${c.id}', 'lecturer', this.value)" class="text-xs p-2 border rounded font-bold text-indigo-600"><input type="text" value="${c.remark || ''}" oninput="adminUpdate('c', '${c.id}', 'remark', this.value)" class="text-xs p-2 border rounded italic"></div></div>`).join('')}
                 </div>
             `;
@@ -713,7 +722,7 @@
             else { setUI('displayDistToUpgrade', 'innerText', '0'); setUI('nextLevelName', 'innerText', '培訓標竿達成'); const bar = document.getElementById('levelProgressBar'); if(bar) bar.style.width = '100%'; }
             const phaseEl = document.getElementById('dashboardPhaseBody');
             if (phaseEl) { phaseEl.innerHTML = `
-                <table class="min-w-full divide-y divide-gray-100"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">階段指標</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">得分/總分</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">完成度 (%)</th></tr></thead>
+                <table class="min-w-full divide-y divide-gray-100 text-sm"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">階段指標</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">得分/總分</th><th class="px-6 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">完成度 (%)</th></tr></thead>
                 <tbody class="divide-y divide-gray-50"><tr><td class="px-6 py-4 text-sm font-bold text-amber-700 uppercase">核心必修項目</td><td class="px-6 py-4 text-sm font-bold">${(userState.completedInitial || []).length}/${(currentConfig.initialCourses || []).length}</td><td class="px-6 py-4 text-sm font-black text-amber-600">${currentConfig.initialCourses.length === 0 ? 0 : Math.round(((userState.completedInitial || []).length / currentConfig.initialCourses.length) * 100)}%</td></tr>
                 ${Object.entries(catStats).map(([n, d]) => { const p = d.t === 0 ? 0 : Math.round((d.c / d.t) * 100); return `<tr><td class="px-6 py-4 text-sm font-bold text-gray-700">${n}</td><td class="px-6 py-4 text-sm font-bold">${d.c}/${d.t}</td><td class="px-6 py-4 text-sm font-black text-blue-600">${p}%</td></tr>`; }).join('')}</tbody></table>
             `; }
