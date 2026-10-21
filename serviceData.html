@@ -625,7 +625,8 @@
 
       if (charts.custom) charts.custom.destroy();
       const isStacked = chartType === 'bar_stacked';
-      charts.custom = new Chart(document.getElementById('chartCustom'), {
+      charts.custom = if (window.myCustomChart) window.myCustomChart.destroy();
+      window.myCustomChart = new Chart(document.getElementById('chartCustom'), {
         type: chartType === 'line' ? 'line' : 'bar',
         data: { labels: xLabels.map(l => xKey === 'month' ? `${l}月` : l), datasets },
         options: {
@@ -651,7 +652,8 @@
         fill: false
       }));
       if (charts.monthly) charts.monthly.destroy();
-      charts.monthly = new Chart(document.getElementById('chartMonthly'), {
+      charts.monthly = if (window.myMonthlyChart) window.myMonthlyChart.destroy();
+      window.myMonthlyChart = new Chart(document.getElementById('chartMonthly'), {
         type: 'line',
         data: { labels: months.map(m => `${m}月`), datasets },
         options: { responsive: true, maintainAspectRatio: false }
@@ -669,7 +671,8 @@
       });
 
       if (charts.brands) charts.brands.destroy();
-      charts.brands = new Chart(document.getElementById('chartBrands'), {
+      charts.brands = if (window.myBrandsChart) window.myBrandsChart.destroy();
+      window.myBrandsChart = new Chart(document.getElementById('chartBrands'), {
         type: 'bar',
         data: {
           labels: topBrands,
@@ -708,7 +711,8 @@
       });
 
       if (charts.engineers) charts.engineers.destroy();
-      charts.engineers = new Chart(document.getElementById('chartEngineers'), {
+      charts.engineers = if (window.myEngineersChart) window.myEngineersChart.destroy();
+      window.myEngineersChart = new Chart(document.getElementById('chartEngineers'), {
         type: 'bar',
         data: {
           labels: topEngs,
@@ -733,7 +737,8 @@
       data.forEach(r => { counts[r.warranty] = (counts[r.warranty] || 0) + 1; });
       const labels = Object.keys(counts).sort((a,b) => counts[b] - counts[a]);
       if (charts.warranty) charts.warranty.destroy();
-      charts.warranty = new Chart(document.getElementById('chartWarranty'), {
+      charts.warranty = if (window.myWarrantyChart) window.myWarrantyChart.destroy();
+      window.myWarrantyChart = new Chart(document.getElementById('chartWarranty'), {
         type: 'doughnut',
         data: {
           labels,
@@ -829,4 +834,3 @@
   </script>
 </body>
 </html>
-
