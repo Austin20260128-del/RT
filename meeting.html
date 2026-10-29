@@ -1034,7 +1034,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
     // Firebase Cloud Configuration (from user's index.html synchronization protocol)
     const firebaseConfig = {
@@ -1393,18 +1393,27 @@
         // Realtime sync for Rooms
         onSnapshot(roomsColRef, async (snapshot) => {
           if (snapshot.empty) {
-            // Seed initial rooms to cloud database if empty
+            // Seed initial rooms with deterministic document IDs so updates & deletes always match!
             for (const r of DEFAULT_ROOMS) {
               try {
-                await addDoc(roomsColRef, { ...r, createdAt: Date.now() });
+                const roomDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', r.id);
+                await setDoc(roomDocRef, { ...r, createdAt: Date.now() }, { merge: true });
               } catch (e) {}
             }
           } else {
-            const cloudRooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const cloudRooms = snapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                ...data,
+                id: doc.id, // Ensure id matches Firestore document ID!
+                code: data.code || doc.id.replace('room-', '')
+              };
+            });
             cloudRooms.sort((a, b) => (a.code || '').localeCompare(b.code || ''));
             state.rooms = cloudRooms;
             saveLocalRoomsBackup(cloudRooms);
             updateRoomCountLabels();
+            updateHeaderAuthBadge();
             populateBookingFormRoomOptions();
             renderActiveView();
             renderRoomManagementTable();
@@ -1417,11 +1426,19 @@
             const initialMock = generateInitialMockBookings(formatTodayDate());
             for (const b of initialMock) {
               try {
-                await addDoc(bookingsColRef, { ...b, createdAt: Date.now() });
+                const bDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', b.id);
+                await setDoc(bDocRef, { ...b, createdAt: Date.now() }, { merge: true });
               } catch (e) {}
             }
           } else {
-            const cloudBookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            const cloudBookings = snapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                ...data,
+                id: doc.id
+              };
+            });
+            cloudBookings.sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
             state.bookings = cloudBookings;
             saveLocalBookingsBackup(cloudBookings);
             updateBadgeCounter();
@@ -1435,8 +1452,9 @@
       async function cloudCreateBooking(bookingData) {
         if (isFirebaseReady && db) {
           try {
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
-            await addDoc(colRef, { ...bookingData, createdAt: Date.now() });
+            const bId = 'b-' + Date.now();
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', bId);
+            await setDoc(docRef, { ...bookingData, id: bId, createdAt: Date.now() });
             return true;
           } catch (err) {
             console.warn("Cloud write booking failed, saving locally", err);
@@ -1465,29 +1483,35 @@
       }
 
       async function cloudSaveRoom(roomData, existingId = '') {
+        const roomId = existingId || ('room-' + Date.now());
+        const fullRoom = {
+          ...roomData,
+          id: roomId,
+          updatedAt: Date.now()
+        };
+
         if (isFirebaseReady && db) {
           try {
-            if (existingId) {
-              const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', existingId);
-              await updateDoc(docRef, roomData);
-            } else {
-              const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'rooms');
-              await addDoc(colRef, { ...roomData, createdAt: Date.now() });
-            }
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+            await setDoc(docRef, fullRoom, { merge: true });
             return true;
           } catch (err) {
             console.warn("Cloud save room failed, saving locally", err);
           }
         }
+
+        // Local fallback
         if (existingId) {
           const idx = state.rooms.findIndex(r => r.id === existingId);
           if (idx !== -1) {
-            state.rooms[idx] = { ...state.rooms[idx], ...roomData };
+            state.rooms[idx] = { ...state.rooms[idx], ...fullRoom };
           }
         } else {
-          state.rooms = [...state.rooms, { id: 'room-' + Date.now(), ...roomData }];
+          state.rooms = [...state.rooms, { id: 'room-' + Date.now(), ...fullRoom }];
         }
         saveLocalRoomsBackup(state.rooms);
+        renderRoomManagementTable();
+        renderActiveView();
         return false;
       }
 
@@ -1497,9 +1521,11 @@
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
             await deleteDoc(docRef);
             // Also delete bookings of this room
-            const roomBookings = state.bookings.filter(b => b.roomId === roomId);
+            const roomBookings = state.bookings.filter(b => b.roomId === roomId || b.roomCode === roomId.replace('room-', ''));
             for (const b of roomBookings) {
-              await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', b.id));
+              try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', b.id));
+              } catch (e) {}
             }
             return true;
           } catch (err) {
@@ -1510,6 +1536,8 @@
         state.bookings = state.bookings.filter(b => b.roomId !== roomId);
         saveLocalRoomsBackup(state.rooms);
         saveLocalBookingsBackup(state.bookings);
+        renderRoomManagementTable();
+        renderActiveView();
         return false;
       }
 
@@ -1596,9 +1624,11 @@
       // ------------------------------------------------------------
       function getFilteredRooms() {
         return state.rooms.filter(r => {
-          // Scoped room permission filter
+          // Scoped room permission filter (matches by ID or room code)
           if (state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all') {
-            if (r.id !== state.auth.allowedRoomId) {
+            const isMatch = (r.id === state.auth.allowedRoomId) ||
+                            (state.auth.allowedRoomCode && r.code === state.auth.allowedRoomCode);
+            if (!isMatch) {
               return false;
             }
           }
@@ -1613,7 +1643,11 @@
         return state.bookings.filter(b => {
           if (b.date !== dateStr) return false;
           if (state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all') {
-            if (b.roomId !== state.auth.allowedRoomId) return false;
+            const bookingRoom = state.rooms.find(r => r.id === b.roomId);
+            const isMatch = (b.roomId === state.auth.allowedRoomId) ||
+                            (bookingRoom && bookingRoom.code === state.auth.allowedRoomCode) ||
+                            (b.roomCode && b.roomCode === state.auth.allowedRoomCode);
+            if (!isMatch) return false;
           }
           return true;
         });
@@ -3187,10 +3221,12 @@
         if (!badge) return;
 
         if (state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all') {
+          const curRoom = state.rooms.find(r => r.id === state.auth.allowedRoomId || (state.auth.allowedRoomCode && r.code === state.auth.allowedRoomCode));
+          const displayName = curRoom ? `${curRoom.code} ${curRoom.name}` : (state.auth.roomName || '指定會議室');
           badge.className = 'inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200';
           badge.innerHTML = `
             <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-            <span>專屬權限：${state.auth.roomName}</span>
+            <span>專屬權限：${displayName}</span>
           `;
           if (manageBtn) manageBtn.classList.add('hidden');
           if (addRoomBtn) addRoomBtn.classList.add('hidden');
@@ -3250,14 +3286,22 @@
           unlockApp({
             type: 'admin',
             allowedRoomId: 'all',
+            allowedRoomCode: 'all',
             roomName: '全部會議室'
           });
-          showToast('👑 全區管理員驗證成功！可查看與預約所有會議室。', 'success');
+          showToast('👑 全區管理員驗證成功！可查看、預約與管理所有會議室。', 'success');
           return;
         }
 
-        // 2. Check Room-Specific Passwords
-        const matchedRoom = state.rooms.find(r => {
+        // 2. Check Room-Specific Passwords (pool from synced rooms and default rooms)
+        const candidateRooms = [...state.rooms];
+        for (const dr of DEFAULT_ROOMS) {
+          if (!candidateRooms.some(r => r.code === dr.code || r.id === dr.id)) {
+            candidateRooms.push(dr);
+          }
+        }
+
+        const matchedRoom = candidateRooms.find(r => {
           const pass = (r.password || '').trim();
           const code = (r.code || '').trim();
           return (pass && (entered === pass || enteredUpper === pass.toUpperCase())) ||
@@ -3269,6 +3313,7 @@
           unlockApp({
             type: 'room',
             allowedRoomId: matchedRoom.id,
+            allowedRoomCode: matchedRoom.code,
             roomName: `${matchedRoom.code} ${matchedRoom.name}`
           });
           showToast(`🔑 專屬授權驗證成功！僅查看「${matchedRoom.code} ${matchedRoom.name}」。`, 'success');
@@ -3278,7 +3323,7 @@
         // 3. Invalid Password
         if (errorAlert && errorText) {
           errorAlert.classList.remove('hidden');
-          errorText.textContent = '密碼錯誤！請輸入全區管理密碼或指定會議室專用密碼。';
+          errorText.textContent = '密碼錯誤！請輸入全區管理密碼 (MT28891989) 或指定會議室專屬密碼 (如 RT101)。';
         }
         passInput.focus();
         passInput.select();
