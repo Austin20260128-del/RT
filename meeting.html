@@ -46,9 +46,9 @@
           <div>
             <div class="flex items-center space-x-2">
               <span class="text-xl font-bold tracking-tight text-slate-900">MeetFlow</span>
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
-                即時同步中
+              <span id="cloudSyncBadge" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 transition">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 animate-ping"></span>
+                雲端連線中...
               </span>
             </div>
             <p class="text-xs text-slate-500 hidden sm:block">利泓科技會議室管理系統 · 開放式即時查詢與預約</p>
@@ -1029,11 +1029,27 @@
   </div>
 
   <!-- ============================================================ -->
-  <!-- APPLICATION SCRIPT -->
+  <!-- APPLICATION SCRIPT WITH FIREBASE REALTIME CLOUD SYNC -->
   <!-- ============================================================ -->
-  <script>
-    (function () {
-      'use strict';
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // Firebase Cloud Configuration (from user's index.html synchronization protocol)
+    const firebaseConfig = {
+        apiKey: "AIzaSyBB8-yJhHg7J8dYu8_hhdw06EkS94Ey990",
+        authDomain: "tool20250204.firebaseapp.com",
+        projectId: "tool20250204",
+        storageBucket: "tool20250204.firebasestorage.app",
+        messagingSenderId: "515853558092",
+        appId: "1:515853558092:web:b95dbcc0f33ebf0568efe9",
+        measurementId: "G-YJ4FE646YM"
+    };
+
+    let firebaseApp, auth, db;
+    let isFirebaseReady = false;
+    const appId = 'meetflow-room-booking';
 
       // ------------------------------------------------------------
       // 1. Data Definitions & Color Themes
@@ -1195,34 +1211,38 @@
       }
 
       // ------------------------------------------------------------
-      // 3. Storage & Default Mock Data
+      // 3. Cloud Storage (Firebase Firestore) & Local Fallback
       // ------------------------------------------------------------
-      function loadRooms() {
+      function updateSyncBadge(status) {
+        const badge = document.getElementById('cloudSyncBadge');
+        if (!badge) return;
+        if (status === 'connected') {
+          badge.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 transition';
+          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> 雲端即時同步中';
+        } else if (status === 'offline') {
+          badge.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 transition';
+          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1"></span> 本機快取模式';
+        } else {
+          badge.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 transition';
+          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1 animate-ping"></span> 雲端連線中...';
+        }
+      }
+
+      function loadLocalRooms() {
         try {
           const raw = localStorage.getItem(STORAGE_ROOMS_KEY);
           if (raw) {
             const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              return parsed;
-            }
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
           }
-        } catch (e) {
-          console.warn('localStorage read error for rooms, falling back to defaults', e);
-        }
-        const initial = JSON.parse(JSON.stringify(DEFAULT_ROOMS));
-        saveRooms(initial);
-        return initial;
+        } catch (e) {}
+        return JSON.parse(JSON.stringify(DEFAULT_ROOMS));
       }
 
-      function saveRooms(rooms) {
-        state.rooms = rooms;
+      function saveLocalRoomsBackup(rooms) {
         try {
           localStorage.setItem(STORAGE_ROOMS_KEY, JSON.stringify(rooms));
-        } catch (e) {
-          console.warn('localStorage write error for rooms', e);
-        }
-        populateBookingFormRoomOptions();
-        updateRoomCountLabels();
+        } catch (e) {}
       }
 
       function updateRoomCountLabels() {
@@ -1320,32 +1340,177 @@
         ];
       }
 
-      function loadBookings() {
+      function loadLocalBookings() {
         const todayStr = formatTodayDate();
         try {
           const raw = localStorage.getItem(STORAGE_BOOKINGS_KEY);
           if (raw) {
             const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              return parsed;
-            }
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
           }
-        } catch (e) {
-          console.warn('localStorage read error for bookings, falling back to mock data', e);
-        }
-        const initial = generateInitialMockBookings(todayStr);
-        saveBookings(initial);
-        return initial;
+        } catch (e) {}
+        return generateInitialMockBookings(todayStr);
       }
 
-      function saveBookings(bookings) {
-        state.bookings = bookings;
+      function saveLocalBookingsBackup(bookings) {
         try {
           localStorage.setItem(STORAGE_BOOKINGS_KEY, JSON.stringify(bookings));
-        } catch (e) {
-          console.warn('localStorage write error for bookings', e);
+        } catch (e) {}
+      }
+
+      // Initialize Firebase and Realtime Cloud Sync
+      function initFirebaseSync() {
+        try {
+          firebaseApp = initializeApp(firebaseConfig);
+          auth = getAuth(firebaseApp);
+          db = getFirestore(firebaseApp);
+
+          signInAnonymously(auth).catch(err => {
+            console.warn("Firebase Anonymous Auth Error, using local mode", err);
+            updateSyncBadge('offline');
+          });
+
+          onAuthStateChanged(auth, user => {
+            if (user) {
+              isFirebaseReady = true;
+              updateSyncBadge('connected');
+              startRealtimeSync();
+            } else {
+              updateSyncBadge('offline');
+            }
+          });
+        } catch (err) {
+          console.warn("Firebase initialization error, fallback to local storage", err);
+          updateSyncBadge('offline');
         }
+      }
+
+      function startRealtimeSync() {
+        if (!db) return;
+        const roomsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'rooms');
+        const bookingsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
+
+        // Realtime sync for Rooms
+        onSnapshot(roomsColRef, async (snapshot) => {
+          if (snapshot.empty) {
+            // Seed initial rooms to cloud database if empty
+            for (const r of DEFAULT_ROOMS) {
+              try {
+                await addDoc(roomsColRef, { ...r, createdAt: Date.now() });
+              } catch (e) {}
+            }
+          } else {
+            const cloudRooms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            cloudRooms.sort((a, b) => (a.code || '').localeCompare(b.code || ''));
+            state.rooms = cloudRooms;
+            saveLocalRoomsBackup(cloudRooms);
+            updateRoomCountLabels();
+            populateBookingFormRoomOptions();
+            renderActiveView();
+            renderRoomManagementTable();
+          }
+        }, err => console.warn("Rooms sync error", err));
+
+        // Realtime sync for Bookings
+        onSnapshot(bookingsColRef, async (snapshot) => {
+          if (snapshot.empty && state.bookings.length === 0) {
+            const initialMock = generateInitialMockBookings(formatTodayDate());
+            for (const b of initialMock) {
+              try {
+                await addDoc(bookingsColRef, { ...b, createdAt: Date.now() });
+              } catch (e) {}
+            }
+          } else {
+            const cloudBookings = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            state.bookings = cloudBookings;
+            saveLocalBookingsBackup(cloudBookings);
+            updateBadgeCounter();
+            renderActiveView();
+            renderMyBookingsList();
+          }
+        }, err => console.warn("Bookings sync error", err));
+      }
+
+      // Cloud operations
+      async function cloudCreateBooking(bookingData) {
+        if (isFirebaseReady && db) {
+          try {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'bookings');
+            await addDoc(colRef, { ...bookingData, createdAt: Date.now() });
+            return true;
+          } catch (err) {
+            console.warn("Cloud write booking failed, saving locally", err);
+          }
+        }
+        state.bookings = [...state.bookings, { id: 'b-' + Date.now(), ...bookingData }];
+        saveLocalBookingsBackup(state.bookings);
         updateBadgeCounter();
+        return false;
+      }
+
+      async function cloudDeleteBooking(bookingId) {
+        if (isFirebaseReady && db) {
+          try {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', bookingId);
+            await deleteDoc(docRef);
+            return true;
+          } catch (err) {
+            console.warn("Cloud delete booking failed, deleting locally", err);
+          }
+        }
+        state.bookings = state.bookings.filter(b => b.id !== bookingId);
+        saveLocalBookingsBackup(state.bookings);
+        updateBadgeCounter();
+        return false;
+      }
+
+      async function cloudSaveRoom(roomData, existingId = '') {
+        if (isFirebaseReady && db) {
+          try {
+            if (existingId) {
+              const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', existingId);
+              await updateDoc(docRef, roomData);
+            } else {
+              const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'rooms');
+              await addDoc(colRef, { ...roomData, createdAt: Date.now() });
+            }
+            return true;
+          } catch (err) {
+            console.warn("Cloud save room failed, saving locally", err);
+          }
+        }
+        if (existingId) {
+          const idx = state.rooms.findIndex(r => r.id === existingId);
+          if (idx !== -1) {
+            state.rooms[idx] = { ...state.rooms[idx], ...roomData };
+          }
+        } else {
+          state.rooms = [...state.rooms, { id: 'room-' + Date.now(), ...roomData }];
+        }
+        saveLocalRoomsBackup(state.rooms);
+        return false;
+      }
+
+      async function cloudDeleteRoom(roomId) {
+        if (isFirebaseReady && db) {
+          try {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+            await deleteDoc(docRef);
+            // Also delete bookings of this room
+            const roomBookings = state.bookings.filter(b => b.roomId === roomId);
+            for (const b of roomBookings) {
+              await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', b.id));
+            }
+            return true;
+          } catch (err) {
+            console.warn("Cloud delete room failed, deleting locally", err);
+          }
+        }
+        state.rooms = state.rooms.filter(r => r.id !== roomId);
+        state.bookings = state.bookings.filter(b => b.roomId !== roomId);
+        saveLocalRoomsBackup(state.rooms);
+        saveLocalBookingsBackup(state.bookings);
+        return false;
       }
 
       // ------------------------------------------------------------
@@ -2622,7 +2787,7 @@
           closeRoomEditModal();
         });
 
-        document.getElementById('formRoomEdit').addEventListener('submit', (e) => {
+        document.getElementById('formRoomEdit').addEventListener('submit', async (e) => {
           e.preventDefault();
 
           const roomId = document.getElementById('editRoomId').value;
@@ -2649,43 +2814,25 @@
           const passEl = document.getElementById('editRoomPassword');
           const roomPass = (passEl ? passEl.value.trim() : '') || ('RT' + code);
 
+          const roomData = {
+            code,
+            name,
+            floor,
+            capacity,
+            capacityType,
+            color,
+            gradient: theme.gradient,
+            amenityLabels,
+            desc,
+            password: roomPass
+          };
+
           if (roomId) {
-            // Edit existing room
-            const index = state.rooms.findIndex(r => r.id === roomId);
-            if (index !== -1) {
-              state.rooms[index] = {
-                ...state.rooms[index],
-                code,
-                name,
-                floor,
-                capacity,
-                capacityType,
-                color,
-                gradient: theme.gradient,
-                amenityLabels,
-                desc,
-                password: roomPass
-              };
-              saveRooms([...state.rooms]);
-              showToast(`會議室「${code} ${name}」設定已成功儲存更新！`, 'success');
-            }
+            await cloudSaveRoom(roomData, roomId);
+            showToast(`會議室「${code} ${name}」設定已成功儲存並同步至雲端！`, 'success');
           } else {
-            // Add new room
-            const newRoom = {
-              id: 'room-' + Date.now(),
-              code,
-              name,
-              floor,
-              capacity,
-              capacityType,
-              color,
-              gradient: theme.gradient,
-              amenityLabels,
-              desc,
-              password: roomPass
-            };
-            saveRooms([...state.rooms, newRoom]);
-            showToast(`🎉 已成功新增會議室「${code} ${name}」！`, 'success');
+            await cloudSaveRoom(roomData, '');
+            showToast(`🎉 已成功新增會議室「${code} ${name}」並同步至雲端！`, 'success');
           }
 
           closeRoomEditModal();
@@ -2698,17 +2845,12 @@
           closeConfirmDeleteRoomModal();
         });
 
-        document.getElementById('btnExecuteDeleteRoom').addEventListener('click', () => {
+        document.getElementById('btnExecuteDeleteRoom').addEventListener('click', async () => {
           const roomId = state.pendingDeleteRoomId;
           if (roomId) {
             const targetRoom = state.rooms.find(r => r.id === roomId);
-            const updatedRooms = state.rooms.filter(r => r.id !== roomId);
-            const updatedBookings = state.bookings.filter(b => b.roomId !== roomId);
-
-            saveRooms(updatedRooms);
-            saveBookings(updatedBookings);
-
-            showToast(`已成功刪除會議室「${targetRoom ? targetRoom.name : ''}」！`, 'info');
+            await cloudDeleteRoom(roomId);
+            showToast(`已成功自雲端刪除會議室「${targetRoom ? targetRoom.name : ''}」！`, 'info');
             renderRoomManagementTable();
             renderActiveView();
           }
@@ -2815,7 +2957,7 @@
         });
 
         // Form Submit
-        document.getElementById('formBooking').addEventListener('submit', (e) => {
+        document.getElementById('formBooking').addEventListener('submit', async (e) => {
           e.preventDefault();
           if (checkBookingConflict()) {
             return;
@@ -2839,7 +2981,6 @@
           if (document.getElementById('chkReqTea').checked) equipment.push('外賓茶水接待');
 
           const newBooking = {
-            id: 'b-' + Date.now(),
             roomId,
             date,
             startTime,
@@ -2852,8 +2993,7 @@
             notes
           };
 
-          const updated = [...state.bookings, newBooking];
-          saveBookings(updated);
+          await cloudCreateBooking(newBooking);
 
           state.currentDate = date;
           closeBookingModal();
@@ -2870,7 +3010,7 @@
           document.getElementById('chkReqTea').checked = false;
 
           const room = state.rooms.find(r => r.id === roomId) || { name: '會議室' };
-          showToast(`🎉 預約成功！已為您保留 ${room.name} (${date} ${startTime}-${endTime})`, 'success');
+          showToast(`🎉 預約成功並已即時同步至雲端！(${date} ${startTime}-${endTime})`, 'success');
         });
 
         // Details Modal actions
@@ -2898,14 +3038,13 @@
           closeConfirmCancelModal();
         });
 
-        document.getElementById('btnExecuteCancel').addEventListener('click', () => {
+        document.getElementById('btnExecuteCancel').addEventListener('click', async () => {
           const id = state.pendingCancelId;
           if (id) {
-            const updated = state.bookings.filter(b => b.id !== id);
-            saveBookings(updated);
+            await cloudDeleteBooking(id);
             renderActiveView();
             renderMyBookingsList();
-            showToast('已成功取消該會議室預約，時段已釋出！', 'info');
+            showToast('已自雲端即時同步取消該會議室預約，時段已釋出！', 'info');
           }
           closeConfirmCancelModal();
         });
@@ -3233,8 +3372,8 @@
         const [y, m] = state.currentDate.split('-').map(Number);
         state.monthViewYear = y;
         state.monthViewMonth = m;
-        state.rooms = loadRooms();
-        state.bookings = loadBookings();
+        state.rooms = loadLocalRooms();
+        state.bookings = loadLocalBookings();
 
         populateTimeOptions();
         populateBookingFormRoomOptions();
@@ -3250,6 +3389,9 @@
         // Initialize password gateway on startup!
         initPasswordGateway();
         updateHeaderAuthBadge();
+
+        // Initialize Firebase Realtime Cloud Synchronization!
+        initFirebaseSync();
       }
 
             if (document.readyState === 'loading') {
@@ -3257,7 +3399,6 @@
       } else {
         init();
       }
-    })();
   </script>
 </body>
 </html>
