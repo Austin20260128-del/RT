@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MeetFlow 會議室預約與即時時段查詢系統</title>
+  <!-- Tailwind CSS 3.4.17 -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo & Title -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white shadow-md shadow-indigo-100 flex-shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="text-xl font-bold tracking-tight text-slate-900">MeetFlow</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
+                即時同步中
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 hidden sm:block">開放式即時會議室預約平台 · 免登入直接查詢與登記</p>
+          </div>
+        </div>
+
+        <!-- Quick Top Actions -->
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <!-- Share URL Button -->
+          <button id="btnOpenShare" class="inline-flex items-center px-3 py-2 border border-slate-200 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm">
+            <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+            </svg>
+            <span class="hidden md:inline">分享網址</span>
+          </button>
+
+          <!-- My Bookings Button -->
+          <button id="btnOpenMyBookings" class="inline-flex items-center px-3 py-2 border border-slate-200 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm relative">
+            <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+            </svg>
+            <span>預約清單</span>
+            <span id="badgeBookingCount" class="ml-1.5 px-1.5 py-0.2 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold">0</span>
+          </button>
+
+          <!-- Primary Book Button -->
+          <button id="btnQuickBook" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm shadow-indigo-200">
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span>立即預約</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Subheader / Date Picker & Filter Bar -->
+  <section class="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3.5 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <!-- Date Controls -->
+      <div class="flex items-center flex-wrap gap-2">
+        <div class="inline-flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <button id="btnPrevDay" class="p-1.5 rounded-md hover:bg-white hover:shadow-xs text-slate-600 transition" title="前一天">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          </button>
+          <button id="btnToday" class="px-2.5 py-1 text-xs font-semibold rounded-md hover:bg-white hover:shadow-xs text-slate-700 transition">
+            今天
+          </button>
+          <button id="btnTomorrow" class="px-2.5 py-1 text-xs font-semibold rounded-md hover:bg-white hover:shadow-xs text-slate-700 transition">
+            明天
+          </button>
+          <button id="btnNextDay" class="p-1.5 rounded-md hover:bg-white hover:shadow-xs text-slate-600 transition" title="後一天">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Date Input & Friendly Display -->
+        <div class="flex items-center space-x-2">
+          <input type="date" id="inputCurrentDate" class="bg-white border border-slate-300 text-slate-800 text-sm rounded-lg px-2.5 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+          <span id="labelDateWeek" class="text-sm font-semibold text-slate-700 hidden sm:inline-block"></span>
+        </div>
+      </div>
+
+      <!-- Filters & View Switchers -->
+      <div class="flex items-center flex-wrap gap-2.5 justify-between md:justify-end">
+        <!-- Room Capacity Filter -->
+        <select id="selectCapacityFilter" class="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg px-2.5 py-1.5 focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+          <option value="all">所有容納人數</option>
+          <option value="small">4人小型 (小型討論)</option>
+          <option value="medium">8-12人中型 (專案團隊)</option>
+          <option value="large">16-30人大型 (全體/大會)</option>
+        </select>
+
+        <!-- Equipment Filter -->
+        <select id="selectAmenityFilter" class="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg px-2.5 py-1.5 focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+          <option value="all">所有設備配備</option>
+          <option value="video">具備視訊視聽系統</option>
+          <option value="board">具備電子/玻璃白板</option>
+          <option value="projector">具備高畫質投影</option>
+        </select>
+
+        <!-- View Tabs -->
+        <div class="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5">
+          <button id="tabViewGrid" class="px-3 py-1 text-xs font-semibold rounded-md transition shadow-sm bg-white text-indigo-700">
+            時程矩陣
+          </button>
+          <button id="tabViewRooms" class="px-3 py-1 text-xs font-medium rounded-md transition text-slate-600 hover:text-slate-900">
+            會議室卡片
+          </button>
+          <button id="tabViewList" class="px-3 py-1 text-xs font-medium rounded-md transition text-slate-600 hover:text-slate-900">
+            今日清單
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Notice Banner / Usage Hint -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    <div class="bg-gradient-to-r from-indigo-50 via-sky-50 to-emerald-50 border border-indigo-100/80 rounded-xl p-3 sm:p-4 flex items-start sm:items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <span class="p-2 rounded-lg bg-indigo-500 text-white flex-shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </span>
+        <div class="text-xs sm:text-sm text-slate-700">
+          <span class="font-bold text-slate-900">預約操作說明：</span>
+          在時程表上直接點擊 <span class="inline-block px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-semibold text-xs border border-emerald-200">+ 可預約</span> 時段即可直接登記；點選已預約的會議卡片可查閱詳情或取消。
+        </div>
+      </div>
+      <div class="flex items-center space-x-3 text-xs text-slate-500 flex-shrink-0">
+        <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 mr-1.5"></span>空閒時段</span>
+        <span class="flex items-center"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-1.5"></span>已預約</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Body -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+    <!-- VIEW 1: Time Schedule Grid / Matrix View -->
+    <div id="viewContainerGrid" class="space-y-4">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <div class="min-w-[850px]">
+            <!-- Room Columns Header -->
+            <div id="gridHeaderRow" class="grid grid-cols-6 border-b border-slate-200 bg-slate-50/80 text-xs font-semibold text-slate-700 sticky top-0 z-10">
+              <!-- First cell: Time header -->
+              <div class="p-3.5 border-r border-slate-200 flex items-center justify-center text-slate-500 bg-slate-100/70">
+                <svg class="w-4 h-4 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>時段 / 會議室</span>
+              </div>
+              <!-- Generated room header columns here -->
+            </div>
+
+            <!-- Time Slots Grid Rows -->
+            <div id="gridBodyRows" class="divide-y divide-slate-100 text-sm">
+              <!-- Dynamically populated rows 08:00 - 20:00 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: Room Cards Detailed View -->
+    <div id="viewContainerRooms" class="hidden">
+      <div id="roomCardsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Dynamically rendered room cards -->
+      </div>
+    </div>
+
+    <!-- VIEW 3: Daily Timeline / Booking List View -->
+    <div id="viewContainerList" class="hidden">
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/50">
+          <div>
+            <h3 class="font-bold text-slate-800 text-base" id="listDateHeading">當日會議排程清單</h3>
+            <p class="text-xs text-slate-500">依時間先後順序排列，點擊可查看詳細資料</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span id="listTotalMeetingsBadge" class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold border border-indigo-100">
+              共 0 場會議
+            </span>
+          </div>
+        </div>
+        <div id="dailyBookingTable" class="divide-y divide-slate-100">
+          <!-- Rendered list items -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+      <div class="flex items-center space-x-2">
+        <span class="font-semibold text-slate-700">MeetFlow 會議室即時預約系統</span>
+        <span>•</span>
+        <span>隨選即用免安裝</span>
+      </div>
+      <div class="flex items-center space-x-4">
+        <button id="btnResetData" class="text-slate-400 hover:text-rose-600 transition" title="清除測試資料並恢復預設">
+          重設範例資料
+        </button>
+        <button id="btnCopyDirectShareLink" class="text-indigo-600 hover:text-indigo-800 font-medium">
+          複製本頁直接預約連結
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 1: Booking Dialog (即時預約彈窗) -->
+  <!-- ============================================================ -->
+  <div id="modalBooking" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full overflow-hidden transform transition-all my-8 animate-in fade-in zoom-in-95">
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <h3 class="text-lg font-bold">預約會議室</h3>
+        </div>
+        <button id="btnCloseBookingModal" class="text-indigo-200 hover:text-white rounded-lg p-1 hover:bg-indigo-600 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body Form -->
+      <form id="formBooking" class="p-6 space-y-4 text-left">
+        <!-- Room Selector -->
+        <div>
+          <label for="bookRoomSelect" class="block text-xs font-semibold text-slate-700 mb-1">
+            選擇會議室 <span class="text-rose-500">*</span>
+          </label>
+          <select id="bookRoomSelect" required class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+            <!-- Populated via JS -->
+          </select>
+          <div id="bookRoomHint" class="text-xs text-slate-500 mt-1 flex items-center">
+            <!-- Room meta info populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Date & Time Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label for="bookDateInput" class="block text-xs font-semibold text-slate-700 mb-1">
+              日期 <span class="text-rose-500">*</span>
+            </label>
+            <input type="date" id="bookDateInput" required class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+          <div>
+            <label for="bookStartTime" class="block text-xs font-semibold text-slate-700 mb-1">
+              開始時間 <span class="text-rose-500">*</span>
+            </label>
+            <select id="bookStartTime" required class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <!-- Populated timeslots -->
+            </select>
+          </div>
+          <div>
+            <label for="bookEndTime" class="block text-xs font-semibold text-slate-700 mb-1">
+              結束時間 <span class="text-rose-500">*</span>
+            </label>
+            <select id="bookEndTime" required class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <!-- Populated timeslots -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Quick Duration Shortcuts -->
+        <div class="flex items-center space-x-2 pt-0.5">
+          <span class="text-xs text-slate-500">快速時長：</span>
+          <button type="button" class="btn-duration px-2 py-0.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-200 transition" data-minutes="30">30分鐘</button>
+          <button type="button" class="btn-duration px-2 py-0.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-200 transition" data-minutes="60">1小時</button>
+          <button type="button" class="btn-duration px-2 py-0.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-200 transition" data-minutes="90">1.5小時</button>
+          <button type="button" class="btn-duration px-2 py-0.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-200 transition" data-minutes="120">2小時</button>
+        </div>
+
+        <!-- Conflict Alert Banner (Dynamic) -->
+        <div id="bookingConflictBanner" class="hidden p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 flex items-start space-x-2">
+          <svg class="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+          </svg>
+          <div id="bookingConflictText">
+            時段衝突警示
+          </div>
+        </div>
+
+        <!-- Meeting Title -->
+        <div>
+          <label for="bookTitle" class="block text-xs font-semibold text-slate-700 mb-1">
+            會議主題 / 目的 <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="bookTitle" required placeholder="例如：Q4 產品進度同步會議" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+
+        <!-- Booker Information -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="bookPerson" class="block text-xs font-semibold text-slate-700 mb-1">
+              預約人姓名 <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="bookPerson" required placeholder="王小明 (Alex)" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+          <div>
+            <label for="bookDept" class="block text-xs font-semibold text-slate-700 mb-1">
+              部門 / 聯絡資訊 <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="bookDept" required placeholder="研發部 / ext. 2301" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+        </div>
+
+        <!-- Attendees Count -->
+        <div>
+          <label for="bookAttendees" class="block text-xs font-semibold text-slate-700 mb-1">
+            預估與會人數
+          </label>
+          <div class="flex items-center space-x-3">
+            <input type="number" id="bookAttendees" min="1" max="100" value="4" class="w-32 bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <span id="labelCapacityWarning" class="text-xs text-amber-600 hidden font-medium">⚠️ 超出此會議室建議容納上限</span>
+          </div>
+        </div>
+
+        <!-- Special Requirements Checkboxes -->
+        <div>
+          <span class="block text-xs font-semibold text-slate-700 mb-1.5">設備借用需求</span>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-slate-700">
+            <label class="flex items-center space-x-1.5">
+              <input type="checkbox" id="chkReqVideo" class="rounded text-indigo-600 focus:ring-indigo-500">
+              <span>遠距視訊鏡頭</span>
+            </label>
+            <label class="flex items-center space-x-1.5">
+              <input type="checkbox" id="chkReqBoard" class="rounded text-indigo-600 focus:ring-indigo-500">
+              <span>白板與筆組</span>
+            </label>
+            <label class="flex items-center space-x-1.5">
+              <input type="checkbox" id="chkReqProjector" class="rounded text-indigo-600 focus:ring-indigo-500">
+              <span>無線簡報投屏</span>
+            </label>
+            <label class="flex items-center space-x-1.5">
+              <input type="checkbox" id="chkReqMic" class="rounded text-indigo-600 focus:ring-indigo-500">
+              <span>外接麥克風</span>
+            </label>
+            <label class="flex items-center space-x-1.5">
+              <input type="checkbox" id="chkReqTea" class="rounded text-indigo-600 focus:ring-indigo-500">
+              <span>外賓茶水接待</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <label for="bookNotes" class="block text-xs font-semibold text-slate-700 mb-1">備註說明 (選填)</label>
+          <textarea id="bookNotes" rows="2" placeholder="如有外賓訪客或其他需求可填寫在此..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+        </div>
+
+        <!-- Modal Footer Actions -->
+        <div class="pt-3 border-t border-slate-200 flex items-center justify-end space-x-3">
+          <button type="button" id="btnCancelBookingModal" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+            取消
+          </button>
+          <button type="submit" id="btnSubmitBooking" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition flex items-center">
+            <span>確認即時預約</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 2: Booking Details Modal (預約詳情彈窗) -->
+  <!-- ============================================================ -->
+  <div id="modalDetails" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden transform transition-all animate-in fade-in zoom-in-95">
+      <div class="bg-slate-100 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="w-3 h-3 rounded-full bg-indigo-600"></span>
+          <h3 class="text-base font-bold text-slate-900">會議預約詳情</h3>
+        </div>
+        <button id="btnCloseDetailsModal" class="text-slate-400 hover:text-slate-600 p-1 rounded-md">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-left">
+        <!-- Title & Status -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span id="detailRoomBadge" class="px-2 py-0.5 rounded text-xs font-semibold bg-indigo-100 text-indigo-800"></span>
+            <span class="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-medium border border-emerald-200">預約已確認</span>
+          </div>
+          <h2 id="detailTitle" class="text-lg font-bold text-slate-900"></h2>
+        </div>
+
+        <!-- Info Grid -->
+        <div class="bg-slate-50 rounded-xl p-3.5 space-y-2 text-xs border border-slate-200">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">預約日期：</span>
+            <span id="detailDate" class="font-medium text-slate-800"></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">會議時段：</span>
+            <span id="detailTime" class="font-bold text-indigo-700"></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">預約人：</span>
+            <span id="detailPerson" class="font-medium text-slate-800"></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">所屬部門：</span>
+            <span id="detailDept" class="font-medium text-slate-800"></span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">與會人數：</span>
+            <span id="detailAttendees" class="font-medium text-slate-800"></span>
+          </div>
+          <div id="detailEquipmentRow" class="flex items-start justify-between pt-1 border-t border-slate-200">
+            <span class="text-slate-500 flex-shrink-0">借用設備：</span>
+            <span id="detailEquipment" class="font-medium text-slate-800 text-right"></span>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div id="detailNotesContainer" class="text-xs">
+          <span class="text-slate-500 block mb-1">備註說明：</span>
+          <p id="detailNotes" class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-slate-700 italic"></p>
+        </div>
+
+        <!-- Actions -->
+        <div class="pt-2 flex items-center justify-between gap-2 border-t border-slate-100">
+          <button id="btnCopyInvite" class="inline-flex items-center px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+            <svg class="w-3.5 h-3.5 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+            </svg>
+            複製邀請資訊
+          </button>
+
+          <button id="btnTriggerCancelBooking" class="inline-flex items-center px-3 py-2 border border-rose-200 rounded-lg text-xs font-semibold text-rose-700 hover:bg-rose-50 transition">
+            <svg class="w-3.5 h-3.5 mr-1 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            取消此預約
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 3: In-Page Confirmation Dialog for Cancellation (NO confirm()) -->
+  <!-- ============================================================ -->
+  <div id="modalConfirmCancel" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 text-center animate-in fade-in zoom-in-95">
+      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+        </svg>
+      </div>
+      <h3 class="text-base font-bold text-slate-900 mb-1">確定要取消這場預約嗎？</h3>
+      <p id="confirmCancelDesc" class="text-xs text-slate-500 mb-6"></p>
+
+      <div class="flex items-center justify-center space-x-3">
+        <button id="btnAbortCancel" class="w-1/2 px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+          返回保留
+        </button>
+        <button id="btnExecuteCancel" class="w-1/2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+          確認取消
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 4: Share URL & QR Code (所有人可透過網址進入確認與預約) -->
+  <!-- ============================================================ -->
+  <div id="modalShare" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95">
+      <div class="bg-indigo-600 px-6 py-4 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path>
+          </svg>
+          <h3 class="text-base font-bold">分享會議室即時預約網址</h3>
+        </div>
+        <button id="btnCloseShareModal" class="text-indigo-200 hover:text-white p-1 rounded-md">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-left">
+        <p class="text-xs text-slate-600">
+          任何人只要開啟此專屬連結，即可直接瀏覽各會議室即時可用時段，並自由登記預約：
+        </p>
+
+        <!-- URL Copy Box -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">網址連結</label>
+          <div class="flex items-center space-x-2">
+            <input type="text" id="shareUrlInput" readonly class="flex-1 bg-slate-50 border border-slate-300 text-slate-700 text-xs rounded-lg px-3 py-2 font-mono select-all">
+            <button id="btnCopyShareUrl" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition flex-shrink-0 flex items-center">
+              <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+              </svg>
+              複製
+            </button>
+          </div>
+        </div>
+
+        <!-- Simulated Door QR Code for on-site scanning -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center space-x-4">
+          <div class="w-24 h-24 bg-white p-2 rounded-lg border border-slate-200 shadow-xs flex-shrink-0 flex items-center justify-center">
+            <!-- Vector QR Code Pattern -->
+            <svg class="w-full h-full text-slate-800" viewBox="0 0 100 100" fill="currentColor">
+              <!-- Position markers -->
+              <rect x="5" y="5" width="26" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="6"/>
+              <rect x="13" y="13" width="10" height="10"/>
+              <rect x="69" y="5" width="26" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="6"/>
+              <rect x="77" y="13" width="10" height="10"/>
+              <rect x="5" y="69" width="26" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="6"/>
+              <rect x="13" y="77" width="10" height="10"/>
+              <!-- Data blocks -->
+              <rect x="36" y="8" width="6" height="6"/>
+              <rect x="48" y="8" width="6" height="6"/>
+              <rect x="58" y="16" width="6" height="6"/>
+              <rect x="36" y="24" width="6" height="6"/>
+              <rect x="48" y="24" width="6" height="6"/>
+              <rect x="8" y="38" width="6" height="6"/>
+              <rect x="20" y="38" width="6" height="6"/>
+              <rect x="8" y="52" width="6" height="6"/>
+              <rect x="36" y="38" width="6" height="6"/>
+              <rect x="48" y="44" width="6" height="6"/>
+              <rect x="58" y="38" width="6" height="6"/>
+              <rect x="68" y="44" width="6" height="6"/>
+              <rect x="80" y="38" width="6" height="6"/>
+              <rect x="36" y="58" width="6" height="6"/>
+              <rect x="48" y="58" width="6" height="6"/>
+              <rect x="58" y="52" width="6" height="6"/>
+              <rect x="74" y="58" width="6" height="6"/>
+              <rect x="84" y="52" width="6" height="6"/>
+              <rect x="38" y="76" width="6" height="6"/>
+              <rect x="48" y="70" width="6" height="6"/>
+              <rect x="60" y="76" width="6" height="6"/>
+              <rect x="70" y="70" width="6" height="6"/>
+              <rect x="80" y="82" width="6" height="6"/>
+            </svg>
+          </div>
+          <div class="text-xs space-y-1">
+            <span class="font-bold text-slate-800 block text-sm">會議室門口掃碼直接預約</span>
+            <p class="text-slate-500">
+              可將此二維碼張貼於各會議室門口，路過同仁或訪客只要用手機掃描即可查看當日剩餘空檔並直接登記！
+            </p>
+          </div>
+        </div>
+
+        <div class="text-right">
+          <button id="btnDoneShare" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">
+            關閉
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 5: My Bookings / All Upcoming Bookings List -->
+  <!-- ============================================================ -->
+  <div id="modalMyBookings" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full overflow-hidden animate-in fade-in zoom-in-95">
+      <div class="bg-slate-100 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          <h3 class="text-base font-bold text-slate-900">所有會議預約排程清單</h3>
+        </div>
+        <button id="btnCloseMyBookingsModal" class="text-slate-400 hover:text-slate-600 p-1 rounded-md">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <!-- Search filter within bookings -->
+        <div class="flex items-center justify-between gap-3">
+          <input type="text" id="inputSearchMyBookings" placeholder="搜尋預約人姓名或會議名稱..." class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+
+        <!-- Bookings List Table -->
+        <div class="max-h-80 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100" id="myBookingsContainer">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="flex items-center justify-between pt-2">
+          <span id="myBookingsCountText" class="text-xs text-slate-500"></span>
+          <button id="btnDoneMyBookings" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">
+            關閉
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none">
+    <!-- Toasts inserted dynamically -->
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- APPLICATION SCRIPT -->
+  <!-- ============================================================ -->
+  <script>
+    (function () {
+      'use strict';
+
+      // ------------------------------------------------------------
+      // 1. Data Definitions & Initial State
+      // ------------------------------------------------------------
+      const ROOMS = [
+        {
+          id: 'room-101',
+          code: '101',
+          name: '藍天微型室',
+          capacity: 4,
+          capacityType: 'small',
+          floor: '1F',
+          amenities: ['video', 'board'],
+          amenityLabels: ['55吋 4K 螢幕', '視訊鏡頭', '玻璃白板'],
+          desc: '適合 2-4 人敏捷對焦、1-on-1 面談或小型電話視訊。',
+          color: 'emerald',
+          gradient: 'from-emerald-500 to-teal-600'
+        },
+        {
+          id: 'room-201',
+          code: '201',
+          name: '智匯研討室',
+          capacity: 8,
+          capacityType: 'medium',
+          floor: '2F',
+          amenities: ['video', 'board', 'projector'],
+          amenityLabels: ['雷射投影機', '電子白板', '4K 廣角視訊'],
+          desc: '適合跨部門專案對焦、產品設計評審與頭腦風暴。',
+          color: 'indigo',
+          gradient: 'from-indigo-500 to-blue-600'
+        },
+        {
+          id: 'room-202',
+          code: '202',
+          name: '協作討論室',
+          capacity: 12,
+          capacityType: 'medium',
+          floor: '2F',
+          amenities: ['video', 'board', 'projector'],
+          amenityLabels: ['雙液晶螢幕', '羅技視訊系統', '移動磁吸白板'],
+          desc: '支援混合辦公視訊連線、商業夥伴提案與敏捷衝刺會議。',
+          color: 'sky',
+          gradient: 'from-sky-500 to-indigo-600'
+        },
+        {
+          id: 'room-301',
+          code: '301',
+          name: '寰宇國際會議廳',
+          capacity: 30,
+          capacityType: 'large',
+          floor: '3F',
+          amenities: ['video', 'projector'],
+          amenityLabels: ['雙雷射投影', '全向麥克風', '演講級擴音', '同聲傳譯座'],
+          desc: '適用全體大會、股東說明會、大型技術研討與外部貴賓拜訪。',
+          color: 'purple',
+          gradient: 'from-purple-500 to-violet-600'
+        },
+        {
+          id: 'room-501',
+          code: '501',
+          name: '卓越董事研討室',
+          capacity: 16,
+          capacityType: 'large',
+          floor: '5F',
+          amenities: ['video', 'board'],
+          amenityLabels: ['85吋會議觸控屏', '降噪麥克風陣列', '頂級真皮座椅', '專人茶水服務'],
+          desc: '高級主管決策會議、董事會與保密商業談判專用。',
+          color: 'amber',
+          gradient: 'from-amber-500 to-orange-600'
+        }
+      ];
+
+      // Time slots from 08:00 to 20:00 (hourly for grid, 30-min selectable in form)
+      const GRID_HOURS = [
+        '08:00', '09:00', '10:00', '11:00', '12:00',
+        '13:00', '14:00', '15:00', '16:00', '17:00',
+        '18:00', '19:00'
+      ];
+
+      // Storage Key
+      const STORAGE_KEY = 'meetflow_bookings_v1';
+
+      // Current App State
+      let state = {
+        currentDate: '', // 'YYYY-MM-DD'
+        activeView: 'grid', // 'grid' | 'rooms' | 'list'
+        capacityFilter: 'all',
+        amenityFilter: 'all',
+        bookings: [],
+        selectedBookingForDetails: null,
+        pendingCancelId: null
+      };
+
+      // ------------------------------------------------------------
+      // 2. Helper Functions (Time & Date)
+      // ------------------------------------------------------------
+      function formatTodayDate() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+
+      function addDays(dateStr, days) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        date.setDate(date.getDate() + days);
+        const ry = date.getFullYear();
+        const rm = String(date.getMonth() + 1).padStart(2, '0');
+        const rd = String(date.getDate()).padStart(2, '0');
+        return `${ry}-${rm}-${rd}`;
+      }
+
+      function getWeekdayName(dateStr) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const dayIdx = new Date(y, m - 1, d).getDay();
+        const weekDays = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
+        return weekDays[dayIdx];
+      }
+
+      function timeToMinutes(timeStr) {
+        const [h, m] = timeStr.split(':').map(Number);
+        return h * 60 + m;
+      }
+
+      function minutesToTime(totalMin) {
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+
+      // Check if two time intervals [s1, e1) and [s2, e2) overlap
+      function isTimeOverlapping(s1, e1, s2, e2) {
+        const start1 = timeToMinutes(s1);
+        const end1 = timeToMinutes(e1);
+        const start2 = timeToMinutes(s2);
+        const end2 = timeToMinutes(e2);
+        return Math.max(start1, start2) < Math.min(end1, end2);
+      }
+
+      // ------------------------------------------------------------
+      // 3. Storage & Default Mock Data
+      // ------------------------------------------------------------
+      function generateInitialMockBookings(todayStr) {
+        const tomorrowStr = addDays(todayStr, 1);
+        return [
+          {
+            id: 'b-mock-1',
+            roomId: 'room-101',
+            date: todayStr,
+            startTime: '09:00',
+            endTime: '10:00',
+            title: '1-on-1 季度績效面談',
+            person: '陳雅婷 (Emily)',
+            dept: '人資部',
+            attendees: 2,
+            equipment: ['玻璃白板'],
+            notes: '需要安靜空間討論個人發展目標。'
+          },
+          {
+            id: 'b-mock-2',
+            roomId: 'room-201',
+            date: todayStr,
+            startTime: '10:00',
+            endTime: '12:00',
+            title: 'Q4 跨產品線敏捷衝刺規劃',
+            person: '林俊傑 (Kevin)',
+            dept: '產品研發處',
+            attendees: 7,
+            equipment: ['雷射投影機', '電子白板', '4K 廣角視訊'],
+            notes: '含新加坡遠距同仁 Zoom 連線，需提前設定音響。'
+          },
+          {
+            id: 'b-mock-3',
+            roomId: 'room-202',
+            date: todayStr,
+            startTime: '14:00',
+            endTime: '16:00',
+            title: '新版客戶入口網站 UI/UX 設計評審',
+            person: '張哲銘 (Marcus)',
+            dept: '設計中心',
+            attendees: 10,
+            equipment: ['雙液晶螢幕', '移動磁吸白板'],
+            notes: '將投影 Figma 原型進行互動走查。'
+          },
+          {
+            id: 'b-mock-4',
+            roomId: 'room-301',
+            date: todayStr,
+            startTime: '16:00',
+            endTime: '17:30',
+            title: '全體技術團隊季度知識分享會',
+            person: '李建國 (David)',
+            dept: '架構工程組',
+            attendees: 25,
+            equipment: ['雙雷射投影', '全向麥克風', '演講級擴音'],
+            notes: '提供會後茶點，外接演講台無線麥克風。'
+          },
+          {
+            id: 'b-mock-5',
+            roomId: 'room-501',
+            date: todayStr,
+            startTime: '10:30',
+            endTime: '11:30',
+            title: '外部策略投資合作保密協商',
+            person: '董事長室特助 王敏',
+            dept: '經營企劃處',
+            attendees: 6,
+            equipment: ['85吋會議觸控屏', '專人茶水服務'],
+            notes: '需準備外賓茶水與點心，房門請設免打擾。'
+          },
+          {
+            id: 'b-mock-6',
+            roomId: 'room-201',
+            date: tomorrowStr,
+            startTime: '09:30',
+            endTime: '11:00',
+            title: '供應商合約審查會',
+            person: '周美玲 (Kelly)',
+            dept: '採購部',
+            attendees: 6,
+            equipment: ['雷射投影機'],
+            notes: '列印合約草案供各方參閱。'
+          }
+        ];
+      }
+
+      function loadBookings() {
+        const todayStr = formatTodayDate();
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              return parsed;
+            }
+          }
+        } catch (e) {
+          console.warn('localStorage read error, falling back to mock data', e);
+        }
+        const initial = generateInitialMockBookings(todayStr);
+        saveBookings(initial);
+        return initial;
+      }
+
+      function saveBookings(bookings) {
+        state.bookings = bookings;
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+        } catch (e) {
+          console.warn('localStorage write error', e);
+        }
+        updateBadgeCounter();
+      }
+
+      // ------------------------------------------------------------
+      // 4. Toast Notifications
+      // ------------------------------------------------------------
+      function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = 'pointer-events-auto flex items-center p-3 sm:p-4 rounded-xl shadow-lg border text-sm max-w-sm transition-all duration-300 transform translate-y-2 opacity-0';
+
+        if (type === 'success') {
+          toast.classList.add('bg-slate-900', 'text-white', 'border-slate-800');
+          toast.innerHTML = `
+            <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mr-3 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            </span>
+            <div class="flex-1 font-medium">${message}</div>
+          `;
+        } else if (type === 'error') {
+          toast.classList.add('bg-rose-900', 'text-white', 'border-rose-800');
+          toast.innerHTML = `
+            <span class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-300 flex items-center justify-center mr-3 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </span>
+            <div class="flex-1 font-medium">${message}</div>
+          `;
+        } else {
+          toast.classList.add('bg-slate-800', 'text-white', 'border-slate-700');
+          toast.innerHTML = `
+            <span class="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center mr-3 flex-shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </span>
+            <div class="flex-1 font-medium">${message}</div>
+          `;
+        }
+
+        container.appendChild(toast);
+        // Animate in
+        requestAnimationFrame(() => {
+          toast.classList.remove('translate-y-2', 'opacity-0');
+        });
+
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => {
+            if (toast.parentNode) {
+              toast.parentNode.removeChild(toast);
+            }
+          }, 300);
+        }, 3200);
+      }
+
+      // Safe clipboard helper
+      function copyToClipboard(text, successMsg) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            showToast(successMsg, 'success');
+          }).catch(() => {
+            fallbackCopy(text, successMsg);
+          });
+        } else {
+          fallbackCopy(text, successMsg);
+        }
+      }
+
+      function fallbackCopy(text, successMsg) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          showToast(successMsg, 'success');
+        } catch (err) {
+          showToast('無法複製至剪貼簿，請手動複製', 'error');
+        }
+        document.body.removeChild(textArea);
+      }
+
+      // ------------------------------------------------------------
+      // 5. Filter & Query Logic
+      // ------------------------------------------------------------
+      function getFilteredRooms() {
+        return ROOMS.filter(r => {
+          if (state.capacityFilter !== 'all' && r.capacityType !== state.capacityFilter) {
+            return false;
+          }
+          if (state.amenityFilter !== 'all' && !r.amenities.includes(state.amenityFilter)) {
+            return false;
+          }
+          return true;
+        });
+      }
+
+      function getBookingsForDate(dateStr) {
+        return state.bookings.filter(b => b.date === dateStr);
+      }
+
+      function updateBadgeCounter() {
+        const badge = document.getElementById('badgeBookingCount');
+        if (badge) {
+          badge.textContent = state.bookings.length;
+        }
+      }
+
+      // ------------------------------------------------------------
+      // 6. View Rendering (Grid, Cards, List)
+      // ------------------------------------------------------------
+      function renderCurrentDateDisplay() {
+        const input = document.getElementById('inputCurrentDate');
+        const label = document.getElementById('labelDateWeek');
+        if (input) input.value = state.currentDate;
+        if (label) {
+          label.textContent = `${getWeekdayName(state.currentDate)}`;
+        }
+      }
+
+      // Render Time Matrix / Grid
+      function renderGrid() {
+        const rooms = getFilteredRooms();
+        const headerRow = document.getElementById('gridHeaderRow');
+        const bodyRows = document.getElementById('gridBodyRows');
+        if (!headerRow || !bodyRows) return;
+
+        // Set dynamic grid columns based on rooms count + 1 (for time column)
+        const colCount = rooms.length + 1;
+        headerRow.style.gridTemplateColumns = `120px repeat(${rooms.length}, minmax(140px, 1fr))`;
+
+        // Render Room Header Cells
+        let headerHtml = `
+          <div class="p-3.5 border-r border-slate-200 flex items-center justify-center text-slate-500 bg-slate-100/70 font-medium">
+            <svg class="w-4 h-4 mr-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>時段</span>
+          </div>
+        `;
+
+        rooms.forEach(r => {
+          headerHtml += `
+            <div class="p-3 border-r border-slate-200 last:border-r-0 flex flex-col justify-center">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-800 text-sm">${r.code} ${r.name}</span>
+                <span class="text-[11px] font-semibold px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded">${r.capacity}人</span>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-0.5 truncate">${r.floor} · ${r.amenityLabels.slice(0, 2).join(', ')}</div>
+            </div>
+          `;
+        });
+        headerRow.innerHTML = headerHtml;
+
+        // Retrieve current date's bookings
+        const dayBookings = getBookingsForDate(state.currentDate);
+
+        // Render Time Slot Rows (08:00 to 19:00)
+        let bodyHtml = '';
+        GRID_HOURS.forEach(hour => {
+          const nextHour = minutesToTime(timeToMinutes(hour) + 60);
+
+          bodyHtml += `
+            <div class="grid border-b border-slate-100 hover:bg-slate-50/50 transition-colors" style="grid-template-columns: 120px repeat(${rooms.length}, minmax(140px, 1fr));">
+              <!-- Time label -->
+              <div class="p-3 border-r border-slate-200 flex items-center justify-center text-xs font-semibold text-slate-500 bg-slate-50/40 select-none">
+                ${hour} - ${nextHour}
+              </div>
+          `;
+
+          rooms.forEach(room => {
+            // Find if there's any booking overlapping with [hour, nextHour) in this room
+            const matchedBooking = dayBookings.find(b => {
+              return b.roomId === room.id && isTimeOverlapping(hour, nextHour, b.startTime, b.endTime);
+            });
+
+            if (matchedBooking) {
+              // Slot is Booked
+              bodyHtml += `
+                <div class="p-1.5 border-r border-slate-200 last:border-r-0 flex items-stretch">
+                  <div class="btn-view-booking w-full bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg p-2 text-left cursor-pointer transition flex flex-col justify-between shadow-xs group"
+                       data-booking-id="${matchedBooking.id}" title="點擊查看預約詳情">
+                    <div>
+                      <div class="flex items-center justify-between text-[11px] font-semibold text-indigo-900 leading-tight">
+                        <span class="truncate font-bold">${matchedBooking.title}</span>
+                        <span class="text-[10px] bg-indigo-200/80 px-1 rounded text-indigo-800 ml-1 flex-shrink-0">${matchedBooking.startTime}-${matchedBooking.endTime}</span>
+                      </div>
+                      <div class="text-[11px] text-indigo-700 truncate mt-1">
+                        👤 ${matchedBooking.person} <span class="text-indigo-400">(${matchedBooking.dept})</span>
+                      </div>
+                    </div>
+                    <div class="text-[10px] text-indigo-500 flex items-center justify-between mt-1 pt-1 border-t border-indigo-100">
+                      <span>${matchedBooking.attendees}人出席</span>
+                      <span class="group-hover:translate-x-0.5 transition-transform font-medium">詳情 →</span>
+                    </div>
+                  </div>
+                </div>
+              `;
+            } else {
+              // Slot is Free & Bookable
+              bodyHtml += `
+                <div class="p-1.5 border-r border-slate-200 last:border-r-0 flex items-center">
+                  <button type="button" class="btn-slot-book w-full h-full min-h-[50px] border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/80 rounded-lg text-slate-400 hover:text-emerald-700 text-xs font-medium flex items-center justify-center transition group p-1"
+                          data-room-id="${room.id}" data-start-time="${hour}" data-date="${state.currentDate}" title="點選立即預約 ${room.name} (${hour})">
+                    <span class="flex items-center group-hover:scale-105 transition-transform">
+                      <svg class="w-3.5 h-3.5 mr-1 text-slate-300 group-hover:text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                      </svg>
+                      可預約
+                    </span>
+                  </button>
+                </div>
+              `;
+            }
+          });
+
+          bodyHtml += `</div>`;
+        });
+
+        bodyRows.innerHTML = bodyHtml;
+      }
+
+      // Render Room Cards View
+      function renderRooms() {
+        const container = document.getElementById('roomCardsList');
+        if (!container) return;
+        const rooms = getFilteredRooms();
+        const dayBookings = getBookingsForDate(state.currentDate);
+
+        if (rooms.length === 0) {
+          container.innerHTML = `
+            <div class="col-span-full py-12 text-center text-slate-400">
+              <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+              <p class="text-sm font-medium">沒有符合篩選條件的會議室</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        rooms.forEach(room => {
+          const roomBookings = dayBookings
+            .filter(b => b.roomId === room.id)
+            .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+
+          // Check if currently busy now if looking at today
+          const now = new Date();
+          const currentHourMin = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          const currentBooking = roomBookings.find(b => isTimeOverlapping(currentHourMin, minutesToTime(timeToMinutes(currentHourMin) + 1), b.startTime, b.endTime));
+
+          html += `
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition overflow-hidden flex flex-col justify-between">
+              <div>
+                <!-- Top banner with room code & status -->
+                <div class="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
+                  <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr ${room.gradient} text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                      ${room.code}
+                    </div>
+                    <div>
+                      <h3 class="font-bold text-slate-900 text-base">${room.name}</h3>
+                      <div class="text-xs text-slate-500 flex items-center space-x-2 mt-0.5">
+                        <span>${room.floor}</span>
+                        <span>•</span>
+                        <span>容納 ${room.capacity} 人</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    ${currentBooking ? `
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>使用中 (至 ${currentBooking.endTime})
+                      </span>
+                    ` : `
+                      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>目前空閒
+                      </span>
+                    `}
+                  </div>
+                </div>
+
+                <!-- Room details & amenities -->
+                <div class="p-5 space-y-4">
+                  <p class="text-xs text-slate-600">${room.desc}</p>
+
+                  <div>
+                    <span class="text-[11px] font-semibold text-slate-400 block mb-1.5 uppercase tracking-wider">配備設施</span>
+                    <div class="flex flex-wrap gap-1.5">
+                      ${room.amenityLabels.map(item => `
+                        <span class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                          ${item}
+                        </span>
+                      `).join('')}
+                    </div>
+                  </div>
+
+                  <!-- Today's Schedule Overview for this room -->
+                  <div>
+                    <div class="flex items-center justify-between text-xs text-slate-500 mb-1.5">
+                      <span class="font-semibold text-slate-700">當日排程 (${roomBookings.length} 場)</span>
+                      <span>08:00 - 20:00</span>
+                    </div>
+
+                    ${roomBookings.length > 0 ? `
+                      <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        ${roomBookings.map(b => `
+                          <div class="btn-view-booking text-xs p-2 rounded-lg bg-indigo-50/70 hover:bg-indigo-100/90 border border-indigo-100 text-indigo-900 flex items-center justify-between cursor-pointer transition"
+                               data-booking-id="${b.id}">
+                            <div class="truncate mr-2">
+                              <span class="font-bold text-indigo-950">${b.startTime}-${b.endTime}</span>
+                              <span class="ml-1.5 text-slate-700 truncate">${b.title}</span>
+                            </div>
+                            <span class="text-[11px] text-indigo-600 flex-shrink-0 font-medium">${b.person}</span>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : `
+                      <div class="p-3 bg-emerald-50/50 border border-emerald-100 rounded-lg text-xs text-emerald-800 text-center font-medium">
+                        ✨ 今日全天時段皆開放預約
+                      </div>
+                    `}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action button -->
+              <div class="p-5 pt-0">
+                <button type="button" class="btn-card-book w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center justify-center space-x-1.5"
+                        data-room-id="${room.id}">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                  <span>預約 ${room.name}</span>
+                </button>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      }
+
+      // Render Daily List View
+      function renderList() {
+        const table = document.getElementById('dailyBookingTable');
+        const heading = document.getElementById('listDateHeading');
+        const badge = document.getElementById('listTotalMeetingsBadge');
+        if (!table) return;
+
+        const dayBookings = getBookingsForDate(state.currentDate)
+          .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
+
+        if (heading) {
+          heading.textContent = `${state.currentDate} (${getWeekdayName(state.currentDate)}) 會議預約排程`;
+        }
+        if (badge) {
+          badge.textContent = `共 ${dayBookings.length} 場會議`;
+        }
+
+        if (dayBookings.length === 0) {
+          table.innerHTML = `
+            <div class="p-12 text-center text-slate-400">
+              <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+              <p class="text-sm font-semibold text-slate-700">當日尚無任何預約紀錄</p>
+              <p class="text-xs text-slate-500 mt-1">您可以點擊右上角「立即預約」來登記時段</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        dayBookings.forEach(b => {
+          const room = ROOMS.find(r => r.id === b.roomId) || { code: '??', name: '會議室' };
+          html += `
+            <div class="btn-view-booking p-4 hover:bg-slate-50 cursor-pointer transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                 data-booking-id="${b.id}">
+              <div class="flex items-start sm:items-center space-x-3">
+                <div class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-sm border border-indigo-100 flex-shrink-0 text-center min-w-[100px]">
+                  ${b.startTime} - ${b.endTime}
+                </div>
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="font-bold text-slate-900 text-sm">${b.title}</span>
+                    <span class="px-2 py-0.2 bg-slate-100 text-slate-700 rounded text-xs font-semibold">${room.code} ${room.name}</span>
+                  </div>
+                  <div class="text-xs text-slate-500 mt-0.5">
+                    預約人：<span class="font-medium text-slate-800">${b.person}</span> (${b.dept}) · 與會人數：${b.attendees} 人
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2 text-xs text-slate-400 self-end sm:self-center">
+                <span class="text-indigo-600 font-semibold hover:underline">查看詳情 →</span>
+              </div>
+            </div>
+          `;
+        });
+
+        table.innerHTML = html;
+      }
+
+      function renderActiveView() {
+        renderCurrentDateDisplay();
+
+        const gridContainer = document.getElementById('viewContainerGrid');
+        const roomsContainer = document.getElementById('viewContainerRooms');
+        const listContainer = document.getElementById('viewContainerList');
+
+        const tabGrid = document.getElementById('tabViewGrid');
+        const tabRooms = document.getElementById('tabViewRooms');
+        const tabList = document.getElementById('tabViewList');
+
+        // Reset tab styles
+        [tabGrid, tabRooms, tabList].forEach(t => {
+          t.className = 'px-3 py-1 text-xs font-medium rounded-md transition text-slate-600 hover:text-slate-900';
+        });
+
+        if (state.activeView === 'grid') {
+          gridContainer.classList.remove('hidden');
+          roomsContainer.classList.add('hidden');
+          listContainer.classList.add('hidden');
+          tabGrid.className = 'px-3 py-1 text-xs font-semibold rounded-md transition shadow-sm bg-white text-indigo-700';
+          renderGrid();
+        } else if (state.activeView === 'rooms') {
+          gridContainer.classList.add('hidden');
+          roomsContainer.classList.remove('hidden');
+          listContainer.classList.add('hidden');
+          tabRooms.className = 'px-3 py-1 text-xs font-semibold rounded-md transition shadow-sm bg-white text-indigo-700';
+          renderRooms();
+        } else if (state.activeView === 'list') {
+          gridContainer.classList.add('hidden');
+          roomsContainer.classList.add('hidden');
+          listContainer.classList.remove('hidden');
+          tabList.className = 'px-3 py-1 text-xs font-semibold rounded-md transition shadow-sm bg-white text-indigo-700';
+          renderList();
+        }
+      }
+
+      // ------------------------------------------------------------
+      // 7. Modals: Booking Form, Conflict Checking & Submissions
+      // ------------------------------------------------------------
+      function populateBookingFormRoomOptions(selectedRoomId = '') {
+        const select = document.getElementById('bookRoomSelect');
+        if (!select) return;
+
+        select.innerHTML = ROOMS.map(r => `
+          <option value="${r.id}" ${r.id === selectedRoomId ? 'selected' : ''}>
+            ${r.code} ${r.name} (${r.floor} · 上限 ${r.capacity} 人)
+          </option>
+        `).join('');
+
+        updateRoomHint();
+      }
+
+      function populateTimeOptions() {
+        const startSelect = document.getElementById('bookStartTime');
+        const endSelect = document.getElementById('bookEndTime');
+        if (!startSelect || !endSelect) return;
+
+        const options = [];
+        for (let m = 8 * 60; m <= 19 * 60 + 30; m += 30) {
+          options.push(minutesToTime(m));
+        }
+
+        startSelect.innerHTML = options.slice(0, -1).map(t => `<option value="${t}">${t}</option>`).join('');
+        endSelect.innerHTML = options.slice(1).map(t => `<option value="${t}">${t}</option>`).join('');
+      }
+
+      function updateRoomHint() {
+        const select = document.getElementById('bookRoomSelect');
+        const hint = document.getElementById('bookRoomHint');
+        const attendeesInput = document.getElementById('bookAttendees');
+        const warning = document.getElementById('labelCapacityWarning');
+
+        if (!select || !hint) return;
+        const room = ROOMS.find(r => r.id === select.value);
+        if (room) {
+          hint.innerHTML = `
+            <span class="inline-block w-2 h-2 rounded-full bg-${room.color}-500 mr-1.5"></span>
+            <span>${room.floor} · 建議容納：${room.capacity} 人 · 配備：${room.amenityLabels.join(', ')}</span>
+          `;
+          if (attendeesInput && warning) {
+            const count = parseInt(attendeesInput.value, 10) || 0;
+            if (count > room.capacity) {
+              warning.classList.remove('hidden');
+              warning.textContent = `⚠️ 超出 ${room.name} 容納上限 (${room.capacity}人)`;
+            } else {
+              warning.classList.add('hidden');
+            }
+          }
+        }
+        checkBookingConflict();
+      }
+
+      function checkBookingConflict() {
+        const roomSelect = document.getElementById('bookRoomSelect');
+        const dateInput = document.getElementById('bookDateInput');
+        const startTimeSelect = document.getElementById('bookStartTime');
+        const endTimeSelect = document.getElementById('bookEndTime');
+        const banner = document.getElementById('bookingConflictBanner');
+        const bannerText = document.getElementById('bookingConflictText');
+        const submitBtn = document.getElementById('btnSubmitBooking');
+
+        if (!roomSelect || !dateInput || !startTimeSelect || !endTimeSelect || !banner) return false;
+
+        const roomId = roomSelect.value;
+        const date = dateInput.value;
+        const start = startTimeSelect.value;
+        const end = endTimeSelect.value;
+
+        // Validity check on start < end
+        if (timeToMinutes(start) >= timeToMinutes(end)) {
+          banner.classList.remove('hidden');
+          bannerText.innerHTML = '<strong>時間設定錯誤：</strong>結束時間必須晚於開始時間！';
+          submitBtn.disabled = true;
+          submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          return true;
+        }
+
+        // Search conflict in state
+        const conflict = state.bookings.find(b => {
+          return b.roomId === roomId && b.date === date && isTimeOverlapping(start, end, b.startTime, b.endTime);
+        });
+
+        if (conflict) {
+          banner.classList.remove('hidden');
+          bannerText.innerHTML = `
+            <div>
+              <strong class="font-bold">時段衝突警示：</strong>
+              該時段已被 <span class="font-semibold underline">${conflict.person}</span> 預約「${conflict.title}」(${conflict.startTime} - ${conflict.endTime})，請更換時段或會議室！
+            </div>
+          `;
+          submitBtn.disabled = true;
+          submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          return true;
+        } else {
+          banner.classList.add('hidden');
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          return false;
+        }
+      }
+
+      function openBookingModal(initialRoomId = '', initialStartTime = '', initialDate = '') {
+        const modal = document.getElementById('modalBooking');
+        const dateInput = document.getElementById('bookDateInput');
+        const startTimeSelect = document.getElementById('bookStartTime');
+        const endTimeSelect = document.getElementById('bookEndTime');
+
+        populateBookingFormRoomOptions(initialRoomId || ROOMS[0].id);
+
+        if (dateInput) {
+          dateInput.value = initialDate || state.currentDate;
+        }
+
+        if (startTimeSelect && endTimeSelect) {
+          if (initialStartTime) {
+            startTimeSelect.value = initialStartTime;
+            const end = minutesToTime(timeToMinutes(initialStartTime) + 60);
+            endTimeSelect.value = end;
+          } else {
+            startTimeSelect.value = '09:00';
+            endTimeSelect.value = '10:00';
+          }
+        }
+
+        updateRoomHint();
+        checkBookingConflict();
+
+        if (modal) {
+          modal.classList.remove('hidden');
+        }
+      }
+
+      function closeBookingModal() {
+        const modal = document.getElementById('modalBooking');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      // Details Modal
+      function openDetailsModal(bookingId) {
+        const booking = state.bookings.find(b => b.id === bookingId);
+        if (!booking) return;
+
+        state.selectedBookingForDetails = booking;
+
+        const modal = document.getElementById('modalDetails');
+        const room = ROOMS.find(r => r.id === booking.roomId) || { code: '??', name: '會議室' };
+
+        document.getElementById('detailTitle').textContent = booking.title;
+        document.getElementById('detailRoomBadge').textContent = `${room.code} ${room.name}`;
+        document.getElementById('detailDate').textContent = `${booking.date} (${getWeekdayName(booking.date)})`;
+        document.getElementById('detailTime').textContent = `${booking.startTime} - ${booking.endTime}`;
+        document.getElementById('detailPerson').textContent = booking.person;
+        document.getElementById('detailDept').textContent = booking.dept;
+        document.getElementById('detailAttendees').textContent = `${booking.attendees} 人`;
+
+        const equipEl = document.getElementById('detailEquipment');
+        if (booking.equipment && booking.equipment.length > 0) {
+          equipEl.textContent = booking.equipment.join('、');
+        } else {
+          equipEl.textContent = '無特殊設備需求';
+        }
+
+        const notesContainer = document.getElementById('detailNotesContainer');
+        const notesEl = document.getElementById('detailNotes');
+        if (booking.notes && booking.notes.trim() !== '') {
+          notesContainer.classList.remove('hidden');
+          notesEl.textContent = booking.notes;
+        } else {
+          notesContainer.classList.add('hidden');
+        }
+
+        if (modal) modal.classList.remove('hidden');
+      }
+
+      function closeDetailsModal() {
+        const modal = document.getElementById('modalDetails');
+        if (modal) modal.classList.add('hidden');
+        state.selectedBookingForDetails = null;
+      }
+
+      // Cancellation Confirmation Modal (In-page dialog, avoiding window.confirm)
+      function openConfirmCancelModal(bookingId) {
+        state.pendingCancelId = bookingId;
+        const booking = state.bookings.find(b => b.id === bookingId);
+        if (!booking) return;
+
+        const modal = document.getElementById('modalConfirmCancel');
+        const desc = document.getElementById('confirmCancelDesc');
+        if (desc) {
+          desc.textContent = `即將取消「${booking.title}」(${booking.date} ${booking.startTime}-${booking.endTime})，取消後時段將立即釋出給所有人預約。`;
+        }
+        if (modal) modal.classList.remove('hidden');
+      }
+
+      function closeConfirmCancelModal() {
+        const modal = document.getElementById('modalConfirmCancel');
+        if (modal) modal.classList.add('hidden');
+        state.pendingCancelId = null;
+      }
+
+      // Share Modal
+      function openShareModal() {
+        const modal = document.getElementById('modalShare');
+        const input = document.getElementById('shareUrlInput');
+        // Simulated live URL with current query parameters
+        const url = `${window.location.origin}${window.location.pathname}#date=${state.currentDate}`;
+        if (input) input.value = url;
+        if (modal) modal.classList.remove('hidden');
+      }
+
+      function closeShareModal() {
+        const modal = document.getElementById('modalShare');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      // My Bookings Modal
+      function openMyBookingsModal() {
+        const modal = document.getElementById('modalMyBookings');
+        renderMyBookingsList();
+        if (modal) modal.classList.remove('hidden');
+      }
+
+      function closeMyBookingsModal() {
+        const modal = document.getElementById('modalMyBookings');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      function renderMyBookingsList(searchTerm = '') {
+        const container = document.getElementById('myBookingsContainer');
+        const countText = document.getElementById('myBookingsCountText');
+        if (!container) return;
+
+        const filtered = state.bookings
+          .filter(b => {
+            if (!searchTerm) return true;
+            const term = searchTerm.toLowerCase();
+            return b.title.toLowerCase().includes(term) ||
+                   b.person.toLowerCase().includes(term) ||
+                   b.dept.toLowerCase().includes(term);
+          })
+          .sort((a, b) => {
+            if (a.date !== b.date) return a.date.localeCompare(b.date);
+            return timeToMinutes(a.startTime) - timeToMinutes(b.startTime);
+          });
+
+        if (countText) {
+          countText.textContent = `共 ${filtered.length} 筆預約`;
+        }
+
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div class="p-8 text-center text-slate-400 text-xs">
+              查無相符的預約紀錄
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        filtered.forEach(b => {
+          const room = ROOMS.find(r => r.id === b.roomId) || { code: '??', name: '會議室' };
+          html += `
+            <div class="p-3.5 hover:bg-slate-50 flex items-center justify-between text-xs transition">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span class="font-bold text-slate-900">${b.title}</span>
+                  <span class="px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-700 font-semibold text-[11px]">${room.code} ${room.name}</span>
+                </div>
+                <div class="text-slate-500 mt-1">
+                  📅 ${b.date} · ⏰ ${b.startTime}-${b.endTime} · 👤 ${b.person} (${b.dept})
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button type="button" class="btn-item-details px-2.5 py-1 text-slate-600 hover:text-indigo-600 font-medium" data-booking-id="${b.id}">
+                  詳情
+                </button>
+                <button type="button" class="btn-item-cancel px-2.5 py-1 text-rose-600 hover:bg-rose-50 rounded font-medium" data-booking-id="${b.id}">
+                  取消
+                </button>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      }
+
+      // ------------------------------------------------------------
+      // 8. Event Listeners & Binding
+      // ------------------------------------------------------------
+      function initEventListeners() {
+        // Date navigation
+        document.getElementById('btnPrevDay').addEventListener('click', () => {
+          state.currentDate = addDays(state.currentDate, -1);
+          renderActiveView();
+        });
+
+        document.getElementById('btnToday').addEventListener('click', () => {
+          state.currentDate = formatTodayDate();
+          renderActiveView();
+        });
+
+        document.getElementById('btnTomorrow').addEventListener('click', () => {
+          state.currentDate = addDays(formatTodayDate(), 1);
+          renderActiveView();
+        });
+
+        document.getElementById('btnNextDay').addEventListener('click', () => {
+          state.currentDate = addDays(state.currentDate, 1);
+          renderActiveView();
+        });
+
+        document.getElementById('inputCurrentDate').addEventListener('change', (e) => {
+          if (e.target.value) {
+            state.currentDate = e.target.value;
+            renderActiveView();
+          }
+        });
+
+        // Filter dropdowns
+        document.getElementById('selectCapacityFilter').addEventListener('change', (e) => {
+          state.capacityFilter = e.target.value;
+          renderActiveView();
+        });
+
+        document.getElementById('selectAmenityFilter').addEventListener('change', (e) => {
+          state.amenityFilter = e.target.value;
+          renderActiveView();
+        });
+
+        // View tabs
+        document.getElementById('tabViewGrid').addEventListener('click', () => {
+          state.activeView = 'grid';
+          renderActiveView();
+        });
+
+        document.getElementById('tabViewRooms').addEventListener('click', () => {
+          state.activeView = 'rooms';
+          renderActiveView();
+        });
+
+        document.getElementById('tabViewList').addEventListener('click', () => {
+          state.activeView = 'list';
+          renderActiveView();
+        });
+
+        // Quick book button in top header
+        document.getElementById('btnQuickBook').addEventListener('click', () => {
+          openBookingModal();
+        });
+
+        // Share buttons
+        document.getElementById('btnOpenShare').addEventListener('click', () => {
+          openShareModal();
+        });
+
+        document.getElementById('btnCloseShareModal').addEventListener('click', () => {
+          closeShareModal();
+        });
+
+        document.getElementById('btnDoneShare').addEventListener('click', () => {
+          closeShareModal();
+        });
+
+        document.getElementById('btnCopyShareUrl').addEventListener('click', () => {
+          const input = document.getElementById('shareUrlInput');
+          copyToClipboard(input.value, '預約專屬網址已複製到剪貼簿！');
+        });
+
+        document.getElementById('btnCopyDirectShareLink').addEventListener('click', () => {
+          const url = `${window.location.origin}${window.location.pathname}#date=${state.currentDate}`;
+          copyToClipboard(url, '當前頁面即時預約連結已成功複製！');
+        });
+
+        // My Bookings
+        document.getElementById('btnOpenMyBookings').addEventListener('click', () => {
+          openMyBookingsModal();
+        });
+
+        document.getElementById('btnCloseMyBookingsModal').addEventListener('click', () => {
+          closeMyBookingsModal();
+        });
+
+        document.getElementById('btnDoneMyBookings').addEventListener('click', () => {
+          closeMyBookingsModal();
+        });
+
+        document.getElementById('inputSearchMyBookings').addEventListener('input', (e) => {
+          renderMyBookingsList(e.target.value);
+        });
+
+        // Reset Data
+        document.getElementById('btnResetData').addEventListener('click', () => {
+          const fresh = generateInitialMockBookings(formatTodayDate());
+          saveBookings(fresh);
+          renderActiveView();
+          showToast('已重設為預設範例預約資料！', 'info');
+        });
+
+        // Booking Modal controls
+        document.getElementById('btnCloseBookingModal').addEventListener('click', () => {
+          closeBookingModal();
+        });
+
+        document.getElementById('btnCancelBookingModal').addEventListener('click', () => {
+          closeBookingModal();
+        });
+
+        document.getElementById('bookRoomSelect').addEventListener('change', () => {
+          updateRoomHint();
+        });
+
+        document.getElementById('bookDateInput').addEventListener('change', () => {
+          checkBookingConflict();
+        });
+
+        document.getElementById('bookStartTime').addEventListener('change', () => {
+          const start = document.getElementById('bookStartTime').value;
+          const endSelect = document.getElementById('bookEndTime');
+          // auto push end time 1 hour forward if start >= end
+          if (timeToMinutes(start) >= timeToMinutes(endSelect.value)) {
+            endSelect.value = minutesToTime(timeToMinutes(start) + 60);
+          }
+          checkBookingConflict();
+        });
+
+        document.getElementById('bookEndTime').addEventListener('change', () => {
+          checkBookingConflict();
+        });
+
+        document.getElementById('bookAttendees').addEventListener('input', () => {
+          updateRoomHint();
+        });
+
+        // Quick duration buttons
+        document.querySelectorAll('.btn-duration').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const minutes = parseInt(e.currentTarget.getAttribute('data-minutes'), 10);
+            const startVal = document.getElementById('bookStartTime').value;
+            const newEnd = minutesToTime(timeToMinutes(startVal) + minutes);
+            const endSelect = document.getElementById('bookEndTime');
+            if (endSelect) {
+              endSelect.value = newEnd;
+            }
+            checkBookingConflict();
+          });
+        });
+
+        // Form Submit
+        document.getElementById('formBooking').addEventListener('submit', (e) => {
+          e.preventDefault();
+          if (checkBookingConflict()) {
+            return;
+          }
+
+          const roomId = document.getElementById('bookRoomSelect').value;
+          const date = document.getElementById('bookDateInput').value;
+          const startTime = document.getElementById('bookStartTime').value;
+          const endTime = document.getElementById('bookEndTime').value;
+          const title = document.getElementById('bookTitle').value.trim();
+          const person = document.getElementById('bookPerson').value.trim();
+          const dept = document.getElementById('bookDept').value.trim();
+          const attendees = parseInt(document.getElementById('bookAttendees').value, 10) || 1;
+          const notes = document.getElementById('bookNotes').value.trim();
+
+          const equipment = [];
+          if (document.getElementById('chkReqVideo').checked) equipment.push('遠距視訊鏡頭');
+          if (document.getElementById('chkReqBoard').checked) equipment.push('白板與筆組');
+          if (document.getElementById('chkReqProjector').checked) equipment.push('無線簡報投屏');
+          if (document.getElementById('chkReqMic').checked) equipment.push('外接麥克風');
+          if (document.getElementById('chkReqTea').checked) equipment.push('外賓茶水接待');
+
+          const newBooking = {
+            id: 'b-' + Date.now(),
+            roomId,
+            date,
+            startTime,
+            endTime,
+            title,
+            person,
+            dept,
+            attendees,
+            equipment,
+            notes
+          };
+
+          const updated = [...state.bookings, newBooking];
+          saveBookings(updated);
+
+          // Update current viewed date to match booking date
+          state.currentDate = date;
+          closeBookingModal();
+          renderActiveView();
+
+          // Reset form fields
+          document.getElementById('bookTitle').value = '';
+          document.getElementById('bookPerson').value = '';
+          document.getElementById('bookDept').value = '';
+          document.getElementById('bookNotes').value = '';
+          document.getElementById('chkReqVideo').checked = false;
+          document.getElementById('chkReqBoard').checked = false;
+          document.getElementById('chkReqProjector').checked = false;
+          document.getElementById('chkReqMic').checked = false;
+          document.getElementById('chkReqTea').checked = false;
+
+          const room = ROOMS.find(r => r.id === roomId);
+          showToast(`🎉 預約成功！已為您保留 ${room.name} (${date} ${startTime}-${endTime})`, 'success');
+        });
+
+        // Details Modal actions
+        document.getElementById('btnCloseDetailsModal').addEventListener('click', () => {
+          closeDetailsModal();
+        });
+
+        document.getElementById('btnCopyInvite').addEventListener('click', () => {
+          const b = state.selectedBookingForDetails;
+          if (!b) return;
+          const room = ROOMS.find(r => r.id === b.roomId);
+          const text = `【會議預約通知】\n主題：${b.title}\n地點：${room.code} ${room.name} (${room.floor})\n時間：${b.date} ${b.startTime} - ${b.endTime}\n預約人：${b.person} (${b.dept})\n出席人數：${b.attendees} 人\n備註：${b.notes || '無'}`;
+          copyToClipboard(text, '會議邀請文字已複製到剪貼簿！');
+        });
+
+        document.getElementById('btnTriggerCancelBooking').addEventListener('click', () => {
+          const b = state.selectedBookingForDetails;
+          if (!b) return;
+          closeDetailsModal();
+          openConfirmCancelModal(b.id);
+        });
+
+        // Cancellation Confirmation Modal actions
+        document.getElementById('btnAbortCancel').addEventListener('click', () => {
+          closeConfirmCancelModal();
+        });
+
+        document.getElementById('btnExecuteCancel').addEventListener('click', () => {
+          const id = state.pendingCancelId;
+          if (id) {
+            const updated = state.bookings.filter(b => b.id !== id);
+            saveBookings(updated);
+            renderActiveView();
+            renderMyBookingsList();
+            showToast('已成功取消該會議室預約，時段已釋出！', 'info');
+          }
+          closeConfirmCancelModal();
+        });
+
+        // Event delegation for dynamic buttons (slots, view booking, card booking, etc.)
+        document.addEventListener('click', (e) => {
+          // 1. Click on Free Slot to Book
+          const slotBtn = e.target.closest('.btn-slot-book');
+          if (slotBtn) {
+            const roomId = slotBtn.getAttribute('data-room-id');
+            const startTime = slotBtn.getAttribute('data-start-time');
+            const date = slotBtn.getAttribute('data-date');
+            openBookingModal(roomId, startTime, date);
+            return;
+          }
+
+          // 2. Click on Booked slot or list item to view details
+          const viewBtn = e.target.closest('.btn-view-booking');
+          if (viewBtn) {
+            const bookingId = viewBtn.getAttribute('data-booking-id');
+            openDetailsModal(bookingId);
+            return;
+          }
+
+          // 3. Click on "預約此會議室" in Room Cards
+          const cardBookBtn = e.target.closest('.btn-card-book');
+          if (cardBookBtn) {
+            const roomId = cardBookBtn.getAttribute('data-room-id');
+            openBookingModal(roomId);
+            return;
+          }
+
+          // 4. Click details or cancel in My Bookings list
+          const itemDetailsBtn = e.target.closest('.btn-item-details');
+          if (itemDetailsBtn) {
+            const bookingId = itemDetailsBtn.getAttribute('data-booking-id');
+            closeMyBookingsModal();
+            openDetailsModal(bookingId);
+            return;
+          }
+
+          const itemCancelBtn = e.target.closest('.btn-item-cancel');
+          if (itemCancelBtn) {
+            const bookingId = itemCancelBtn.getAttribute('data-booking-id');
+            closeMyBookingsModal();
+            openConfirmCancelModal(bookingId);
+            return;
+          }
+        });
+      }
+
+      // ------------------------------------------------------------
+      // 9. App Initialization
+      // ------------------------------------------------------------
+      function init() {
+        state.currentDate = formatTodayDate();
+        state.bookings = loadBookings();
+
+        populateTimeOptions();
+        populateBookingFormRoomOptions();
+        initEventListeners();
+        renderActiveView();
+      }
+
+      // Run on DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+    })();
+  </script>
+</body>
+</html>
