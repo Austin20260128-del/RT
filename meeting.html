@@ -51,12 +51,20 @@
                 即時同步中
               </span>
             </div>
-            <p class="text-xs text-slate-500 hidden sm:block">開放式即時會議室預約平台 · 免登入直接查詢與登記</p>
+            <p class="text-xs text-slate-500 hidden sm:block">利泓科技會議室管理系統 · 開放式即時查詢與預約</p>
           </div>
         </div>
 
         <!-- Quick Top Actions -->
         <div class="flex items-center space-x-2 sm:space-x-3">
+          <!-- Room Management Button -->
+          <button id="btnOpenRoomManagement" class="inline-flex items-center px-3 py-2 border border-slate-200 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm" title="自由新增、編輯或刪除會議室配置">
+            <svg class="w-4 h-4 mr-1.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            <span>會議室管理</span>
+          </button>
+
           <!-- Share URL Button -->
           <button id="btnOpenShare" class="inline-flex items-center px-3 py-2 border border-slate-200 text-sm font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm">
             <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,6 +83,18 @@
           </button>
 
           <!-- Primary Book Button -->
+          <!-- Current Auth Status Badge -->
+          <div id="headerAuthBadge" class="hidden sm:inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-semibold border bg-slate-100 text-slate-700 border-slate-200">
+            <!-- Dynamic Role -->
+          </div>
+
+          <!-- Lock System Button -->
+          <button id="btnLockApp" class="inline-flex items-center px-2.5 py-2 border border-slate-200 text-sm font-medium rounded-lg text-slate-500 hover:text-slate-800 bg-white hover:bg-slate-50 transition shadow-sm" title="鎖定系統">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+          </button>
+
           <button id="btnQuickBook" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-semibold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-sm shadow-indigo-200">
             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -124,16 +144,10 @@
           <option value="all">所有容納人數</option>
           <option value="small">4人小型 (小型討論)</option>
           <option value="medium">8-12人中型 (專案團隊)</option>
-          <option value="large">16-30人大型 (全體/大會)</option>
+          <option value="large">16人以上大型 (全體/大會)</option>
         </select>
 
-        <!-- Equipment Filter -->
-        <select id="selectAmenityFilter" class="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg px-2.5 py-1.5 focus:ring-indigo-500 focus:border-indigo-500 font-medium">
-          <option value="all">所有設備配備</option>
-          <option value="video">具備視訊視聽系統</option>
-          <option value="board">具備電子/玻璃白板</option>
-          <option value="projector">具備高畫質投影</option>
-        </select>
+
 
         <!-- View Tabs -->
         <div class="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5">
@@ -145,6 +159,9 @@
           </button>
           <button id="tabViewList" class="px-3 py-1 text-xs font-medium rounded-md transition text-slate-600 hover:text-slate-900">
             今日清單
+          </button>
+          <button id="tabViewMonth" class="px-3 py-1 text-xs font-medium rounded-md transition text-slate-600 hover:text-slate-900">
+            月份一覽
           </button>
         </div>
       </div>
@@ -161,8 +178,8 @@
           </svg>
         </span>
         <div class="text-xs sm:text-sm text-slate-700">
-          <span class="font-bold text-slate-900">預約操作說明：</span>
-          在時程表上直接點擊 <span class="inline-block px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-semibold text-xs border border-emerald-200">+ 可預約</span> 時段即可直接登記；點選已預約的會議卡片可查閱詳情或取消。
+          <span class="font-bold text-slate-900">會議室增修提示：</span>
+          可點擊右上角「<span class="font-semibold text-indigo-700">會議室管理</span>」或切換至「會議室卡片」自由新增、編輯或刪除會議室；時程矩陣與預約選單將自動即時同步。
         </div>
       </div>
       <div class="flex items-center space-x-3 text-xs text-slate-500 flex-shrink-0">
@@ -201,8 +218,23 @@
       </div>
     </div>
 
-    <!-- VIEW 2: Room Cards Detailed View -->
-    <div id="viewContainerRooms" class="hidden">
+    <!-- VIEW 2: Room Cards Detailed View (with Add Room button) -->
+    <div id="viewContainerRooms" class="hidden space-y-4">
+      <!-- Toolbar for room creation -->
+      <div class="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+        <div>
+          <h3 class="font-bold text-slate-900 text-base flex items-center space-x-2">
+            <span>會議室空間配置清單</span>
+            <span id="labelTotalRoomsCount" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">共 0 間</span>
+          </h3>
+          <p class="text-xs text-slate-500">點選卡片右上角按鈕可編輯名稱規格、修改配備設施或移除會議室</p>
+        </div>
+        <button id="btnAddNewRoom" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs transition space-x-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          <span>＋ 新增會議室</span>
+        </button>
+      </div>
+
       <div id="roomCardsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- Dynamically rendered room cards -->
       </div>
@@ -228,6 +260,82 @@
       </div>
     </div>
 
+    <!-- VIEW 4: Month Overview / Calendar View (直觀查看哪個月份的哪一天會議室是空的) -->
+    <div id="viewContainerMonth" class="hidden space-y-4">
+      <!-- Month Navigation & Filter Toolbar -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- Month navigation controls -->
+        <div class="flex items-center space-x-3">
+          <div class="inline-flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+            <button id="btnPrevMonth" class="p-1.5 rounded-md hover:bg-white hover:shadow-xs text-slate-600 transition" title="上個月">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </button>
+            <button id="btnCurrentMonth" class="px-2.5 py-1 text-xs font-semibold rounded-md hover:bg-white hover:shadow-xs text-slate-700 transition">
+              本月
+            </button>
+            <button id="btnNextMonth" class="p-1.5 rounded-md hover:bg-white hover:shadow-xs text-slate-600 transition" title="下個月">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </button>
+          </div>
+          <h2 id="monthDisplayHeading" class="text-lg font-bold text-slate-900"></h2>
+        </div>
+
+        <!-- Room Filter for Month & Legend -->
+        <div class="flex items-center flex-wrap gap-3">
+          <div class="flex items-center space-x-2">
+            <label for="selectMonthRoomFilter" class="text-xs font-semibold text-slate-700 flex-shrink-0">查看空間：</label>
+            <select id="selectMonthRoomFilter" class="bg-white border border-slate-300 text-slate-800 text-xs rounded-lg px-2.5 py-1.5 focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <span id="monthStatsSummary" class="text-xs px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold"></span>
+        </div>
+      </div>
+
+      <!-- Month Legend Bar -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-2">
+        <div class="flex items-center space-x-4">
+          <span class="flex items-center font-semibold text-emerald-800">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1.5"></span>
+            全天空閒 (完全無會議)
+          </span>
+          <span class="flex items-center font-semibold text-indigo-800">
+            <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 mr-1.5"></span>
+            部分時段有預約 (尚有可用餘額)
+          </span>
+          <span class="flex items-center font-semibold text-rose-800">
+            <span class="w-2.5 h-2.5 rounded-full bg-rose-500 mr-1.5"></span>
+            高度佔用 / 已滿
+          </span>
+        </div>
+        <div class="text-slate-500 font-medium">
+          💡 點選月曆中任一天，可一鍵切換至該日「時程矩陣」查閱所有會議室時段
+        </div>
+      </div>
+
+      <!-- Calendar Month Grid Container -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <!-- Weekday header -->
+        <div class="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center text-xs font-bold text-slate-600 py-3">
+          <div class="text-rose-500">週日</div>
+          <div>週一</div>
+          <div>週二</div>
+          <div>週三</div>
+          <div>週四</div>
+          <div>週五</div>
+          <div class="text-indigo-600">週六</div>
+        </div>
+        <!-- Days Grid -->
+        <div id="calendarMonthGrid" class="grid grid-cols-7 divide-x divide-y divide-slate-100 min-h-[580px]">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Footer -->
@@ -236,7 +344,7 @@
       <div class="flex items-center space-x-2">
         <span class="font-semibold text-slate-700">MeetFlow 會議室即時預約系統</span>
         <span>•</span>
-        <span>隨選即用免安裝</span>
+        <span>支援會議室自由增刪與內容編輯</span>
       </div>
       <div class="flex items-center space-x-4">
         <button id="btnResetData" class="text-slate-400 hover:text-rose-600 transition" title="清除測試資料並恢復預設">
@@ -492,7 +600,7 @@
   </div>
 
   <!-- ============================================================ -->
-  <!-- MODAL 3: In-Page Confirmation Dialog for Cancellation (NO confirm()) -->
+  <!-- MODAL 3: In-Page Confirmation Dialog for Booking Cancellation -->
   <!-- ============================================================ -->
   <div id="modalConfirmCancel" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 text-center animate-in fade-in zoom-in-95">
@@ -558,14 +666,12 @@
           <div class="w-24 h-24 bg-white p-2 rounded-lg border border-slate-200 shadow-xs flex-shrink-0 flex items-center justify-center">
             <!-- Vector QR Code Pattern -->
             <svg class="w-full h-full text-slate-800" viewBox="0 0 100 100" fill="currentColor">
-              <!-- Position markers -->
               <rect x="5" y="5" width="26" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="6"/>
               <rect x="13" y="13" width="10" height="10"/>
               <rect x="69" y="5" width="26" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="6"/>
               <rect x="77" y="13" width="10" height="10"/>
               <rect x="5" y="69" width="26" height="26" rx="2" fill="none" stroke="currentColor" stroke-width="6"/>
               <rect x="13" y="77" width="10" height="10"/>
-              <!-- Data blocks -->
               <rect x="36" y="8" width="6" height="6"/>
               <rect x="48" y="8" width="6" height="6"/>
               <rect x="58" y="16" width="6" height="6"/>
@@ -648,7 +754,276 @@
     </div>
   </div>
 
-  <!-- Toast Notification Container -->
+  <!-- ============================================================ -->
+  <!-- MODAL 6: Room Management Center (會議室管理中心) -->
+  <!-- ============================================================ -->
+  <div id="modalRoomManagement" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-3xl w-full overflow-hidden animate-in fade-in zoom-in-95">
+      <div class="bg-gradient-to-r from-slate-900 to-indigo-950 px-6 py-4 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold">會議室空間配置管理</h3>
+            <p class="text-xs text-slate-300">自由增設、編輯各空間名稱、容納人數、樓層與多媒體設備</p>
+          </div>
+        </div>
+        <button id="btnCloseRoomManagementModal" class="text-slate-400 hover:text-white p-1 rounded-md">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <!-- Admin-Only Password Management & Permission Reference Card -->
+        <div class="p-3.5 bg-gradient-to-r from-indigo-50/80 to-slate-50 border border-indigo-100 rounded-xl text-xs text-left space-y-2">
+          <div class="font-bold text-slate-800 flex items-center justify-between">
+            <span class="flex items-center">
+              <svg class="w-4 h-4 mr-1 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+              密碼分權存取規則 (僅全區管理員可見)
+            </span>
+            <span class="text-[11px] font-normal text-slate-400">登入頁面已隱藏以防密碼外洩</span>
+          </div>
+          <div class="space-y-1.5 text-slate-600 text-[11px] leading-relaxed">
+            <div>• <strong class="text-slate-800">全區總管理員密碼</strong>：<code class="text-indigo-600 font-bold bg-white px-1.5 py-0.5 rounded border border-indigo-200">MT28891989</code>（具備所有會議室預約與增修管理權限）</div>
+            <div>• <strong class="text-slate-800">各空間專用密碼</strong>：下方會議室列表均載明各空間專屬密碼（點選「編輯規格」可自訂）。提供給同仁或外部人員時，其登入<strong>僅能看見該單一會議室</strong>，其餘空間自動隱藏。</div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div id="manageRoomTotalText" class="text-xs font-semibold text-slate-700"></div>
+          <button id="btnAddNewRoomInModal" class="inline-flex items-center px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-xs transition space-x-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            <span>＋ 新增會議室</span>
+          </button>
+        </div>
+
+        <!-- Rooms Table -->
+        <div class="max-h-96 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100" id="roomManagementTableContainer">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+          <span class="text-xs text-slate-500">會議室增刪或修改後將即時同步至排程矩陣與預約表單中</span>
+          <button id="btnDoneRoomManagement" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">
+            關閉
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 7: Room Add / Edit Dialog (新增 / 編輯會議室彈窗) -->
+  <!-- ============================================================ -->
+  <div id="modalRoomEdit" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 my-8">
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-slate-900 to-indigo-900 px-6 py-4 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+          </svg>
+          <h3 id="modalRoomEditTitle" class="text-base font-bold">新增會議室</h3>
+        </div>
+        <button id="btnCloseRoomEditModal" class="text-slate-400 hover:text-white p-1 rounded-md">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form id="formRoomEdit" class="p-6 space-y-4 text-left">
+        <input type="hidden" id="editRoomId" value="">
+
+        <!-- Code & Name -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label for="editRoomCode" class="block text-xs font-semibold text-slate-700 mb-1">
+              會議室代號 <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="editRoomCode" required placeholder="如 101, A2" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 font-bold">
+          </div>
+          <div class="sm:col-span-2">
+            <label for="editRoomName" class="block text-xs font-semibold text-slate-700 mb-1">
+              會議室名稱 <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="editRoomName" required placeholder="如 創新研討室、VIP董事廳" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 font-medium">
+          </div>
+        </div>
+
+        <!-- Floor, Capacity, Capacity Type -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label for="editRoomFloor" class="block text-xs font-semibold text-slate-700 mb-1">
+              所在樓層/位置 <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="editRoomFloor" required placeholder="如 2F, 總部大樓3F" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+          <div>
+            <label for="editRoomCapacity" class="block text-xs font-semibold text-slate-700 mb-1">
+              容納人數 <span class="text-rose-500">*</span>
+            </label>
+            <input type="number" id="editRoomCapacity" required min="1" max="500" value="8" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+          </div>
+          <div>
+            <label for="editRoomCapacityType" class="block text-xs font-semibold text-slate-700 mb-1">
+              規模分類
+            </label>
+            <select id="editRoomCapacityType" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-2.5 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <option value="auto">自動判斷</option>
+              <option value="small">小型 (≤4人)</option>
+              <option value="medium">中型 (5-15人)</option>
+              <option value="large">大型 (≥16人)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Color Theme Select -->
+        <div>
+          <label for="editRoomColor" class="block text-xs font-semibold text-slate-700 mb-1">
+            視覺代表色調
+          </label>
+          <select id="editRoomColor" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="indigo">經典靛藍 (Indigo)</option>
+            <option value="emerald">清新翠綠 (Emerald)</option>
+            <option value="sky">水藍色調 (Sky)</option>
+            <option value="purple">高雅深紫 (Purple)</option>
+            <option value="amber">活力琥珀金 (Amber)</option>
+            <option value="rose">熱情玫瑰紅 (Rose)</option>
+          </select>
+        </div>
+
+
+
+        <!-- Equipment Labels (Custom tags) -->
+        <div>
+          <label for="editRoomAmenityLabels" class="block text-xs font-semibold text-slate-700 mb-1">
+            詳細設備標籤 (以逗號隔開)
+          </label>
+          <input type="text" id="editRoomAmenityLabels" placeholder="例如：55吋 4K 螢幕, 視訊鏡頭, 玻璃白板, 移動白板" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+
+        <!-- Room Specific Access Password -->
+        <div>
+          <label for="editRoomPassword" class="block text-xs font-semibold text-slate-700 mb-1">
+            會議室專屬存取密碼 (選填/留空則預設 RT+代號)
+          </label>
+          <input type="text" id="editRoomPassword" placeholder="如 RT101 或 SALES2026" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono">
+          <p class="text-[11px] text-slate-400 mt-1">使用此密碼登入的使用者，系統只會顯示此單一會議室之時程與預約排程。</p>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label for="editRoomDesc" class="block text-xs font-semibold text-slate-700 mb-1">
+            空間介紹與適用場景
+          </label>
+          <textarea id="editRoomDesc" rows="2" placeholder="說明此空間的特色、適用會議類型或預約注意事項..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-xs rounded-lg px-3 py-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="pt-3 border-t border-slate-200 flex items-center justify-end space-x-3">
+          <button type="button" id="btnCancelRoomEdit" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+            取消編輯
+          </button>
+          <button type="submit" id="btnSaveRoomForm" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+            儲存會議室
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- MODAL 8: Confirm Room Deletion (刪除會議室確認彈窗) -->
+  <!-- ============================================================ -->
+  <div id="modalConfirmDeleteRoom" class="fixed inset-0 z-50 overflow-y-auto hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 text-center animate-in fade-in zoom-in-95">
+      <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+        </svg>
+      </div>
+      <h3 class="text-base font-bold text-slate-900 mb-1">確定要刪除這間會議室嗎？</h3>
+      <p id="confirmDeleteRoomText" class="text-xs text-slate-500 mb-6"></p>
+
+      <div class="flex items-center justify-center space-x-3">
+        <button id="btnAbortDeleteRoom" class="w-1/2 px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+          返回保留
+        </button>
+        <button id="btnExecuteDeleteRoom" class="w-1/2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+          確認刪除會議室
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- PASSWORD GATEWAY OVERLAY (MT28891989) -->
+  <!-- ============================================================ -->
+  <div id="passwordGatewayOverlay" class="fixed inset-0 z-50 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-sm w-full p-8 text-center animate-in fade-in zoom-in-95">
+      <!-- Icon & Logo -->
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-400 text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+        </svg>
+      </div>
+
+      <h2 class="text-xl font-bold text-slate-900 mb-1">利泓科技會議室管理系統</h2>
+      <p class="text-xs text-slate-500 mb-6">受安全密碼保護，請輸入通行密碼以進入</p>
+
+      <!-- Password Form -->
+      <form id="formPasswordGateway" class="space-y-4 text-left">
+        <div>
+          <label for="inputAppPassword" class="block text-xs font-semibold text-slate-700 mb-1.5">
+            系統存取密碼
+          </label>
+          <div class="relative">
+            <input type="password" id="inputAppPassword" required autofocus placeholder="請輸入通行密碼"
+                   class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl pl-3.5 pr-10 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition font-mono">
+            <button type="button" id="btnTogglePasswordVisibility" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600" title="顯示/隱藏密碼">
+              <svg id="iconEyeOpen" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+              </svg>
+              <svg id="iconEyeClosed" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Error Alert -->
+        <div id="passwordErrorAlert" class="hidden p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center space-x-2">
+          <svg class="w-4 h-4 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span id="passwordErrorText">密碼錯誤，請確認後重新輸入</span>
+        </div>
+
+        <button type="submit" id="btnSubmitPassword" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-md shadow-indigo-100 transition flex items-center justify-center space-x-2">
+          <span>解鎖進入系統</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+          </svg>
+        </button>
+      </form>
+
+      <div class="mt-6 pt-4 border-t border-slate-100 text-[11px] text-slate-400">
+        利泓科技 · 會議室預約管理平台
+      </div>
+    </div>
+  </div>
+
+    <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none">
     <!-- Toasts inserted dynamically -->
   </div>
@@ -661,17 +1036,26 @@
       'use strict';
 
       // ------------------------------------------------------------
-      // 1. Data Definitions & Initial State
+      // 1. Data Definitions & Color Themes
       // ------------------------------------------------------------
-      const ROOMS = [
+      const ROOM_THEMES = {
+        emerald: { color: 'emerald', gradient: 'from-emerald-500 to-teal-600' },
+        indigo: { color: 'indigo', gradient: 'from-indigo-500 to-blue-600' },
+        sky: { color: 'sky', gradient: 'from-sky-500 to-indigo-600' },
+        purple: { color: 'purple', gradient: 'from-purple-500 to-violet-600' },
+        amber: { color: 'amber', gradient: 'from-amber-500 to-orange-600' },
+        rose: { color: 'rose', gradient: 'from-rose-500 to-pink-600' }
+      };
+
+      const DEFAULT_ROOMS = [
         {
           id: 'room-101',
           code: '101',
           name: '藍天微型室',
+          password: 'RT101',
           capacity: 4,
           capacityType: 'small',
           floor: '1F',
-          amenities: ['video', 'board'],
           amenityLabels: ['55吋 4K 螢幕', '視訊鏡頭', '玻璃白板'],
           desc: '適合 2-4 人敏捷對焦、1-on-1 面談或小型電話視訊。',
           color: 'emerald',
@@ -681,10 +1065,10 @@
           id: 'room-201',
           code: '201',
           name: '智匯研討室',
+          password: 'RT201',
           capacity: 8,
           capacityType: 'medium',
           floor: '2F',
-          amenities: ['video', 'board', 'projector'],
           amenityLabels: ['雷射投影機', '電子白板', '4K 廣角視訊'],
           desc: '適合跨部門專案對焦、產品設計評審與頭腦風暴。',
           color: 'indigo',
@@ -694,10 +1078,10 @@
           id: 'room-202',
           code: '202',
           name: '協作討論室',
+          password: 'RT202',
           capacity: 12,
           capacityType: 'medium',
           floor: '2F',
-          amenities: ['video', 'board', 'projector'],
           amenityLabels: ['雙液晶螢幕', '羅技視訊系統', '移動磁吸白板'],
           desc: '支援混合辦公視訊連線、商業夥伴提案與敏捷衝刺會議。',
           color: 'sky',
@@ -707,10 +1091,10 @@
           id: 'room-301',
           code: '301',
           name: '寰宇國際會議廳',
+          password: 'RT301',
           capacity: 30,
           capacityType: 'large',
           floor: '3F',
-          amenities: ['video', 'projector'],
           amenityLabels: ['雙雷射投影', '全向麥克風', '演講級擴音', '同聲傳譯座'],
           desc: '適用全體大會、股東說明會、大型技術研討與外部貴賓拜訪。',
           color: 'purple',
@@ -720,10 +1104,10 @@
           id: 'room-501',
           code: '501',
           name: '卓越董事研討室',
+          password: 'RT501',
           capacity: 16,
           capacityType: 'large',
           floor: '5F',
-          amenities: ['video', 'board'],
           amenityLabels: ['85吋會議觸控屏', '降噪麥克風陣列', '頂級真皮座椅', '專人茶水服務'],
           desc: '高級主管決策會議、董事會與保密商業談判專用。',
           color: 'amber',
@@ -738,18 +1122,28 @@
         '18:00', '19:00'
       ];
 
-      // Storage Key
-      const STORAGE_KEY = 'meetflow_bookings_v1';
+      // Storage Keys
+      const STORAGE_BOOKINGS_KEY = 'meetflow_bookings_v2';
+      const STORAGE_ROOMS_KEY = 'meetflow_rooms_v2';
 
       // Current App State
       let state = {
         currentDate: '', // 'YYYY-MM-DD'
-        activeView: 'grid', // 'grid' | 'rooms' | 'list'
+        activeView: 'grid', // 'grid' | 'rooms' | 'list' | 'month'
         capacityFilter: 'all',
-        amenityFilter: 'all',
+        monthViewYear: 2026,
+        monthViewMonth: 10,
+        monthRoomFilter: 'all',
+        auth: {
+          type: 'admin', // 'admin' | 'room'
+          allowedRoomId: 'all', // 'all' or room.id
+          roomName: '全部會議室'
+        },
+        rooms: [],
         bookings: [],
         selectedBookingForDetails: null,
-        pendingCancelId: null
+        pendingCancelId: null,
+        pendingDeleteRoomId: null
       };
 
       // ------------------------------------------------------------
@@ -803,6 +1197,45 @@
       // ------------------------------------------------------------
       // 3. Storage & Default Mock Data
       // ------------------------------------------------------------
+      function loadRooms() {
+        try {
+          const raw = localStorage.getItem(STORAGE_ROOMS_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              return parsed;
+            }
+          }
+        } catch (e) {
+          console.warn('localStorage read error for rooms, falling back to defaults', e);
+        }
+        const initial = JSON.parse(JSON.stringify(DEFAULT_ROOMS));
+        saveRooms(initial);
+        return initial;
+      }
+
+      function saveRooms(rooms) {
+        state.rooms = rooms;
+        try {
+          localStorage.setItem(STORAGE_ROOMS_KEY, JSON.stringify(rooms));
+        } catch (e) {
+          console.warn('localStorage write error for rooms', e);
+        }
+        populateBookingFormRoomOptions();
+        updateRoomCountLabels();
+      }
+
+      function updateRoomCountLabels() {
+        const badge = document.getElementById('labelTotalRoomsCount');
+        if (badge) {
+          badge.textContent = `共 ${state.rooms.length} 間`;
+        }
+        const manageText = document.getElementById('manageRoomTotalText');
+        if (manageText) {
+          manageText.textContent = `現有會議室數量：共 ${state.rooms.length} 間空間配置`;
+        }
+      }
+
       function generateInitialMockBookings(todayStr) {
         const tomorrowStr = addDays(todayStr, 1);
         return [
@@ -890,7 +1323,7 @@
       function loadBookings() {
         const todayStr = formatTodayDate();
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+          const raw = localStorage.getItem(STORAGE_BOOKINGS_KEY);
           if (raw) {
             const parsed = JSON.parse(raw);
             if (Array.isArray(parsed) && parsed.length > 0) {
@@ -898,7 +1331,7 @@
             }
           }
         } catch (e) {
-          console.warn('localStorage read error, falling back to mock data', e);
+          console.warn('localStorage read error for bookings, falling back to mock data', e);
         }
         const initial = generateInitialMockBookings(todayStr);
         saveBookings(initial);
@@ -908,9 +1341,9 @@
       function saveBookings(bookings) {
         state.bookings = bookings;
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+          localStorage.setItem(STORAGE_BOOKINGS_KEY, JSON.stringify(bookings));
         } catch (e) {
-          console.warn('localStorage write error', e);
+          console.warn('localStorage write error for bookings', e);
         }
         updateBadgeCounter();
       }
@@ -950,7 +1383,6 @@
         }
 
         container.appendChild(toast);
-        // Animate in
         requestAnimationFrame(() => {
           toast.classList.remove('translate-y-2', 'opacity-0');
         });
@@ -965,7 +1397,6 @@
         }, 3200);
       }
 
-      // Safe clipboard helper
       function copyToClipboard(text, successMsg) {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(() => {
@@ -999,11 +1430,14 @@
       // 5. Filter & Query Logic
       // ------------------------------------------------------------
       function getFilteredRooms() {
-        return ROOMS.filter(r => {
-          if (state.capacityFilter !== 'all' && r.capacityType !== state.capacityFilter) {
-            return false;
+        return state.rooms.filter(r => {
+          // Scoped room permission filter
+          if (state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all') {
+            if (r.id !== state.auth.allowedRoomId) {
+              return false;
+            }
           }
-          if (state.amenityFilter !== 'all' && !r.amenities.includes(state.amenityFilter)) {
+          if (state.capacityFilter !== 'all' && r.capacityType !== state.capacityFilter) {
             return false;
           }
           return true;
@@ -1011,13 +1445,22 @@
       }
 
       function getBookingsForDate(dateStr) {
-        return state.bookings.filter(b => b.date === dateStr);
+        return state.bookings.filter(b => {
+          if (b.date !== dateStr) return false;
+          if (state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all') {
+            if (b.roomId !== state.auth.allowedRoomId) return false;
+          }
+          return true;
+        });
       }
 
       function updateBadgeCounter() {
         const badge = document.getElementById('badgeBookingCount');
         if (badge) {
-          badge.textContent = state.bookings.length;
+          const count = (state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all')
+            ? state.bookings.filter(b => b.roomId === state.auth.allowedRoomId).length
+            : state.bookings.length;
+          badge.textContent = count;
         }
       }
 
@@ -1040,8 +1483,22 @@
         const bodyRows = document.getElementById('gridBodyRows');
         if (!headerRow || !bodyRows) return;
 
+        if (rooms.length === 0) {
+          headerRow.style.gridTemplateColumns = '120px 1fr';
+          headerRow.innerHTML = `
+            <div class="p-3.5 border-r border-slate-200 flex items-center justify-center text-slate-500 bg-slate-100/70 font-medium">時段</div>
+            <div class="p-3.5 text-center text-slate-500">會議室</div>
+          `;
+          bodyRows.innerHTML = `
+            <div class="p-12 text-center text-slate-400">
+              <p class="text-sm font-semibold text-slate-700">目前尚無符合篩選條件的會議室</p>
+              <p class="text-xs text-slate-500 mt-1">請調整上方篩選條件，或點選右上角「會議室管理」新增會議室</p>
+            </div>
+          `;
+          return;
+        }
+
         // Set dynamic grid columns based on rooms count + 1 (for time column)
-        const colCount = rooms.length + 1;
         headerRow.style.gridTemplateColumns = `120px repeat(${rooms.length}, minmax(140px, 1fr))`;
 
         // Render Room Header Cells
@@ -1058,10 +1515,10 @@
           headerHtml += `
             <div class="p-3 border-r border-slate-200 last:border-r-0 flex flex-col justify-center">
               <div class="flex items-center justify-between">
-                <span class="font-bold text-slate-800 text-sm">${r.code} ${r.name}</span>
-                <span class="text-[11px] font-semibold px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded">${r.capacity}人</span>
+                <span class="font-bold text-slate-800 text-sm truncate" title="${r.name}">${r.code} ${r.name}</span>
+                <span class="text-[11px] font-semibold px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded ml-1 flex-shrink-0">${r.capacity}人</span>
               </div>
-              <div class="text-[11px] text-slate-400 mt-0.5 truncate">${r.floor} · ${r.amenityLabels.slice(0, 2).join(', ')}</div>
+              <div class="text-[11px] text-slate-400 mt-0.5 truncate">${r.floor} · ${(r.amenityLabels || []).slice(0, 2).join(', ')}</div>
             </div>
           `;
         });
@@ -1084,13 +1541,11 @@
           `;
 
           rooms.forEach(room => {
-            // Find if there's any booking overlapping with [hour, nextHour) in this room
             const matchedBooking = dayBookings.find(b => {
               return b.roomId === room.id && isTimeOverlapping(hour, nextHour, b.startTime, b.endTime);
             });
 
             if (matchedBooking) {
-              // Slot is Booked
               bodyHtml += `
                 <div class="p-1.5 border-r border-slate-200 last:border-r-0 flex items-stretch">
                   <div class="btn-view-booking w-full bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg p-2 text-left cursor-pointer transition flex flex-col justify-between shadow-xs group"
@@ -1112,7 +1567,6 @@
                 </div>
               `;
             } else {
-              // Slot is Free & Bookable
               bodyHtml += `
                 <div class="p-1.5 border-r border-slate-200 last:border-r-0 flex items-center">
                   <button type="button" class="btn-slot-book w-full h-full min-h-[50px] border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/80 rounded-lg text-slate-400 hover:text-emerald-700 text-xs font-medium flex items-center justify-center transition group p-1"
@@ -1135,18 +1589,21 @@
         bodyRows.innerHTML = bodyHtml;
       }
 
-      // Render Room Cards View
+      // Render Room Cards View (with Edit & Delete room actions)
       function renderRooms() {
         const container = document.getElementById('roomCardsList');
         if (!container) return;
         const rooms = getFilteredRooms();
         const dayBookings = getBookingsForDate(state.currentDate);
 
+        updateRoomCountLabels();
+
         if (rooms.length === 0) {
           container.innerHTML = `
-            <div class="col-span-full py-12 text-center text-slate-400">
+            <div class="col-span-full py-12 text-center text-slate-400 bg-white rounded-xl border border-slate-200">
               <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-              <p class="text-sm font-medium">沒有符合篩選條件的會議室</p>
+              <p class="text-sm font-semibold text-slate-700">沒有符合條件的會議室</p>
+              <p class="text-xs text-slate-500 mt-1">請點選上方「＋ 新增會議室」建立全新會議空間！</p>
             </div>
           `;
           return;
@@ -1158,18 +1615,18 @@
             .filter(b => b.roomId === room.id)
             .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
 
-          // Check if currently busy now if looking at today
           const now = new Date();
           const currentHourMin = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
           const currentBooking = roomBookings.find(b => isTimeOverlapping(currentHourMin, minutesToTime(timeToMinutes(currentHourMin) + 1), b.startTime, b.endTime));
+          const gradientClass = room.gradient || 'from-indigo-500 to-blue-600';
 
           html += `
             <div class="bg-white rounded-2xl border border-slate-200 shadow-xs hover:shadow-md transition overflow-hidden flex flex-col justify-between">
               <div>
-                <!-- Top banner with room code & status -->
+                <!-- Top banner with room code & status & room edit/delete buttons -->
                 <div class="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
                   <div class="flex items-center space-x-3">
-                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr ${room.gradient} text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-tr ${gradientClass} text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
                       ${room.code}
                     </div>
                     <div>
@@ -1181,6 +1638,22 @@
                       </div>
                     </div>
                   </div>
+                  <!-- Edit & Delete Buttons (Admin Only) -->
+                  <div class="flex items-center space-x-1 ${state.auth && state.auth.allowedRoomId !== 'all' ? 'hidden' : ''}">
+                    <button type="button" class="btn-edit-room p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-white rounded-lg transition border border-transparent hover:border-slate-200"
+                            data-room-id="${room.id}" title="編輯會議室名稱、容量與配備">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+                    <button type="button" class="btn-delete-room p-1.5 text-slate-400 hover:text-rose-600 hover:bg-white rounded-lg transition border border-transparent hover:border-slate-200"
+                            data-room-id="${room.id}" title="刪除此會議室">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Status indicator -->
+                <div class="px-5 pt-3 flex items-center justify-between">
+                  <span class="text-xs text-slate-500 font-medium">即時狀態：</span>
                   <div>
                     ${currentBooking ? `
                       <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-200">
@@ -1195,13 +1668,13 @@
                 </div>
 
                 <!-- Room details & amenities -->
-                <div class="p-5 space-y-4">
-                  <p class="text-xs text-slate-600">${room.desc}</p>
+                <div class="p-5 space-y-4 pt-3">
+                  <p class="text-xs text-slate-600">${room.desc || '暫無空間簡介。'}</p>
 
                   <div>
                     <span class="text-[11px] font-semibold text-slate-400 block mb-1.5 uppercase tracking-wider">配備設施</span>
                     <div class="flex flex-wrap gap-1.5">
-                      ${room.amenityLabels.map(item => `
+                      ${(room.amenityLabels || []).map(item => `
                         <span class="px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
                           ${item}
                         </span>
@@ -1283,7 +1756,7 @@
 
         let html = '';
         dayBookings.forEach(b => {
-          const room = ROOMS.find(r => r.id === b.roomId) || { code: '??', name: '會議室' };
+          const room = state.rooms.find(r => r.id === b.roomId) || { code: '??', name: '會議室' };
           html += `
             <div class="btn-view-booking p-4 hover:bg-slate-50 cursor-pointer transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                  data-booking-id="${b.id}">
@@ -1311,19 +1784,185 @@
         table.innerHTML = html;
       }
 
+      // Render Month Calendar Availability View
+      function renderMonthView() {
+        const grid = document.getElementById('calendarMonthGrid');
+        const heading = document.getElementById('monthDisplayHeading');
+        const summary = document.getElementById('monthStatsSummary');
+        if (!grid || !heading) return;
+
+        const year = state.monthViewYear;
+        const month = state.monthViewMonth; // 1-12
+
+        heading.textContent = `${year} 年 ${month} 月`;
+
+        // Days calculation
+        const daysInCurrentMonth = new Date(year, month, 0).getDate();
+        const firstDayWeekday = new Date(year, month - 1, 1).getDay(); // 0 is Sunday
+        const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
+
+        const todayStr = formatTodayDate();
+
+        let fullyFreeDaysCount = 0;
+        let partiallyBookedDaysCount = 0;
+        let fullBookedDaysCount = 0;
+
+        let cellsHtml = '';
+
+        // 1. Previous month trailing days
+        for (let i = firstDayWeekday - 1; i >= 0; i--) {
+          const dayNum = daysInPrevMonth - i;
+          const prevMonth = month === 1 ? 12 : month - 1;
+          const prevYear = month === 1 ? year - 1 : year;
+          const dateStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+
+          cellsHtml += `
+            <div class="p-2 sm:p-2.5 bg-slate-50/50 text-slate-300 min-h-[105px] flex flex-col justify-between select-none">
+              <span class="text-xs font-medium">${dayNum}</span>
+              <div class="text-[10px] text-slate-300">非本月</div>
+            </div>
+          `;
+        }
+
+        // 2. Current month days (1 to daysInCurrentMonth)
+        for (let d = 1; d <= daysInCurrentMonth; d++) {
+          const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          const isToday = dateStr === todayStr;
+          const isSelectedDate = dateStr === state.currentDate;
+
+          // Find bookings for this date
+          let dayBookings = state.bookings.filter(b => b.date === dateStr);
+          if (state.monthRoomFilter !== 'all') {
+            dayBookings = dayBookings.filter(b => b.roomId === state.monthRoomFilter);
+          }
+
+          // Calculate free status
+          const totalTargetRooms = state.monthRoomFilter === 'all'
+            ? state.rooms.length
+            : 1;
+
+          // Rooms that have no bookings on this day
+          let freeRoomsOnDay = [];
+          if (state.monthRoomFilter === 'all') {
+            freeRoomsOnDay = state.rooms.filter(r => !dayBookings.some(b => b.roomId === r.id));
+          } else {
+            const r = state.rooms.find(rm => rm.id === state.monthRoomFilter);
+            if (r && dayBookings.length === 0) {
+              freeRoomsOnDay.push(r);
+            }
+          }
+
+          const hasBookings = dayBookings.length > 0;
+          const isFullyFree = !hasBookings;
+
+          // Status badges
+          let statusBadgeHtml = '';
+          let bgClass = 'bg-white hover:bg-slate-50';
+
+          if (isFullyFree) {
+            fullyFreeDaysCount++;
+            bgClass = 'bg-emerald-50/20 hover:bg-emerald-50/50';
+            statusBadgeHtml = `
+              <div class="mt-1">
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1"></span>
+                  全天空閒
+                </span>
+                <div class="text-[10px] text-emerald-700 mt-1 font-medium truncate hidden sm:block">
+                  ${state.monthRoomFilter === 'all' ? `${state.rooms.length} 間空間全數開放` : '全天時段開放預約'}
+                </div>
+              </div>
+            `;
+          } else {
+            // Check if heavily booked (e.g. >= 4 bookings)
+            if (dayBookings.length >= (totalTargetRooms * 3)) {
+              fullBookedDaysCount++;
+              bgClass = 'bg-rose-50/20 hover:bg-rose-50/50';
+              statusBadgeHtml = `
+                <div class="mt-1">
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
+                    已排滿 ${dayBookings.length} 場
+                  </span>
+                  <div class="text-[10px] text-rose-600 mt-1 font-medium truncate hidden sm:block">
+                    時段密集
+                  </div>
+                </div>
+              `;
+            } else {
+              partiallyBookedDaysCount++;
+              bgClass = 'bg-sky-50/20 hover:bg-sky-50/50';
+              statusBadgeHtml = `
+                <div class="mt-1">
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                    ${dayBookings.length} 場預約
+                  </span>
+                  <div class="text-[10px] text-indigo-700 mt-1 font-medium truncate hidden sm:block">
+                    ${freeRoomsOnDay.length > 0 ? `餘 ${freeRoomsOnDay.length} 間全空` : '尚有可用時段'}
+                  </div>
+                </div>
+              `;
+            }
+          }
+
+          cellsHtml += `
+            <div class="btn-month-day-cell p-2 sm:p-2.5 ${bgClass} min-h-[115px] flex flex-col justify-between transition border-slate-100 cursor-pointer relative group ${isToday ? 'ring-2 ring-indigo-500 ring-inset rounded-lg z-10' : ''}"
+                 data-date="${dateStr}" title="點選直接切換至 ${dateStr} 時程總覽">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs sm:text-sm font-bold ${isToday ? 'text-indigo-600' : 'text-slate-800'}">${d}</span>
+                  ${isToday ? '<span class="px-1.5 py-0.2 bg-indigo-600 text-white text-[10px] rounded font-bold">今天</span>' : ''}
+                </div>
+                ${statusBadgeHtml}
+              </div>
+
+              <!-- Bottom hover actions -->
+              <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 group-hover:text-indigo-600">
+                <span class="font-medium group-hover:underline">查看時程 →</span>
+                <button type="button" class="btn-month-quick-book p-1 rounded hover:bg-indigo-100 text-slate-400 hover:text-indigo-700 transition"
+                        data-date="${dateStr}" title="直接在 ${dateStr} 預約會議室">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        // 3. Next month leading days to complete grid (up to multiple of 7)
+        const totalRendered = firstDayWeekday + daysInCurrentMonth;
+        const remainingCells = (7 - (totalRendered % 7)) % 7;
+        for (let nextDay = 1; nextDay <= remainingCells; nextDay++) {
+          cellsHtml += `
+            <div class="p-2 sm:p-2.5 bg-slate-50/50 text-slate-300 min-h-[105px] flex flex-col justify-between select-none">
+              <span class="text-xs font-medium">${nextDay}</span>
+              <div class="text-[10px] text-slate-300">次月</div>
+            </div>
+          `;
+        }
+
+        grid.innerHTML = cellsHtml;
+
+        if (summary) {
+          summary.innerHTML = `
+            本月統計：<strong class="text-emerald-700">${fullyFreeDaysCount} 天全天空閒</strong> · 
+            <strong class="text-indigo-700">${partiallyBookedDaysCount} 天尚有餘額</strong>
+          `;
+        }
+      }
+
       function renderActiveView() {
         renderCurrentDateDisplay();
 
         const gridContainer = document.getElementById('viewContainerGrid');
         const roomsContainer = document.getElementById('viewContainerRooms');
         const listContainer = document.getElementById('viewContainerList');
+        const monthContainer = document.getElementById('viewContainerMonth');
 
         const tabGrid = document.getElementById('tabViewGrid');
         const tabRooms = document.getElementById('tabViewRooms');
         const tabList = document.getElementById('tabViewList');
+        const tabMonth = document.getElementById('tabViewMonth');
 
-        // Reset tab styles
-        [tabGrid, tabRooms, tabList].forEach(t => {
+        [tabGrid, tabRooms, tabList, tabMonth].forEach(t => {
           t.className = 'px-3 py-1 text-xs font-medium rounded-md transition text-slate-600 hover:text-slate-900';
         });
 
@@ -1331,20 +1970,30 @@
           gridContainer.classList.remove('hidden');
           roomsContainer.classList.add('hidden');
           listContainer.classList.add('hidden');
+          monthContainer.classList.add('hidden');
           tabGrid.className = 'px-3 py-1 text-xs font-semibold rounded-md transition shadow-sm bg-white text-indigo-700';
           renderGrid();
         } else if (state.activeView === 'rooms') {
           gridContainer.classList.add('hidden');
           roomsContainer.classList.remove('hidden');
           listContainer.classList.add('hidden');
+          monthContainer.classList.add('hidden');
           tabRooms.className = 'px-3 py-1 text-xs font-semibold rounded-md transition shadow-sm bg-white text-indigo-700';
           renderRooms();
         } else if (state.activeView === 'list') {
           gridContainer.classList.add('hidden');
           roomsContainer.classList.add('hidden');
           listContainer.classList.remove('hidden');
+          monthContainer.classList.add('hidden');
           tabList.className = 'px-3 py-1 text-xs font-semibold rounded-md transition shadow-sm bg-white text-indigo-700';
           renderList();
+        } else if (state.activeView === 'month') {
+          gridContainer.classList.add('hidden');
+          roomsContainer.classList.add('hidden');
+          listContainer.classList.add('hidden');
+          monthContainer.classList.remove('hidden');
+          tabMonth.className = 'px-3 py-1 text-xs font-semibold rounded-md transition shadow-sm bg-white text-indigo-700';
+          renderMonthView();
         }
       }
 
@@ -1355,13 +2004,55 @@
         const select = document.getElementById('bookRoomSelect');
         if (!select) return;
 
-        select.innerHTML = ROOMS.map(r => `
-          <option value="${r.id}" ${r.id === selectedRoomId ? 'selected' : ''}>
+        const isRestricted = state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all';
+        const accessibleRooms = isRestricted
+          ? state.rooms.filter(r => r.id === state.auth.allowedRoomId)
+          : state.rooms;
+
+        if (accessibleRooms.length === 0) {
+          select.innerHTML = '<option value="">(目前無可預約會議室)</option>';
+          return;
+        }
+
+        const effectiveSelectedId = isRestricted
+          ? state.auth.allowedRoomId
+          : (selectedRoomId || accessibleRooms[0].id);
+
+        select.innerHTML = accessibleRooms.map(r => `
+          <option value="${r.id}" ${r.id === effectiveSelectedId ? 'selected' : ''}>
             ${r.code} ${r.name} (${r.floor} · 上限 ${r.capacity} 人)
           </option>
         `).join('');
 
         updateRoomHint();
+        populateMonthRoomFilterOptions();
+      }
+
+      function populateMonthRoomFilterOptions() {
+        const monthSelect = document.getElementById('selectMonthRoomFilter');
+        if (!monthSelect) return;
+
+        const isRestricted = state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all';
+        const accessibleRooms = isRestricted
+          ? state.rooms.filter(r => r.id === state.auth.allowedRoomId)
+          : state.rooms;
+
+        let options = '';
+        if (!isRestricted) {
+          options += '<option value="all">全部會議室 (查看整體空間餘額)</option>';
+        }
+        accessibleRooms.forEach(r => {
+          options += `<option value="${r.id}" ${r.id === state.monthRoomFilter ? 'selected' : ''}>${r.code} ${r.name} (${r.capacity}人 · ${r.floor})</option>`;
+        });
+        monthSelect.innerHTML = options;
+
+        if (isRestricted && accessibleRooms.length > 0) {
+          state.monthRoomFilter = accessibleRooms[0].id;
+          monthSelect.value = accessibleRooms[0].id;
+          monthSelect.disabled = true;
+        } else {
+          monthSelect.disabled = false;
+        }
       }
 
       function populateTimeOptions() {
@@ -1385,11 +2076,11 @@
         const warning = document.getElementById('labelCapacityWarning');
 
         if (!select || !hint) return;
-        const room = ROOMS.find(r => r.id === select.value);
+        const room = state.rooms.find(r => r.id === select.value);
         if (room) {
           hint.innerHTML = `
-            <span class="inline-block w-2 h-2 rounded-full bg-${room.color}-500 mr-1.5"></span>
-            <span>${room.floor} · 建議容納：${room.capacity} 人 · 配備：${room.amenityLabels.join(', ')}</span>
+            <span class="inline-block w-2 h-2 rounded-full bg-${room.color || 'indigo'}-500 mr-1.5"></span>
+            <span>${room.floor} · 建議容納：${room.capacity} 人 · 配備：${(room.amenityLabels || []).join(', ')}</span>
           `;
           if (attendeesInput && warning) {
             const count = parseInt(attendeesInput.value, 10) || 0;
@@ -1400,6 +2091,8 @@
               warning.classList.add('hidden');
             }
           }
+        } else {
+          hint.innerHTML = '';
         }
         checkBookingConflict();
       }
@@ -1420,7 +2113,6 @@
         const start = startTimeSelect.value;
         const end = endTimeSelect.value;
 
-        // Validity check on start < end
         if (timeToMinutes(start) >= timeToMinutes(end)) {
           banner.classList.remove('hidden');
           bannerText.innerHTML = '<strong>時間設定錯誤：</strong>結束時間必須晚於開始時間！';
@@ -1429,7 +2121,6 @@
           return true;
         }
 
-        // Search conflict in state
         const conflict = state.bookings.find(b => {
           return b.roomId === roomId && b.date === date && isTimeOverlapping(start, end, b.startTime, b.endTime);
         });
@@ -1459,7 +2150,11 @@
         const startTimeSelect = document.getElementById('bookStartTime');
         const endTimeSelect = document.getElementById('bookEndTime');
 
-        populateBookingFormRoomOptions(initialRoomId || ROOMS[0].id);
+        const isRestricted = state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all';
+        const defaultRoomId = isRestricted
+          ? state.auth.allowedRoomId
+          : (initialRoomId || (state.rooms.length > 0 ? state.rooms[0].id : ''));
+        populateBookingFormRoomOptions(defaultRoomId);
 
         if (dateInput) {
           dateInput.value = initialDate || state.currentDate;
@@ -1497,7 +2192,7 @@
         state.selectedBookingForDetails = booking;
 
         const modal = document.getElementById('modalDetails');
-        const room = ROOMS.find(r => r.id === booking.roomId) || { code: '??', name: '會議室' };
+        const room = state.rooms.find(r => r.id === booking.roomId) || { code: '??', name: '會議室' };
 
         document.getElementById('detailTitle').textContent = booking.title;
         document.getElementById('detailRoomBadge').textContent = `${room.code} ${room.name}`;
@@ -1556,7 +2251,6 @@
       function openShareModal() {
         const modal = document.getElementById('modalShare');
         const input = document.getElementById('shareUrlInput');
-        // Simulated live URL with current query parameters
         const url = `${window.location.origin}${window.location.pathname}#date=${state.currentDate}`;
         if (input) input.value = url;
         if (modal) modal.classList.remove('hidden');
@@ -1584,7 +2278,11 @@
         const countText = document.getElementById('myBookingsCountText');
         if (!container) return;
 
-        const filtered = state.bookings
+        let scopedBookings = state.bookings;
+        if (state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all') {
+          scopedBookings = scopedBookings.filter(b => b.roomId === state.auth.allowedRoomId);
+        }
+        const filtered = scopedBookings
           .filter(b => {
             if (!searchTerm) return true;
             const term = searchTerm.toLowerCase();
@@ -1612,7 +2310,7 @@
 
         let html = '';
         filtered.forEach(b => {
-          const room = ROOMS.find(r => r.id === b.roomId) || { code: '??', name: '會議室' };
+          const room = state.rooms.find(r => r.id === b.roomId) || { code: '??', name: '會議室' };
           html += `
             <div class="p-3.5 hover:bg-slate-50 flex items-center justify-between text-xs transition">
               <div>
@@ -1640,7 +2338,157 @@
       }
 
       // ------------------------------------------------------------
-      // 8. Event Listeners & Binding
+      // 8. Room Management Center & Room Add/Edit/Delete Logic
+      // ------------------------------------------------------------
+      function openRoomManagementModal() {
+        const modal = document.getElementById('modalRoomManagement');
+        renderRoomManagementTable();
+        updateRoomCountLabels();
+        if (modal) modal.classList.remove('hidden');
+      }
+
+      function closeRoomManagementModal() {
+        const modal = document.getElementById('modalRoomManagement');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      function renderRoomManagementTable() {
+        const container = document.getElementById('roomManagementTableContainer');
+        if (!container) return;
+
+        if (state.rooms.length === 0) {
+          container.innerHTML = `
+            <div class="p-8 text-center text-slate-400 text-xs">
+              目前尚未配置任何會議室，請點選上方「＋ 新增會議室」建立。
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        state.rooms.forEach(r => {
+          const bookingCount = state.bookings.filter(b => b.roomId === r.id).length;
+          const gradientClass = r.gradient || 'from-indigo-500 to-blue-600';
+
+          html += `
+            <div class="p-4 hover:bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs transition">
+              <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-gradient-to-tr ${gradientClass} text-white font-bold flex items-center justify-center text-sm shadow-xs flex-shrink-0">
+                  ${r.code}
+                </div>
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="font-bold text-slate-900 text-sm">${r.name}</span>
+                    <span class="px-2 py-0.2 bg-slate-100 text-slate-700 rounded text-xs font-semibold">${r.floor}</span>
+                    <span class="px-2 py-0.2 bg-indigo-50 text-indigo-700 rounded text-xs font-semibold">容納 ${r.capacity} 人</span>
+                  </div>
+                  <div class="text-slate-500 mt-1 flex flex-wrap items-center gap-2">
+                    <span>配備：${(r.amenityLabels || []).join(', ') || '基本設備'}</span>
+                    <span>•</span>
+                    <span>專屬密碼：<code class="px-1.5 py-0.5 rounded font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">${r.password || 'RT' + r.code}</code></span>
+                    <span>•</span>
+                    <span class="${bookingCount > 0 ? 'text-indigo-600 font-semibold' : 'text-slate-400'}">已累計 ${bookingCount} 場預約</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2 self-end sm:self-center">
+                <button type="button" class="btn-manage-edit-room px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 rounded-lg font-semibold transition"
+                        data-room-id="${r.id}">
+                  編輯規格
+                </button>
+                <button type="button" class="btn-manage-delete-room px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 rounded-lg font-semibold transition"
+                        data-room-id="${r.id}">
+                  刪除
+                </button>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      }
+
+      function openRoomEditModal(roomId = '') {
+        const modal = document.getElementById('modalRoomEdit');
+        const titleEl = document.getElementById('modalRoomEditTitle');
+        const idInput = document.getElementById('editRoomId');
+        const codeInput = document.getElementById('editRoomCode');
+        const nameInput = document.getElementById('editRoomName');
+        const floorInput = document.getElementById('editRoomFloor');
+        const capInput = document.getElementById('editRoomCapacity');
+        const capTypeSelect = document.getElementById('editRoomCapacityType');
+        const colorSelect = document.getElementById('editRoomColor');
+        const amenityLabelsInput = document.getElementById('editRoomAmenityLabels');
+        const descInput = document.getElementById('editRoomDesc');
+
+        if (roomId) {
+          const room = state.rooms.find(r => r.id === roomId);
+          const passwordInput = document.getElementById('editRoomPassword');
+          if (room) {
+            titleEl.textContent = `編輯會議室 - ${room.code} ${room.name}`;
+            idInput.value = room.id;
+            codeInput.value = room.code;
+            nameInput.value = room.name;
+            floorInput.value = room.floor;
+            capInput.value = room.capacity;
+            capTypeSelect.value = room.capacityType || 'auto';
+            colorSelect.value = room.color || 'indigo';
+            amenityLabelsInput.value = (room.amenityLabels || []).join(', ');
+            descInput.value = room.desc || '';
+            if (passwordInput) passwordInput.value = room.password || ('RT' + room.code);
+          }
+        } else {
+          const passwordInput = document.getElementById('editRoomPassword');
+          titleEl.textContent = '新增會議室';
+          idInput.value = '';
+          codeInput.value = '';
+          nameInput.value = '';
+          floorInput.value = '1F';
+          capInput.value = '8';
+          capTypeSelect.value = 'auto';
+          colorSelect.value = 'indigo';
+          amenityLabelsInput.value = '55吋 4K 螢幕, 視訊鏡頭, 玻璃白板';
+          descInput.value = '';
+          if (passwordInput) passwordInput.value = '';
+        }
+
+        if (modal) modal.classList.remove('hidden');
+      }
+
+      function closeRoomEditModal() {
+        const modal = document.getElementById('modalRoomEdit');
+        if (modal) modal.classList.add('hidden');
+      }
+
+      function openConfirmDeleteRoomModal(roomId) {
+        state.pendingDeleteRoomId = roomId;
+        const room = state.rooms.find(r => r.id === roomId);
+        if (!room) return;
+
+        const modal = document.getElementById('modalConfirmDeleteRoom');
+        const textEl = document.getElementById('confirmDeleteRoomText');
+
+        const bookingCount = state.bookings.filter(b => b.roomId === roomId).length;
+        if (bookingCount > 0) {
+          textEl.innerHTML = `
+            <span class="text-rose-600 font-bold block mb-1">⚠️ 警告：該會議室目前共有 ${bookingCount} 筆預約排程！</span>
+            若確認刪除「<strong>${room.code} ${room.name}</strong>」，將一併清除該會議室關聯的所有會議預約排程。此操作不可復原，確定要刪除嗎？
+          `;
+        } else {
+          textEl.innerHTML = `確定要刪除會議室「<strong>${room.code} ${room.name}</strong>」嗎？刪除後空間將從系統與選單中移除。`;
+        }
+
+        if (modal) modal.classList.remove('hidden');
+      }
+
+      function closeConfirmDeleteRoomModal() {
+        const modal = document.getElementById('modalConfirmDeleteRoom');
+        if (modal) modal.classList.add('hidden');
+        state.pendingDeleteRoomId = null;
+      }
+
+      // ------------------------------------------------------------
+      // 9. Event Listeners & Binding
       // ------------------------------------------------------------
       function initEventListeners() {
         // Date navigation
@@ -1677,10 +2525,7 @@
           renderActiveView();
         });
 
-        document.getElementById('selectAmenityFilter').addEventListener('change', (e) => {
-          state.amenityFilter = e.target.value;
-          renderActiveView();
-        });
+
 
         // View tabs
         document.getElementById('tabViewGrid').addEventListener('click', () => {
@@ -1698,9 +2543,176 @@
           renderActiveView();
         });
 
+        document.getElementById('tabViewMonth').addEventListener('click', () => {
+          state.activeView = 'month';
+          // Sync month view to currentDate
+          if (state.currentDate) {
+            const [y, m] = state.currentDate.split('-').map(Number);
+            state.monthViewYear = y;
+            state.monthViewMonth = m;
+          }
+          renderActiveView();
+        });
+
+        // Month Navigation controls
+        document.getElementById('btnPrevMonth').addEventListener('click', () => {
+          if (state.monthViewMonth === 1) {
+            state.monthViewMonth = 12;
+            state.monthViewYear -= 1;
+          } else {
+            state.monthViewMonth -= 1;
+          }
+          renderMonthView();
+        });
+
+        document.getElementById('btnCurrentMonth').addEventListener('click', () => {
+          const [y, m] = formatTodayDate().split('-').map(Number);
+          state.monthViewYear = y;
+          state.monthViewMonth = m;
+          renderMonthView();
+        });
+
+        document.getElementById('btnNextMonth').addEventListener('click', () => {
+          if (state.monthViewMonth === 12) {
+            state.monthViewMonth = 1;
+            state.monthViewYear += 1;
+          } else {
+            state.monthViewMonth += 1;
+          }
+          renderMonthView();
+        });
+
+        document.getElementById('selectMonthRoomFilter').addEventListener('change', (e) => {
+          state.monthRoomFilter = e.target.value;
+          renderMonthView();
+        });
+
         // Quick book button in top header
         document.getElementById('btnQuickBook').addEventListener('click', () => {
           openBookingModal();
+        });
+
+        // Room Management Center Modal
+        document.getElementById('btnOpenRoomManagement').addEventListener('click', () => {
+          openRoomManagementModal();
+        });
+
+        document.getElementById('btnCloseRoomManagementModal').addEventListener('click', () => {
+          closeRoomManagementModal();
+        });
+
+        document.getElementById('btnDoneRoomManagement').addEventListener('click', () => {
+          closeRoomManagementModal();
+        });
+
+        document.getElementById('btnAddNewRoomInModal').addEventListener('click', () => {
+          openRoomEditModal('');
+        });
+
+        document.getElementById('btnAddNewRoom').addEventListener('click', () => {
+          openRoomEditModal('');
+        });
+
+        // Room Edit / Add Modal Form
+        document.getElementById('btnCloseRoomEditModal').addEventListener('click', () => {
+          closeRoomEditModal();
+        });
+
+        document.getElementById('btnCancelRoomEdit').addEventListener('click', () => {
+          closeRoomEditModal();
+        });
+
+        document.getElementById('formRoomEdit').addEventListener('submit', (e) => {
+          e.preventDefault();
+
+          const roomId = document.getElementById('editRoomId').value;
+          const code = document.getElementById('editRoomCode').value.trim();
+          const name = document.getElementById('editRoomName').value.trim();
+          const floor = document.getElementById('editRoomFloor').value.trim();
+          const capacity = parseInt(document.getElementById('editRoomCapacity').value, 10) || 1;
+          const capTypeSelection = document.getElementById('editRoomCapacityType').value;
+          const color = document.getElementById('editRoomColor').value;
+          const theme = ROOM_THEMES[color] || ROOM_THEMES.indigo;
+
+          let capacityType = capTypeSelection;
+          if (capacityType === 'auto') {
+            capacityType = capacity <= 4 ? 'small' : (capacity <= 15 ? 'medium' : 'large');
+          }
+
+          const rawLabels = document.getElementById('editRoomAmenityLabels').value;
+          const amenityLabels = rawLabels
+            .split(/[,，、]/)
+            .map(s => s.trim())
+            .filter(Boolean);
+
+          const desc = document.getElementById('editRoomDesc').value.trim();
+          const passEl = document.getElementById('editRoomPassword');
+          const roomPass = (passEl ? passEl.value.trim() : '') || ('RT' + code);
+
+          if (roomId) {
+            // Edit existing room
+            const index = state.rooms.findIndex(r => r.id === roomId);
+            if (index !== -1) {
+              state.rooms[index] = {
+                ...state.rooms[index],
+                code,
+                name,
+                floor,
+                capacity,
+                capacityType,
+                color,
+                gradient: theme.gradient,
+                amenityLabels,
+                desc,
+                password: roomPass
+              };
+              saveRooms([...state.rooms]);
+              showToast(`會議室「${code} ${name}」設定已成功儲存更新！`, 'success');
+            }
+          } else {
+            // Add new room
+            const newRoom = {
+              id: 'room-' + Date.now(),
+              code,
+              name,
+              floor,
+              capacity,
+              capacityType,
+              color,
+              gradient: theme.gradient,
+              amenityLabels,
+              desc,
+              password: roomPass
+            };
+            saveRooms([...state.rooms, newRoom]);
+            showToast(`🎉 已成功新增會議室「${code} ${name}」！`, 'success');
+          }
+
+          closeRoomEditModal();
+          renderRoomManagementTable();
+          renderActiveView();
+        });
+
+        // Room Deletion Confirmation Dialog
+        document.getElementById('btnAbortDeleteRoom').addEventListener('click', () => {
+          closeConfirmDeleteRoomModal();
+        });
+
+        document.getElementById('btnExecuteDeleteRoom').addEventListener('click', () => {
+          const roomId = state.pendingDeleteRoomId;
+          if (roomId) {
+            const targetRoom = state.rooms.find(r => r.id === roomId);
+            const updatedRooms = state.rooms.filter(r => r.id !== roomId);
+            const updatedBookings = state.bookings.filter(b => b.roomId !== roomId);
+
+            saveRooms(updatedRooms);
+            saveBookings(updatedBookings);
+
+            showToast(`已成功刪除會議室「${targetRoom ? targetRoom.name : ''}」！`, 'info');
+            renderRoomManagementTable();
+            renderActiveView();
+          }
+          closeConfirmDeleteRoomModal();
         });
 
         // Share buttons
@@ -1745,10 +2757,13 @@
 
         // Reset Data
         document.getElementById('btnResetData').addEventListener('click', () => {
-          const fresh = generateInitialMockBookings(formatTodayDate());
-          saveBookings(fresh);
+          const freshRooms = JSON.parse(JSON.stringify(DEFAULT_ROOMS));
+          saveRooms(freshRooms);
+          const freshBookings = generateInitialMockBookings(formatTodayDate());
+          saveBookings(freshBookings);
           renderActiveView();
-          showToast('已重設為預設範例預約資料！', 'info');
+          renderRoomManagementTable();
+          showToast('已重設為預設範例會議室與預約資料！', 'info');
         });
 
         // Booking Modal controls
@@ -1771,7 +2786,6 @@
         document.getElementById('bookStartTime').addEventListener('change', () => {
           const start = document.getElementById('bookStartTime').value;
           const endSelect = document.getElementById('bookEndTime');
-          // auto push end time 1 hour forward if start >= end
           if (timeToMinutes(start) >= timeToMinutes(endSelect.value)) {
             endSelect.value = minutesToTime(timeToMinutes(start) + 60);
           }
@@ -1841,12 +2855,10 @@
           const updated = [...state.bookings, newBooking];
           saveBookings(updated);
 
-          // Update current viewed date to match booking date
           state.currentDate = date;
           closeBookingModal();
           renderActiveView();
 
-          // Reset form fields
           document.getElementById('bookTitle').value = '';
           document.getElementById('bookPerson').value = '';
           document.getElementById('bookDept').value = '';
@@ -1857,7 +2869,7 @@
           document.getElementById('chkReqMic').checked = false;
           document.getElementById('chkReqTea').checked = false;
 
-          const room = ROOMS.find(r => r.id === roomId);
+          const room = state.rooms.find(r => r.id === roomId) || { name: '會議室' };
           showToast(`🎉 預約成功！已為您保留 ${room.name} (${date} ${startTime}-${endTime})`, 'success');
         });
 
@@ -1869,7 +2881,7 @@
         document.getElementById('btnCopyInvite').addEventListener('click', () => {
           const b = state.selectedBookingForDetails;
           if (!b) return;
-          const room = ROOMS.find(r => r.id === b.roomId);
+          const room = state.rooms.find(r => r.id === b.roomId) || { code: '??', name: '會議室', floor: '' };
           const text = `【會議預約通知】\n主題：${b.title}\n地點：${room.code} ${room.name} (${room.floor})\n時間：${b.date} ${b.startTime} - ${b.endTime}\n預約人：${b.person} (${b.dept})\n出席人數：${b.attendees} 人\n備註：${b.notes || '無'}`;
           copyToClipboard(text, '會議邀請文字已複製到剪貼簿！');
         });
@@ -1898,8 +2910,30 @@
           closeConfirmCancelModal();
         });
 
-        // Event delegation for dynamic buttons (slots, view booking, card booking, etc.)
+        // Event delegation for dynamic buttons
         document.addEventListener('click', (e) => {
+          // Month quick book
+          const monthQuickBookBtn = e.target.closest('.btn-month-quick-book');
+          if (monthQuickBookBtn) {
+            e.stopPropagation();
+            const date = monthQuickBookBtn.getAttribute('data-date');
+            const targetRoom = state.monthRoomFilter !== 'all' ? state.monthRoomFilter : '';
+            openBookingModal(targetRoom, '09:00', date);
+            return;
+          }
+
+          // Month day cell click -> jump to grid view for that day
+          const dayCell = e.target.closest('.btn-month-day-cell');
+          if (dayCell) {
+            const date = dayCell.getAttribute('data-date');
+            if (date) {
+              state.currentDate = date;
+              state.activeView = 'grid';
+              renderActiveView();
+              showToast(`已切換至 ${date} 時程總覽！`, 'info');
+            }
+            return;
+          }
           // 1. Click on Free Slot to Book
           const slotBtn = e.target.closest('.btn-slot-book');
           if (slotBtn) {
@@ -1926,7 +2960,23 @@
             return;
           }
 
-          // 4. Click details or cancel in My Bookings list
+          // 4. Click Edit Room button in cards or management modal
+          const editRoomBtn = e.target.closest('.btn-edit-room, .btn-manage-edit-room');
+          if (editRoomBtn) {
+            const roomId = editRoomBtn.getAttribute('data-room-id');
+            openRoomEditModal(roomId);
+            return;
+          }
+
+          // 5. Click Delete Room button in cards or management modal
+          const deleteRoomBtn = e.target.closest('.btn-delete-room, .btn-manage-delete-room');
+          if (deleteRoomBtn) {
+            const roomId = deleteRoomBtn.getAttribute('data-room-id');
+            openConfirmDeleteRoomModal(roomId);
+            return;
+          }
+
+          // 6. Click details or cancel in My Bookings list
           const itemDetailsBtn = e.target.closest('.btn-item-details');
           if (itemDetailsBtn) {
             const bookingId = itemDetailsBtn.getAttribute('data-booking-id');
@@ -1946,20 +2996,263 @@
       }
 
       // ------------------------------------------------------------
-      // 9. App Initialization
+      // 10. App Initialization
       // ------------------------------------------------------------
+
+      // ------------------------------------------------------------
+      // Role-Based Password Authentication (MT28891989 & Room Passwords)
+      // ------------------------------------------------------------
+      const APP_MASTER_PASSWORD = 'MT28891989';
+      const AUTH_STORAGE_KEY = 'meetflow_auth_session_v2';
+      let inMemoryAuth = null; // in-memory fallback for sandboxed iframes
+
+      function getStoredAuth() {
+        if (inMemoryAuth) return inMemoryAuth;
+        try {
+          const raw = sessionStorage.getItem(AUTH_STORAGE_KEY) || localStorage.getItem(AUTH_STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.allowedRoomId) {
+              inMemoryAuth = parsed;
+              return parsed;
+            }
+          }
+        } catch (e) {
+          // Sandboxed environment fallback
+        }
+        return null;
+      }
+
+      function setStoredAuth(authObj) {
+        inMemoryAuth = authObj;
+        state.auth = authObj || { type: 'admin', allowedRoomId: 'all', roomName: '全部會議室' };
+        try {
+          if (authObj) {
+            const serialized = JSON.stringify(authObj);
+            sessionStorage.setItem(AUTH_STORAGE_KEY, serialized);
+            localStorage.setItem(AUTH_STORAGE_KEY, serialized);
+          } else {
+            sessionStorage.removeItem(AUTH_STORAGE_KEY);
+            localStorage.removeItem(AUTH_STORAGE_KEY);
+          }
+        } catch (e) {
+          // ignore storage errors
+        }
+      }
+
+      function updateHeaderAuthBadge() {
+        const badge = document.getElementById('headerAuthBadge');
+        const manageBtn = document.getElementById('btnOpenRoomManagement');
+        const addRoomBtn = document.getElementById('btnAddNewRoom');
+
+        if (!badge) return;
+
+        if (state.auth && state.auth.allowedRoomId && state.auth.allowedRoomId !== 'all') {
+          badge.className = 'inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200';
+          badge.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+            <span>專屬權限：${state.auth.roomName}</span>
+          `;
+          if (manageBtn) manageBtn.classList.add('hidden');
+          if (addRoomBtn) addRoomBtn.classList.add('hidden');
+        } else {
+          badge.className = 'inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200';
+          badge.innerHTML = `
+            <span class="w-2 h-2 rounded-full bg-indigo-600 mr-1.5"></span>
+            <span>全區總管理員 (全部會議室)</span>
+          `;
+          if (manageBtn) manageBtn.classList.remove('hidden');
+          if (addRoomBtn) addRoomBtn.classList.remove('hidden');
+        }
+      }
+
+      function unlockApp(authInfo) {
+        setStoredAuth(authInfo);
+        const overlay = document.getElementById('passwordGatewayOverlay');
+        if (overlay) {
+          overlay.style.display = 'none';
+          overlay.classList.add('hidden');
+        }
+        updateHeaderAuthBadge();
+        populateBookingFormRoomOptions();
+        renderActiveView();
+      }
+
+      function lockApp() {
+        setStoredAuth(null);
+        const overlay = document.getElementById('passwordGatewayOverlay');
+        const passInput = document.getElementById('inputAppPassword');
+        const errorAlert = document.getElementById('passwordErrorAlert');
+
+        if (overlay) {
+          overlay.style.display = 'flex';
+          overlay.classList.remove('hidden');
+        }
+        if (errorAlert) errorAlert.classList.add('hidden');
+        if (passInput) {
+          passInput.value = '';
+          setTimeout(() => passInput.focus(), 100);
+        }
+        showToast('已登出並鎖定系統，可輸入不同密碼切換權限。', 'info');
+      }
+
+      function attemptPasswordUnlock() {
+        const passInput = document.getElementById('inputAppPassword');
+        const errorAlert = document.getElementById('passwordErrorAlert');
+        const errorText = document.getElementById('passwordErrorText');
+        if (!passInput) return;
+
+        const entered = passInput.value.trim();
+        const enteredUpper = entered.toUpperCase();
+
+        // 1. Check Master / Full Admin Password (MT28891989)
+        if (entered === APP_MASTER_PASSWORD || enteredUpper === APP_MASTER_PASSWORD.toUpperCase()) {
+          if (errorAlert) errorAlert.classList.add('hidden');
+          unlockApp({
+            type: 'admin',
+            allowedRoomId: 'all',
+            roomName: '全部會議室'
+          });
+          showToast('👑 全區管理員驗證成功！可查看與預約所有會議室。', 'success');
+          return;
+        }
+
+        // 2. Check Room-Specific Passwords
+        const matchedRoom = state.rooms.find(r => {
+          const pass = (r.password || '').trim();
+          const code = (r.code || '').trim();
+          return (pass && (entered === pass || enteredUpper === pass.toUpperCase())) ||
+                 (code && (enteredUpper === `RT${code.toUpperCase()}` || enteredUpper === code.toUpperCase()));
+        });
+
+        if (matchedRoom) {
+          if (errorAlert) errorAlert.classList.add('hidden');
+          unlockApp({
+            type: 'room',
+            allowedRoomId: matchedRoom.id,
+            roomName: `${matchedRoom.code} ${matchedRoom.name}`
+          });
+          showToast(`🔑 專屬授權驗證成功！僅查看「${matchedRoom.code} ${matchedRoom.name}」。`, 'success');
+          return;
+        }
+
+        // 3. Invalid Password
+        if (errorAlert && errorText) {
+          errorAlert.classList.remove('hidden');
+          errorText.textContent = '密碼錯誤！請輸入全區管理密碼或指定會議室專用密碼。';
+        }
+        passInput.focus();
+        passInput.select();
+      }
+
+      function initPasswordGateway() {
+        const form = document.getElementById('formPasswordGateway');
+        const passInput = document.getElementById('inputAppPassword');
+        const submitBtn = document.getElementById('btnSubmitPassword');
+        const toggleBtn = document.getElementById('btnTogglePasswordVisibility');
+        const iconOpen = document.getElementById('iconEyeOpen');
+        const iconClosed = document.getElementById('iconEyeClosed');
+        const lockBtn = document.getElementById('btnLockApp');
+        const overlay = document.getElementById('passwordGatewayOverlay');
+
+        // Toggle password view
+        if (toggleBtn && passInput) {
+          toggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const isPassword = passInput.type === 'password';
+            passInput.type = isPassword ? 'text' : 'password';
+            if (iconOpen && iconClosed) {
+              if (isPassword) {
+                iconOpen.classList.remove('hidden');
+                iconClosed.classList.add('hidden');
+              } else {
+                iconOpen.classList.add('hidden');
+                iconClosed.classList.remove('hidden');
+              }
+            }
+          });
+        }
+
+        // Form submit
+        if (form) {
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            attemptPasswordUnlock();
+          });
+        }
+
+        // Submit button direct click
+        if (submitBtn) {
+          submitBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            attemptPasswordUnlock();
+          });
+        }
+
+        // Enter key inside password input
+        if (passInput) {
+          passInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              attemptPasswordUnlock();
+            }
+          });
+        }
+
+        // Manual lock button in header
+        if (lockBtn) {
+          lockBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            lockApp();
+          });
+        }
+
+        // Initial check on load
+        const storedAuth = getStoredAuth();
+        if (storedAuth) {
+          state.auth = storedAuth;
+          if (overlay) {
+            overlay.style.display = 'none';
+            overlay.classList.add('hidden');
+          }
+          updateHeaderAuthBadge();
+        } else {
+          if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.classList.remove('hidden');
+          }
+          if (passInput) {
+            setTimeout(() => passInput.focus(), 150);
+          }
+        }
+      }
+
       function init() {
         state.currentDate = formatTodayDate();
+        const [y, m] = state.currentDate.split('-').map(Number);
+        state.monthViewYear = y;
+        state.monthViewMonth = m;
+        state.rooms = loadRooms();
         state.bookings = loadBookings();
 
         populateTimeOptions();
         populateBookingFormRoomOptions();
         initEventListeners();
         renderActiveView();
+
+        // Restore stored authentication session if any
+        const existingAuth = getStoredAuth();
+        if (existingAuth) {
+          state.auth = existingAuth;
+        }
+
+        // Initialize password gateway on startup!
+        initPasswordGateway();
+        updateHeaderAuthBadge();
       }
 
-      // Run on DOM ready
-      if (document.readyState === 'loading') {
+            if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
       } else {
         init();
